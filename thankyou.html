@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <?!= include('eChartJS') ?>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700&family=Questrial&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- CommonJS Lib -->
+  <?!= include('jquery-3.3.1.slim.min.js') ?>
+  <?!= include('popper.min.js') ?>
+  <?!= include('bootstrap.bundle.min.js') ?>
+  <?!= include('bootstrap-datepicker.min.js') ?>
+  <?!= include('bootstrap-datepicker.ja.min.js') ?>
+  <?!= include('sweetalert2.min.js') ?>
+  <!-- StyleCSS Lib -->
+  <?!= include('bootstrap.min.css') ?>
+  <?!= include('bootstrap-datepicker.min.css') ?>
+  <!-- <?!= include('all.min.css') ?> -->
+  <?!= include('sweetalert2.min.css') ?>
+  <?!= include('stylesCss') ?>
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- Header -->
+    <div class="container-fuild d-none d-md-flex mb-3 position-relative"
+      style="color: #fff; background: #01932e; width: 100%; font-weight: 700;">
+      <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;">
+        <img
+          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+          alt="" width="28px" height="28px" style="margin-right: 5px;">
+        <span class="title-addon" style="font-size: 24px; color: white;">汎用投票アプリ</span>
+      </span>
+      <!-- <div class="d-flex flex-column text-end ms-auto m-0 p-2 px-3" id="email-user"
+        style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;"
+        v-if="userEmail && userEmail != '' && userEmail != 'false' ">
+        <span style="font-weight: 510; font-size: 14px;" v-if="userName != ''">{{ userName }}</span>
+        <span style="font-weight: 400; font-size: 12px; color: whitesmoke;" v-if="userEmail != '' && userName != ''">{{
+          userEmail }}</span>
+        <span style="font-weight: 510; font-size: 14px;" v-if="userName == '' && userEmail != ''">{{ userEmail
+          }}</span>
+      </div> -->
+    </div>
+    <div class="d-flex d-md-none align-items-center mb-3" style="color: #fff; background: #01932e; font-weight: 700;">
+      <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;">
+        <img
+          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+          alt="" width="28px" height="28px" style="margin-right: 5px;">
+        <span class="title-addon" style="font-size: 20px; color: white;">汎用投票アプリ</span>
+      </span>
+      <!-- <div class="d-flex flex-column text-end ms-auto m-0 p-2 px-3" style="position: relative;"
+        v-if="userEmail && userEmail != '' && userEmail != 'false' ">
+        <div id="user-avatar"
+          style="width: 30px; height: 30px; background-color: #87CEEB; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 400; cursor: pointer;"
+          v-if="userEmail != ''" @click="toggleUserInfo">
+          {{ getInitial() }}
+        </div>
+        <div id="user-info"
+          style="position: absolute; top: 100%; right: 0; background-color: #fff; border: 1px solid #ccc; padding: 10px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);"
+          v-show="showUserInfo">
+          <span id="user-name" style="font-weight: 510; font-size: 14px; color: #555;" v-if="userName != ''">{{ userName
+            }}</span><br v-if="userName != ''">
+          <span id="user-email" style="font-weight: 400; font-size: 12px; color: #555;" v-if="userEmail != ''">{{
+            userEmail }}</span>
+        </div>
+      </div> -->
+    </div>
+    <!--End Header -->
+  
+    <div class="container-fuild px-3" >
+      <div class="modal" id="loading" data-backdrop="static" style="z-index: 2000;">
+        <div class="modal-dialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+          <div id="circle">
+            <div class="loader"></div>
+          </div>
+        </div>
+      </div>
+      <div id="content" class="container-fuild">
+        <section id="content-form" class="row mb-3 g-3">
+          <div class="showNotStart">
+            <div class="message-box">
+              <h5>ありがとうございます。</h5>
+              <h5>返信していただきありがとうございます。良い一日をお過ごしください。</h5>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <?!= include('VueJS') ?>
+  <?!= include('thankyouJS') ?>
+</body>
+
+</html>

@@ -1,0 +1,359 @@
+<script type="module">
+    // Create a Vue app
+    const app = Vue.createApp({
+        data() {
+            return {
+                questions: [],
+                loading: true,
+                url_top: null,
+                user: {},
+                form: {},
+                validates: {},
+                invalidEmail: false,
+                settings: {},
+                vote: {},
+                isDescription: 'text-description',
+                disabledClick: false,
+                currentQuestionIndex: 0,
+                quesVisit: 0,
+                showUserInfo: false,
+            }
+        },
+        created() {
+
+        },
+        watch: {
+
+        },
+        async mounted() {
+            document.getElementById('loading').style.display = 'block'
+            document.addEventListener('click', this.handleClickOutside);
+            this.url_top = await this.getUrlTop();
+            this.questions = question;
+            this.user = user;
+            this.form = response;
+            this.vote = vote;
+            document.getElementById('loading').style.display = ''
+            document.getElementById('content').classList.remove('d-none')
+            this.$nextTick(() => {
+                // This code will be executed after Vue has updated the DOM
+                this.initialDatepicker();
+            });
+            this.quesVisit = this.questions.length;
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.updateElementHeights();
+                }, 100);
+            });
+            window.addEventListener('resize', () => {
+                setTimeout(() => {
+                    this.updateElementHeights();
+                }, 100);
+            });
+        },
+        computed: {
+        },
+        methods: {
+            getInitial() {
+                return this.user.email.charAt(0).toUpperCase();
+            },
+            toggleUserInfo(event) {
+                event.stopPropagation();
+                this.showUserInfo = !this.showUserInfo;
+            },
+            handleClickOutside(event) {
+                const userInfo = document.getElementById('user-info');
+                const userAvatar = document.getElementById('user-avatar');
+                if (userInfo && userAvatar && !userAvatar.contains(event.target) && !userInfo.contains(event.target)) {
+                    this.showUserInfo = false;
+                }
+            },
+            getUrlTop() {
+                let scope = this
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler((res) => {
+                            resolve(res);
+                        })
+                        .withFailureHandler((error) => {
+                            reject(error)
+                        })
+                        .getUrlTop();
+                })
+
+            },
+            getDataSetting() {
+                let scope = this
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler((res) => {
+                            // console.log({ res })
+                            resolve(res);
+                        })
+                        .withFailureHandler((error) => {
+                            reject(error)
+                        })
+                        .getDataSetting();
+                })
+            },
+            validate(submitData) {
+  let status = true;
+
+  for (let i = 0; i < this.questions.length; i++) {
+    const question = this.questions[i];
+    if (!question.question_required) continue;
+
+    const questionKey = `${i + 1}．${question.question}`;
+    const data = submitData[questionKey];
+
+    // 🔒 Phòng tránh lỗi nếu không tồn tại submitData[questionKey]
+    if (!data) {
+      this.validates[questionKey] = false;
+      status = false;
+      continue;
+    }
+
+    // ✅ Nếu câu hỏi có criterias
+    if (data.criterias && typeof data.criterias === 'object') {
+      this.validates[questionKey] = true;
+
+      for (const [critName, critValue] of Object.entries(data.criterias)) {
+        if (!critValue || critValue.value === '' || critValue.value.length === 0) {
+          this.validates[questionKey] = false;
+          status = false;
+          break;
+        }
+      }
+
+    } else {
+      // ✅ Nếu chỉ có value
+      if (data.value === '' || data.value.length === 0) {
+        this.validates[questionKey] = false;
+        status = false;
+      } else {
+        this.validates[questionKey] = true;
+      }
+    }
+  }
+
+  return status;
+},
+            getSegmentClass(index1) {
+                if (index1 > this.quesVisit) {
+                    return 'not-visited';
+                } else {
+                    let currentQuestion = this.questions[index1];
+                    let formNow = this.form[`${index1 + 1}．${currentQuestion.question}`];
+                    if (formNow.criteria) {
+                        //đa tiêu chí
+                        let check = true;
+                        for (const [critName, critValue] of Object.entries(formNow.criterias)) {
+                            if (critValue.value === '' || critValue.value.length === 0) {
+                                check = false
+                            } else {
+                                check = true
+                            }
+                        }
+                        if (!check) return 'unanswered';
+                        if (check) return 'answered';
+                    } else {
+                        //câu thường
+                        if (formNow.value === '' || formNow.value.length === 0) {
+                            return 'unanswered';
+                        } else {
+                            return 'answered';
+                        }
+                    }
+                }
+            },
+            saveResponse() {
+                let scope = this;
+                let form = scope.form;
+                // let validateState = this.validate(form);
+                // if (!validateState) return
+                Swal.fire({
+                    title: "保存しますか？",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#01932e",
+                    cancelButtonColor: "#6A6A6A",
+                    confirmButtonText: "はい",
+                    cancelButtonText: "いいえ",
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // console.log({ form })
+                        // if (scope.user.name == '' || scope.user.email == '') return
+                        let now = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'long', timeStyle: 'medium' }).format(new Date());
+                        form['answer_created'] = { value: now, type: 'date' };
+                        for (let [k, v] of Object.entries(scope.user)) {
+                            form[k] = { value: v }
+                        }
+                        document.getElementById('loading').style.display = 'block'
+                        google.script.run
+                            .withSuccessHandler((res) => {
+                                // console.log({ res })
+                                if (!res) scope.failureHandler(res.msg)
+                                else {
+                                    // scope.vote = res.data.vote;
+                                    // save storage user information
+                                    localStorage.setItem("user", JSON.stringify({ ...scope.user, 'answer_created': form['answer_created'].value }));
+                                    localStorage.setItem(surveyID, JSON.stringify({ 'surveyID': surveyID }));
+                                    scope.disabledClick = true
+
+                                    scope.successHandler(res.msg)
+                                }
+                                document.getElementById('loading').style.display = ''
+                            })
+                            .saveResponse(form, surveyID);
+                    }
+                })
+            },
+            initialDatepicker() {
+                if (this.$refs.datepicker) {
+                    // console.log(this.$refs.datepicker)
+                    $(this.$refs.datepicker).datepicker({
+                        format: 'yyyy年mm月dd日',
+                        autoclose: true,
+                        todayHighlight: true,
+                        forceParse: false,
+                        language: 'ja',
+                    }).on('changeDate', ({ target }) => {
+                        let id = target.id;
+                        let value = target.value;
+                        this.form[id]['value'] = value
+                    })
+                }
+            },
+            successHandler(msg) {
+                document.getElementById('loading').style.display = ''
+                Swal.fire({
+                    title: msg,
+                    icon: "success",
+                    confirmButtonColor: "#01932e",
+                    confirmButtonText: "閉じる",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let scope = this;
+                        let form = scope.form;
+                        for (let [k, v] of Object.entries(scope.user)) {
+                            form[k] = { value: v }
+                        }
+                        sessionStorage.setItem('vote_data', JSON.stringify({ question: scope.questions, user: scope.user, response: form, vote: scope.vote, surveyID: surveyID }))
+                        if (scope.vote.statistics === '表示') {
+                            this.statistic(scope.vote.id, scope.vote.dateRun);
+                        } else {
+                            let pageObject = {
+                                page: "thankyou"
+                            };
+                            let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
+                            let url = `https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`;
+                            window.open(url, '_top')
+                        }
+                    }
+                })
+            },
+            failureHandler(error) {
+                      document.getElementById('loading').style.display = 'none';
+
+  let errorMessage = "不明なエラーが発生しました"; // fallback message
+
+  if (error) {
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object') {
+      const str = JSON.stringify(error);
+      errorMessage = str === '{}' ? errorMessage : str;
+    }
+  }
+
+  Swal.fire({
+    title: "エラーが発生しました",
+    text: errorMessage,
+    icon: "error",
+    confirmButtonColor: "#01932e",
+    confirmButtonText: "閉じる",
+                }).then((result) => {
+
+                })
+            },
+            prevQuestion() {
+                if (this.currentQuestionIndex > 0) {
+                    this.currentQuestionIndex--;
+                }
+            },
+            nextQuestion() {
+                if (this.currentQuestionIndex < this.questions.length - 1) {
+                    let currentQuestion = this.questions[this.currentQuestionIndex];
+                    this.validates[`${this.currentQuestionIndex + 1}．${currentQuestion.question}`] = true;
+                    let formNow = this.form[`${this.currentQuestionIndex + 1}．${currentQuestion.question}`];
+                    if (this.questions[this.currentQuestionIndex].question_required) {
+                        if (formNow.criteria) {
+                            //đa tiêu chí
+                            for (const [critName, critValue] of Object.entries(formNow.criterias)) {
+                                if (critValue.value === '' || critValue.value.length === 0) {
+                                    this.validates[`${this.currentQuestionIndex + 1}．${currentQuestion.question}`] = false
+                                    status = false;
+                                    break;
+                                }
+                            }
+                        } else {
+                            //câu thường
+                            if (formNow.value === '' || formNow.value.length === 0) {
+                                this.validates[`${this.currentQuestionIndex + 1}．${currentQuestion.question}`] = false
+                                status = false;
+                            } else {
+                                this.validates[`${this.currentQuestionIndex + 1}．${currentQuestion.question}`] = true
+                            }
+                        }
+                    }
+
+                    if (this.validates[`${this.currentQuestionIndex + 1}．${currentQuestion.question}`] == true) {
+                        this.currentQuestionIndex++;
+                        if (this.quesVisit < this.currentQuestionIndex) {
+                            this.quesVisit = this.currentQuestionIndex
+                        }
+                    }
+                }
+            },
+            activateInput(index, idex, idx) {
+                const inputId = `Q${index + 1}-C${idex + 1}-${idx + 1}`;
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.click();
+                }
+            },
+            statistic(surveyID, dateRun) {
+                sessionStorage.setItem('vote', JSON.stringify({ surveyID: surveyID, dateRun: dateRun }))
+                let pageObject = {
+                    page: "statistic",
+                    code: surveyID,
+                    dateRun: dateRun
+                };
+                let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
+                let url = `https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`;
+                window.open(url, '_top')
+            },
+            updateElementHeights() {
+                const spanElement = document.querySelector('.background-top-oneQuest span');
+                const pElement = document.querySelector('.background-top-oneQuest p');
+                const backgroundTopElement = document.querySelector('.background-top-oneQuest');
+                const formSlideElement = document.querySelector('.form-slide');
+                const backgroundBottomElement = document.querySelector('.background-bottom-oneQuest');
+
+                if (spanElement && pElement && backgroundTopElement && formSlideElement && backgroundBottomElement) {
+                    const spanHeight = spanElement.offsetHeight;
+                    const pHeight = pElement.offsetHeight;
+                    const totalHeight = spanHeight + pHeight + 20;
+                    backgroundTopElement.style.height = totalHeight + 20 + 'px';
+                    formSlideElement.style.top = totalHeight + 'px';
+                    backgroundBottomElement.style.top = totalHeight + 20 + 'px';
+                }
+            },
+        },
+    })
+
+    app.mount('#app');
+</script>

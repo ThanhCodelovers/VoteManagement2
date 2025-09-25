@@ -1,0 +1,1043 @@
+<script type="module">
+    // Create a Vue app
+    const app = Vue.createApp({
+        data() {
+            return {
+                isOverflowed: false,
+                showDescriptionModal: false,
+                questions: null,
+                loading: true,
+                prjSelected: null,
+                results: {},
+                questionIndex: 0,
+                title: null,
+                description: null,
+                dateRun: null,
+                dateEnd: null,
+                userEmail: '',
+                userName: '',
+                showUserInfo: false,
+                notStatistic: false,
+                typeQuestion: null,
+                criteria: null,
+                expandedCriteria: {},
+                answersPerPage: 30,
+                currentPage: {},
+                currentPageNoCriteria: 1,
+                vote: {},
+                colors: {},
+            }
+        },
+        created() {
+
+        },
+        watch: {
+          descriptionText() {
+          this.$nextTick(() => {
+            this.checkOverflow();
+            });
+          }
+        },
+        async mounted() {
+            if (user || login) {
+                this.userEmail = (user && user.email) || (login && login.email) || '';
+                this.userName = (user && user.name) || (login && login.fullname) || '';
+            } else {
+                this.userEmail = '';
+                this.userName = '';
+            }
+            document.addEventListener('click', this.handleClickOutside);
+            if (surveyID) {
+                document.getElementById('loading').style.display = 'block'
+                await this.getQuestions(surveyID);
+                await this.dataStatistics(surveyID);
+            } else {
+                $('.content-msg').removeClass('d-none').html('投票データが見つかりません！')
+                // console.log('The vote is not found data!')
+            }
+            this.checkOverflow();
+            window.addEventListener('load', () => {
+            this.$nextTick(() => {
+                let chart = echarts.getInstanceByDom(document.getElementById('eChart_total_0'));
+                if (chart) chart.resize();
+            });
+          });
+          window.addEventListener('resize', () => {
+              this.results.forEach((_, idx) => {
+                  let chartEl = document.getElementById(`eChart_total_${idx}`);
+                  if (chartEl) {
+                      let chart = echarts.getInstanceByDom(chartEl);
+                      if (chart) chart.resize();
+                  }
+              });
+          });
+        },
+        computed: {
+          descriptionText() {
+          const temp = document.createElement("div");
+          temp.innerHTML = this.description || '';
+          return temp.textContent || temp.innerText || "";
+          }
+        },
+        methods: {
+            getCriteriaKeys(item) {
+              let keys = new Set();
+              // Lặp object thay vì forEach
+              Object.values(item.question_answers).forEach(ans => {
+                if (ans.criteria) {
+                  Object.keys(ans.criteria).forEach(k => keys.add(k));
+                }
+              });
+              return Array.from(keys);
+            },
+            getAnswerList(item) {
+              // Chuyển object thành array để v-for không bị lỗi
+              return Object.values(item.question_answers);
+            },
+            checkOverflow() {
+                const el = this.$refs.descPreview;
+                if (el) {
+                this.isOverflowed = el.scrollHeight > el.clientHeight;
+              }
+            },
+            openDescriptionModal() {
+                const modal = new bootstrap.Modal(this.$refs.descriptionModal);
+                modal.show();
+            },
+            getInitial() {
+                return this.userEmail.charAt(0).toUpperCase();
+            },
+            toggleUserInfo(event) {
+                event.stopPropagation();
+                this.showUserInfo = !this.showUserInfo;
+            },
+            handleClickOutside(event) {
+                const userInfo = document.getElementById('user-info');
+                const userAvatar = document.getElementById('user-avatar');
+                if (userInfo && userAvatar && !userAvatar.contains(event.target) && !userInfo.contains(event.target)) {
+                    this.showUserInfo = false;
+                }
+            },
+            getQuestions(surveyID) {
+                let scope = this
+                // document.getElementById('loading').style.display = 'block'
+                google.script.run
+                    .withSuccessHandler((res) => {
+                        // console.log("getQuestions:", { res })
+                        if (!res) {
+                            scope.failureHandler(res.msg)
+                            return
+                        }
+                        let { keys, rows, surveySetting, vote } = res.data;
+                        // console.log(res.data, 'getQuestions');
+                        this.title = vote.nameVote;
+                        this.description = vote.description;
+                        this.dateRun = vote.dateRun;
+                        this.colors = vote.colors;
+                        this.dateEnd = vote.dateEnd
+                        this.vote = vote;
+                        scope.formatData(keys, rows);
+                        document.getElementById('loading').style.display = ''
+                        if (this.questions.length == 0 || vote.numberVoted == '0') {
+                            document.getElementById('notQuestions').classList.remove('d-none')
+                        } else {
+                            document.getElementById('content').classList.remove('d-none')
+                        }
+                    })
+                    .getQuestions(surveyID);
+            },
+            formatData(keys, rows) {
+                this.questions = [];
+                for (let i = 0; i < rows.length; i++) {
+                    let obj = {};
+                    for (const [k, v] of Object.entries(keys)) {
+                        if (v === -1) continue
+                        obj[k] = rows[i][v];
+                    }
+                    this.questions.push(obj)
+                }
+            },
+            selectQuestion(prj, index) {
+                // this.notStatistic = false;
+                console.log("👉 selectQuestion được gọi:", { prj, index });
+                console.log("👉 this.results hiện tại:", this.results);
+                if (this.results) {
+                    console.log("👉 this.results[" + index + "]:", this.results[index]);
+                    if (!this.results[index]) {
+                      console.error("❌ Lỗi: this.results[" + index + "] bị undefined!");
+                      this.notStatistic = true;
+                      return; // Dừng luôn để tránh lỗi tiếp theo
+                    }
+                    this.typeQuestion = this.results[index].typeQuestion;
+                    console.log("✅ typeQuestion:", this.typeQuestion);
+                    this.criteria = this.results[index].criteria;
+                    console.log("✅ criteria:", this.criteria);
+                    this.expandedCriteria = {};
+                    let check = true;
+                    if (this.results[index].criteria == false) {
+                        if (this.results[index].typeQuestion == "oneSelect" || this.results[index].typeQuestion == "multiSelect") {
+                            let answers = this.results[index].question_answers;
+                            let allTotalsZero = Object.values(answers).every(answer => answer.total === 0);
+                            if (Object.keys(answers).length == 0 || allTotalsZero) {
+                                this.notStatistic = true;
+                                check = false;
+                            }
+                        }
+                        if (this.results[index].typeQuestion == "input") {
+                            if (this.results[index].question_answers[0].length == 0) {
+                                this.notStatistic = true;
+                                check = false
+                            }
+                        }
+                    } else if (this.results[index].criteria == true) {
+                        console.log("📥 Dữ liệu kết quả (this.results[index]):", JSON.stringify(this.results[index], null, 2));
+                        console.log("📥 Các answer:", this.results[index].question_answers);
+                        if (this.results[index].typeQuestion == "oneSelect" || this.results[index].typeQuestion == "multiSelect") {
+                            let answers = this.results[index].question_answers;
+                            let allCriteriaEmpty = Object.values(answers).every(answer =>
+                                Object.keys(answer.criteria).length === 0
+                            );
+                            if (Object.keys(answers).length == 0 || allCriteriaEmpty) {
+                                this.notStatistic = true;
+                                check = false;
+                            }
+                        }
+                        if (this.results[index].typeQuestion == "input" || this.results[index].typeQuestion == "score") {
+                            let answer = this.results[index].question_answers[0];
+                            let isCriteriaEmpty = Object.keys(answer.criteria).length === 0;
+                            if (isCriteriaEmpty) {
+                                this.notStatistic = true;
+                                check = false;
+                            }
+                            if (this.results[index].typeQuestion == "input") {
+                                for (let key in this.results[index].question_answers[0].criteria) {
+                                    this.currentPage[key] = 1;
+                                }
+                            }
+                        }
+                    }
+                    if (check) this.notStatistic = false;
+                    $('#content-total .project-list ul .list-group-item').removeClass('active')
+                    let el = $('#content-total .project-list ul .list-group-item')[index];
+                    $(el).addClass('active')
+                    this.questionIndex = index
+                    if (!check) return;
+                    setTimeout(() => {
+                        this.formatDataChart(this.results[index], index);
+                        this.$nextTick(() => {
+                        // Resize lại chart sau khi DOM render
+                        let chartEl = document.getElementById(`eChart_total_${index}`);
+                        if (chartEl) {
+                            let chart = echarts.getInstanceByDom(chartEl);
+                            if (chart) {
+                                setTimeout(() => {
+                                    chart.resize();
+                                }, 100); // delay một chút cho chắc
+                            }
+                        }
+                    });
+                    }, 200);
+                } else {
+                    this.notStatistic = true;
+                }
+            },
+            formatAnswer(answer) {
+                return answer.split('\n').map(line => line.trim()).filter(line => line);
+            },
+            dataStatistics(surveyID) {
+                let scope = this
+                google.script.run
+                    .withSuccessHandler((res) => {
+                        if (!res) scope.failureHandler(res.msg)
+                        // console.log("dataStatistics:", { res })
+                        // Bắn dữ liệu lên bảng
+                        this.results = res.data;
+                        // Tạo biểu đồ đầu tiên cho câu 1
+                        this.$nextTick(() => {
+                      if (this.results[0] !== undefined) {
+                        this.selectQuestion(0, 0);
+
+                        this.$nextTick(() => {
+                          let el = document.getElementById('eChart_total_0');
+                          if (el) {
+                            let chart = echarts.getInstanceByDom(el);
+                            if (chart) chart.resize();
+                          }
+                          document.getElementById('loading').style.display = '';
+                        });
+                      }
+                      });
+                    })
+                    .withFailureHandler((error) => {
+                        // console.log(error);
+                        scope.failureHandler(error)
+                    })
+                    .dataStatistics(surveyID);
+            },
+            formatDataChart(data, index) {
+                // console.log(data['question_answers']);
+                let newData = [];
+                let total = 0;
+                if (data['criteria'] == false) {
+                    if (data['typeQuestion'] != 'score') {
+                        for (let key in data['question_answers']) {
+                            if (data['question_answers'].hasOwnProperty(key)) {
+                                let value = data['question_answers'][key]['total'];
+                                total += value;
+                                newData.push({ name: data['question_answers'][key]['name'], value: value });
+                            }
+                        }
+                        this.generateChart(index, newData, 0, total);
+                    } else {
+                        for (let key in data['question_answers']) {
+                            if (data['question_answers'].hasOwnProperty(key)) {
+                                let value = data['question_answers'][key]['total'];
+                                newData.push({ name: '合計点', value: value });
+                            }
+                        }
+                        this.generateChart(index, newData, 0, total);
+                    }
+                } else {
+                    if (data['typeQuestion'] != 'score') {
+                        this.generateChartCriteria(index, data);
+                    } else {
+                        for (let key in data['question_answers'][0]['criteria']) {
+                            if (data['question_answers'][0]['criteria'].hasOwnProperty(key)) {
+                                let value = data['question_answers'][0]['criteria'][key];
+                                newData.push({ name: key, value: value });
+                            }
+                        }
+                        this.generateChart(index, newData, 0, total);
+                    }
+                }
+            },
+            generateChart(id, data, title, total = 0) {
+                let elChart;
+                let parentElement = document.querySelector('.content-total__dataSummary-chart');
+                parentElement.innerHTML = '';
+                elChart = document.getElementById(`eChart_total_${id}`);
+                // console.log("here:", id, elChart);
+                if (!elChart) {
+                    elChart = document.createElement('div');
+                    elChart.id = `eChart_total_${id}`;
+                    // đảm bảo chart có chiều cao mặc định; width để 100% để ECharts đọc đúng
+                    elChart.style.width = '100%';
+                    elChart.style.height = '350px';
+                    parentElement.appendChild(elChart);
+                }
+
+                // Nếu có instance cũ trên element này, dispose trước
+                const prev = echarts.getInstanceByDom(elChart);
+                if (prev) {
+                  try { prev.dispose(); } catch (e) { /* ignore */ }
+                }
+
+                var myChar = echarts.init(elChart, null, { throttle: 70 });
+
+                myChar.showLoading('default', {
+                    color: '#01932e',
+                    zlevel: 0,
+                    showSpinner: true,
+                    spinnerRadius: 10,
+                })
+                // opttion 0
+                let option = {
+                    baseOption: {
+                        tooltip: {},
+                        legend: {
+                            left: 'center',
+                            left: 10,
+                        },
+                        grid: {
+                            left: 15,
+                            right: '50%',
+                            bottom: 5,
+                            top: 25,
+                        },
+                        xAxis: [
+                            {
+                                type: 'category',
+                                data: data.map(x => x.name),
+                                axisTick: {
+                                    alignWithLabel: true
+                                },
+                                show: false
+                            }
+                        ],
+                        yAxis: [
+                            {
+                                type: 'value'
+                            }
+                        ],
+                        series: [
+                            {
+                                id: 'barChart',
+                                type: 'bar',
+                                barWidth: '60%',
+                                colorBy: 'data',
+                                data: data.map(x => x.value),
+                                label: {
+                                    show: true,
+                                    position: 'inside',
+                                    formatter: function (params) {
+                                        return params.value !== 0 ? params.value : ''
+                                    },
+                                },
+                            },
+                        ]
+                    },
+                    media: [
+                        {
+                            query: {
+                                maxWidth: 430
+                            },
+                            option: {
+                                grid: [
+                                    {
+                                        left: '10%',
+                                        right: '10%',
+                                        bottom: '50%',
+                                        top: '18%',
+                                        containLabel: true
+                                    },
+                                    {
+                                        left: '10%',
+                                        right: '10%',
+                                        bottom: '0%',
+                                        top: '65%',
+                                        containLabel: true
+                                    }
+                                ],
+                                series: [
+                                    {
+                                        id: 'lineChart',
+                                        xAxisIndex: 0,
+                                        yAxisIndex: 0
+                                    },
+                                    {
+                                        id: 'pieChart',
+                                        radius: ['30%', '50%'],
+                                        center: ['50%', '75%'],
+                                        xAxisIndex: 1,
+                                        yAxisIndex: 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            query: {
+                                minWidth: 431,
+                                maxWidth: 640
+                            },
+                            option: {
+                                grid: [
+                                    {
+                                        left: '10%',
+                                        right: '55%',
+                                        bottom: '0%',
+                                        top: '10%',
+                                        containLabel: true
+                                    },
+                                    {
+                                        left: '55%',
+                                        right: '10%',
+                                        bottom: '0%',
+                                        top: '10%',
+                                        containLabel: true
+                                    }
+                                ],
+                                series: [
+                                    {
+                                        id: 'lineChart',
+                                        xAxisIndex: 0,
+                                        yAxisIndex: 0
+                                    },
+                                    {
+                                        id: 'pieChart',
+                                        radius: ['25%', '45%'],
+                                        center: ['75%', '50%'],
+                                        xAxisIndex: 1,
+                                        yAxisIndex: 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            query: {
+                                minWidth: 641
+                            },
+                            option: {
+                                legend: {
+                                    left: '75%',
+                                    top: 'center',
+                                    orient: 'vertical', // Đặt hướng theo chiều dọc
+                                    // formatter: function (name) {
+                                    //     // Trả về tên không bị cắt bớt
+                                    //     return name.replace(/ /g, '<br/>'); // Thay dấu cách bằng <br/> để xuống dòng
+                                    // },
+                                    textStyle: {
+                                        width: 500,
+                                        overflow: 'break', // Cho phép văn bản xuống dòng
+                                    },
+                                    padding: [10, 10, 10, 10], // Padding cho legend
+                                },
+                                grid: [
+                                    {
+                                        left: '2%',
+                                        right: '55%',
+                                        bottom: '0%',
+                                        top: '10%',
+                                        containLabel: true
+                                    },
+                                    {
+                                        left: '50%',
+                                        right: '15%',
+                                        bottom: '0%',
+                                        top: '10%',
+                                        containLabel: true
+                                    }
+                                ],
+                                series: [
+                                    {
+                                        id: 'lineChart',
+                                        xAxisIndex: 0,
+                                        yAxisIndex: 0
+                                    },
+                                    {
+                                        id: 'pieChart',
+                                        radius: ['35%', '65%'],
+                                        center: ['65%', '50%'],
+                                        xAxisIndex: 1,
+                                        yAxisIndex: 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+                if (total !== 0) {
+                    option.baseOption.series.push({
+                        id: 'pieChart',
+                        type: 'pie',
+                        avoidLabelOverlap: false,
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 40,
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        itemStyle: {
+                            normal: {
+                                label: {
+                                    show: true, position: 'inside',
+                                    formatter: function (params) {
+                                        return params.value !== 0 && total !== 0 ? ((params.value * 100) / total).toFixed(2) + '%\n' : ''
+                                    },
+                                },
+                                labelLine: {
+                                    show: false
+                                }
+                            },
+                        },
+                        data: data
+                    })
+                }
+
+                myChar.setOption(option)
+                myChar.hideLoading()
+
+                this.$nextTick(() => {
+                    requestAnimationFrame(() => {
+                      myChar.resize();
+                    });
+                  });
+
+                // Chỉ đăng ký listener resize 1 lần: nếu bạn muốn mỗi chart có handler riêng, 
+                // tốt hơn cài 1 handler toàn cục ở created/mounted. 
+                // Ở đây ta thêm listener nhẹ (không overwrite) — nhưng tránh thêm nhiều lần:
+                if (!window.__hasChartResizeListener) {
+                  window.__hasChartResizeListener = true;
+                  window.addEventListener('resize', () => {
+                    // Lấy chart instance nếu có và gọi resize
+                    const inst = echarts.getInstanceByDom(elChart);
+                    if (inst) {
+                      try { inst.resize(); } catch (e) { /* ignore */ }
+                    } else {
+                      // Nếu instance không tìm thấy, nothing
+                    }
+                  });
+                };
+            },
+            generateChartCriteria(id, data) {
+                // console.log("here Criteria:", id, data);
+                let elChart;
+                let parentElement = document.querySelector('.content-total__dataSummary-chart');
+                parentElement.innerHTML = '';
+                // Tạo div row
+                let rowDiv = document.createElement('div');
+                rowDiv.classList.add('row')
+                // Tạo div cho chart bar
+                let colDiv = document.createElement('div');
+                colDiv.classList.add('col-12');
+                rowDiv.appendChild(colDiv);
+                let index = 0;
+                // create div for chartBarStackY
+                let eleChartBarStackY = document.createElement('div');
+                eleChartBarStackY.id = 'chart-bar-stack-y';
+                eleChartBarStackY.style.height = '360px';
+                eleChartBarStackY.style.width = '98%';
+                colDiv.appendChild(eleChartBarStackY);
+
+                parentElement.appendChild(rowDiv);
+                this.chartBarStackY(data);
+            },
+            chartBar(id, data) {
+                var optionBar = {
+                    tooltip: {},
+                    legend: {
+                        data: Object.values(data['question_answers']).map(item => item.name),
+                    },
+                    xAxis: {
+                        data: Object.keys(data['question_answers'][0]['criteria']),
+                    },
+                    yAxis: {},
+                    series: []
+                };
+                // console.log(data);
+                for (let k in data['question_answers']) {
+                    let serie = {};
+                    serie.name = data['question_answers'][k]['name'];
+                    serie.type = 'bar';
+                    serie.data = [];
+                    for (let key in data['question_answers'][0]['criteria']) {
+                        serie.data.push(data['question_answers'][k]['criteria'][key])
+                    }
+                    optionBar.series.push(serie);
+                }
+                echarts.init(document.getElementById(`eChart_total_${id}`)).setOption(optionBar);
+            },
+            chartPie(id, data) {
+                // console.log("chartPie:", id, data);
+                let index = 0;
+                for (let k in data['question_answers'][0]['criteria']) {
+                    let totalValue = 0;
+                    for (let key in data['question_answers']) {
+                        totalValue += data['question_answers'][key]['criteria'][k];
+                    }
+                    var optionPie = {
+                        title: {
+                            text: k
+                        },
+                        tooltip: {},
+                        series: [{
+                            name: k,
+                            type: 'pie',
+                            radius: '70%',
+                            center: ['50%', '50%'],
+                            data: [],
+                            itemStyle: {
+                                normal: {
+                                    label: {
+                                        show: true,
+                                        position: 'inside',
+                                        formatter: function (params) {
+                                            var value = params.value;
+                                            if (value > 0 && totalValue > 0) {
+                                                return ((params.value * 100) / totalValue).toFixed(2) + '%';
+                                            } else {
+                                                return '';
+                                            }
+                                        }
+                                    },
+                                    labelLine: {
+                                        show: false
+                                    }
+                                },
+                            },
+                        }]
+                    };
+                    for (let key in data['question_answers']) {
+                        let value = data['question_answers'][key]['criteria'][k];
+                        let percentage = (value / totalValue) * 100;
+                        optionPie.series[0].data.push({
+                            value: value,
+                            name: data['question_answers'][key]['name']
+                        });
+                    }
+                    echarts.init(document.getElementById(`eChartPie_total_${index}`)).setOption(optionPie);
+                    index++;
+                }
+            },
+            chartBarStackY(data) {
+                let optionBarStackY = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            // Use axis to trigger tooltip
+                            type: 'shadow' // 'shadow' as default; can also be 'line' or 'shadow'
+                        }
+                    },
+                    legend: {},
+                    grid: {
+                        left: '2%',
+                        right: '2%',
+                        bottom: '2%',
+                        top: '14%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'value'
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: []
+                    },
+                    series: [],
+                    media: [
+                        {
+                            query: {
+                                maxWidth: 430
+                            },
+                            option: {
+                                grid: {
+                                    left: '1%',
+                                    right: '1%',
+                                    bottom: '1%',
+                                    top: '17%',
+                                    containLabel: true
+                                },
+                                xAxis: {
+                                    axisLabel: {
+                                        fontSize: 8 // Smaller font size for very small screens
+                                    }
+                                },
+                                yAxis: {
+                                    axisLabel: {
+                                        fontSize: 8 // Smaller font size for very small screens
+                                    }
+                                },
+                                legend: {
+                                    //top: 5,
+                                    //itemGap: 5,
+                                    textStyle: {
+                                        fontSize: 8
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                };
+                //
+                for (let k in data['question_answers'][0]['criteria']) {
+                    optionBarStackY.yAxis.data.push(k);
+                }
+                //
+                for (let key in data['question_answers']) {
+                    let eleSeries = {
+                        name: '',
+                        type: 'bar',
+                        stack: 'total',
+                        label: {
+                            show: true
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: []
+                    };
+                    let criteria = data['question_answers'][key]['criteria'];
+                    let name = data['question_answers'][key]['name'];
+                    eleSeries.name = name;
+                    // console.log({ key, eleSeries, criteria });
+
+                    //
+                    for (let k in data['question_answers'][0]['criteria']) {
+                        let value = data['question_answers'][key]['criteria'][k];
+                        eleSeries.data.push(value);
+                    }
+                    optionBarStackY.series.push(eleSeries);
+                }
+                // console.log({ optionBarStackY });
+                echarts.init(document.getElementById('chart-bar-stack-y')).setOption(optionBarStackY);
+            },
+            toggleCollapse(key) {
+                this.expandedCriteria[key] = !this.expandedCriteria[key];
+            },
+            isExpanded(key) {
+                return !!this.expandedCriteria[key];
+            },
+            paginatedAnswers(key) {
+                const start = (this.currentPage[key] - 1) * this.answersPerPage;
+                const end = start + this.answersPerPage;
+                return this.results[this.questionIndex].question_answers[0].criteria[key].slice(start, end);
+            },
+            totalPages(key) {
+                return Math.ceil(this.results[this.questionIndex].question_answers[0].criteria[key].length / this.answersPerPage);
+            },
+            prevPage(key) {
+                if (this.currentPage[key] > 1) {
+                    this.currentPage[key]--;
+                }
+            },
+            nextPage(key) {
+                if (this.currentPage[key] < this.totalPages(key)) {
+                    this.currentPage[key]++;
+                }
+            },
+            goToPage(key, page) {
+                this.currentPage[key] = page;
+            },
+            paginatedAnswersNoCriteria() {
+                const start = (this.currentPageNoCriteria - 1) * this.answersPerPage;
+                const end = start + this.answersPerPage;
+                return this.results[this.questionIndex].question_answers[0].slice(start, end);
+            },
+            totalPagesNoCriteria() {
+                return Math.ceil(this.results[this.questionIndex].question_answers[0].length / this.answersPerPage);
+            },
+            prevPageNoCriteria() {
+                if (this.currentPageNoCriteria > 1) {
+                    this.currentPageNoCriteria--;
+                }
+            },
+            nextPageNoCriteria() {
+                if (this.currentPageNoCriteria < this.totalPagesNoCriteria()) {
+                    this.currentPageNoCriteria++;
+                }
+            },
+            goToPageNoCriteria(page) {
+                this.currentPageNoCriteria = page;
+            },
+            successHandler(msg) {
+                document.getElementById('loading').style.display = ''
+                Swal.fire({
+                    title: msg,
+                    icon: "success",
+                    confirmButtonColor: "#01932e",
+                    confirmButtonText: "閉じる",
+                }).then((result) => {
+                    // update table
+                })
+            },
+            failureHandler(error) {
+                document.getElementById('loading').style.display = 'none';
+
+  let errorMessage = "不明なエラーが発生しました"; // fallback message
+
+  if (error) {
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object') {
+      const str = JSON.stringify(error);
+      errorMessage = str === '{}' ? errorMessage : str;
+    }
+  }
+
+  Swal.fire({
+    title: "エラーが発生しました",
+    text: errorMessage,
+    icon: "error",
+    confirmButtonColor: "#01932e",
+    confirmButtonText: "閉じる",
+                }).then((result) => {
+
+                })
+            },
+  getThresholdValue(questionIndex) {
+      const question = this.questions[questionIndex];
+      if (!question) return 50.1;
+      const threshold = question.voteThreshold || '50.1%';
+      return parseFloat(threshold.replace('%', ''));
+    },
+
+    getTotalVotesForQuestion(questionIndex) {
+      if (!this.results || !this.results[questionIndex] || this.results[questionIndex].criteria) {
+        return 0;
+      }
+      const answers = this.results[questionIndex].question_answers;
+      if (!answers) return 0;
+      return Object.values(answers).reduce((total, answer) => total + (answer.total || 0), 0);
+    },
+
+    getTotalVotesForCriteria(questionIndex, criteriaName) {
+      if (!this.results || !this.results[questionIndex] || !this.results[questionIndex].criteria) {
+        return 0;
+      }
+      const answers = this.results[questionIndex].question_answers;
+      if (!answers) return 0;
+      return Object.values(answers).reduce((total, answer) => {
+        return total + (answer.criteria && answer.criteria[criteriaName] ? answer.criteria[criteriaName] : 0);
+      }, 0);
+    },
+
+    hasAnswerMeetingThreshold(questionIndex) {
+      const threshold = this.getThresholdValue(questionIndex);
+      const totalVotes = this.getTotalVotesForQuestion(questionIndex);
+      if (totalVotes === 0) return false;
+      const answers = this.results[questionIndex].question_answers;
+      if (!answers) return false;
+      return Object.values(answers).some(answer => {
+        const percentage = (answer.total / totalVotes) * 100;
+        return percentage >= threshold;
+      });
+    },
+
+    getWinningAnswer(questionIndex) {
+      const threshold = this.getThresholdValue(questionIndex);
+      const totalVotes = this.getTotalVotesForQuestion(questionIndex);
+      if (totalVotes === 0) return '';
+      const answers = this.results[questionIndex].question_answers;
+      if (!answers) return '';
+      const winningAnswer = Object.values(answers).find(answer => {
+        const percentage = (answer.total / totalVotes) * 100;
+        return percentage >= threshold;
+      });
+      return winningAnswer ? winningAnswer.name : '';
+    },
+
+    getWinningPercentage(questionIndex) {
+      const threshold = this.getThresholdValue(questionIndex);
+      const totalVotes = this.getTotalVotesForQuestion(questionIndex);
+      if (totalVotes === 0) return 0;
+      const answers = this.results[questionIndex].question_answers;
+      if (!answers) return 0;
+      const winningAnswer = Object.values(answers).find(answer => {
+        const percentage = (answer.total / totalVotes) * 100;
+        return percentage >= threshold;
+      });
+      return winningAnswer ? ((winningAnswer.total / totalVotes) * 100).toFixed(1) : 0;
+    },
+
+    getCriteriaNames(questionIndex) {
+        if (!this.results || !this.results[questionIndex] || !this.results[questionIndex].criteria) {
+            return [];
+        }
+
+        const answers = this.results[questionIndex].question_answers;
+        if (!answers) return [];
+        
+        const criteriaSet = new Set();
+        
+        Object.values(answers).forEach(answer => {
+            if (answer.criteria) {
+                Object.keys(answer.criteria).forEach(criteriaName => {
+                    criteriaSet.add(criteriaName);
+                });
+            }
+        });
+
+        return Array.from(criteriaSet);
+    },
+
+    hasAnswerMeetingThresholdForCriteria(questionIndex, criteriaName) {
+        if (!this.results || !this.results[questionIndex] || !this.results[questionIndex].criteria) {
+            return false;
+        }
+
+        const threshold = this.getThresholdValue(questionIndex);
+        const totalVotes = this.getTotalVotesForCriteria(questionIndex, criteriaName);
+        
+        if (totalVotes === 0) return false;
+
+        const answers = this.results[questionIndex].question_answers;
+        if (!answers) return false;
+        
+        return Object.values(answers).some(answer => {
+            if (!answer.criteria || !answer.criteria[criteriaName]) return false;
+            const percentage = (answer.criteria[criteriaName] / totalVotes) * 100;
+            return percentage >= threshold;
+        });
+    },
+
+    getWinningAnswerForCriteria(questionIndex, criteriaName) {
+        if (!this.results || !this.results[questionIndex] || !this.results[questionIndex].criteria) {
+            return '';
+        }
+
+        const threshold = this.getThresholdValue(questionIndex);
+        const totalVotes = this.getTotalVotesForCriteria(questionIndex, criteriaName);
+        
+        if (totalVotes === 0) return '';
+
+        const answers = this.results[questionIndex].question_answers;
+        if (!answers) return '';
+        
+        const winningAnswer = Object.values(answers).find(answer => {
+            if (!answer.criteria || !answer.criteria[criteriaName]) return false;
+            const percentage = (answer.criteria[criteriaName] / totalVotes) * 100;
+            return percentage >= threshold;
+        });
+
+        return winningAnswer ? winningAnswer.name : '';
+    },
+
+    getWinningPercentageForCriteria(questionIndex, criteriaName) {
+        if (!this.results || !this.results[questionIndex] || !this.results[questionIndex].criteria) {
+            return 0;
+        }
+
+        const threshold = this.getThresholdValue(questionIndex);
+        const totalVotes = this.getTotalVotesForCriteria(questionIndex, criteriaName);
+        
+        if (totalVotes === 0) return 0;
+
+        const answers = this.results[questionIndex].question_answers;
+        if (!answers) return 0;
+        
+        const winningAnswer = Object.values(answers).find(answer => {
+            if (!answer.criteria || !answer.criteria[criteriaName]) return false;
+            const percentage = (answer.criteria[criteriaName] / totalVotes) * 100;
+            return percentage >= threshold;
+        });
+
+        return winningAnswer && winningAnswer.criteria && winningAnswer.criteria[criteriaName] ? 
+            ((winningAnswer.criteria[criteriaName] / totalVotes) * 100).toFixed(1) : 0;
+    },
+
+    getWinningVoteCount(questionIndex) {
+      const totalVotes = this.getTotalVotesForQuestion(questionIndex);
+      if (totalVotes === 0) return 0;
+      const answers = this.results[questionIndex].question_answers;
+      if (!answers) return 0;
+      const threshold = this.getThresholdValue(questionIndex);
+      const winningAnswer = Object.values(answers).find(answer => {
+        const percentage = (answer.total / totalVotes) * 100;
+        return percentage >= threshold;
+      });
+      return winningAnswer ? winningAnswer.total : 0;
+    },
+    getWinningVoteCountForCriteria(questionIndex, criteriaName) {
+      const totalVotes = this.getTotalVotesForCriteria(questionIndex, criteriaName);
+      if (totalVotes === 0) return 0;
+      const answers = this.results[questionIndex].question_answers;
+      if (!answers) return 0;
+      const threshold = this.getThresholdValue(questionIndex);
+      const winningAnswer = Object.values(answers).find(answer => {
+        if (!answer.criteria || !answer.criteria[criteriaName]) return false;
+        const percentage = (answer.criteria[criteriaName] / totalVotes) * 100;
+        return percentage >= threshold;
+      });
+      return winningAnswer && winningAnswer.criteria ? winningAnswer.criteria[criteriaName] : 0;
+    },
+    getTotalVotes(questionIndex) {
+      return this.getTotalVotesForQuestion(questionIndex);
+    },
+
+    getTotalVotesForCriteriaWrapper(questionIndex, criteriaName) {
+      return this.getTotalVotesForCriteria(questionIndex, criteriaName);
+    }
+        },
+    })
+
+    app.mount('#app');
+</script>

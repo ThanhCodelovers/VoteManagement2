@@ -1,0 +1,2507 @@
+<template id="content-pageCreateNew_context">
+  <div
+    id="content-pageCreateNew_context__quizInfo"
+    class=""
+    style="padding-top: 12px"
+  >
+    <!-- <span class=" my-auto" style="font-size: 16px;">アンケート基本設定</span> -->
+    <div class="content-pageCreateNew_context__quizInfo___form">
+      <div class="input-group" style="display: flex">
+        <span class="input-group-text abc" style="padding-top: 0; width: 60%"
+          >投票タイトル（<span style="color: red">*</span>）</span
+        >
+        <!-- <button class="new-item text-end" style="padding-top: 0px; width: 40%; margin-top: 0px;"
+                  @click="newQuestion" v-show="allowChangeQuest"
+                  v-if="allowChangeVote && allowChangeQuest">【＋】質問を追加する</button> -->
+        <input
+          type="text"
+          class="form-control"
+          placeholder="投票タイトル"
+          aria-label="title"
+          v-model="dataForm.nameVote"
+          :class="{'is-invalid': validates.nameVote}"
+          :disabled="!allowChangeVote"
+        />
+      </div>
+      <div class="input-group-flex">
+        <div class="input-item">
+          <label class="input-label">担当者名</label>
+          <input
+            type="text"
+            class="form-control"
+            v-model="dataForm.author"
+            :disabled="!allowChangeVote"
+          />
+        </div>
+        <div class="input-item">
+          <label class="input-label"
+            >状態（<span style="color: red">*</span>）</label
+          >
+          <select
+            class="form-select"
+            v-model="dataForm.status"
+            :class="{'is-invalid': dataForm.statusInValid}"
+            :disabled="!editting"
+          >
+            <option value="作成中" style="color: #46bdc6" selected>
+              作成中
+            </option>
+            <option value="非公開" style="color: #ff9900">非公開</option>
+            <option value="公開中" style="color: #007bff">公開中</option>
+            <option value="終了済" style="color: #28a745">終了済</option>
+          </select>
+        </div>
+      </div>
+      <div class="text-danger" v-show="validates.status">
+        まだ質問がありませんのでステータスを公開中に設定できません。
+      </div>
+
+      <div
+        class="input-group"
+        style="display: flex; align-items: center; padding-bottom: 0.37rem"
+      >
+        <span class="input-group-text" style="width: 100%"
+          >表示モード（<span style="color: red">*</span>）</span
+        >
+        <div class="input-group-checkbox_item display-mode-width">
+          <input
+            type="radio"
+            class="form-check-input lift-up"
+            aria-label="state"
+            value="１ページで１問ずつ表示"
+            id="１ページで１問ずつ表示"
+            v-model="dataForm.displayType"
+            :disabled="!allowChangeVote"
+          />
+          <label for="１ページで１問ずつ表示">１ページで１問ずつ表示</label>
+        </div>
+        <div class="input-group-checkbox_item">
+          <input
+            type="radio"
+            class="form-check-input lift-up"
+            aria-label="state"
+            value="１ページで全て表示"
+            id="１ページで全て表示"
+            v-model="dataForm.displayType"
+            :disabled="!allowChangeVote"
+          />
+          <label for="１ページで全て表示">１ページで全て表示</label>
+        </div>
+      </div>
+      <div class="input-group checkbox-group" style="display: flex">
+        <div
+          class="input-group-date2"
+          style="align-items: center; display: flex; width: 100%"
+        >
+          <div class="input-group-checkbox_item">
+            <input
+              type="checkbox"
+              class="form-check-input sp-margin-4"
+              aria-label="state"
+              value="true"
+              id="開始時名前／メールアドレス必須"
+              v-model="dataForm.informationRequired"
+              :disabled="!allowChangeVote"
+            />
+            <label for="開始時名前／メールアドレス必須" class="label-form"
+              >投票開始時に名前とメールアドレスを必須にする</label
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group checkbox-group">
+        <div
+          class="input-group-date2 wrap-on-mobile"
+          style="align-items: center; width: 100%"
+        >
+          <div class="input-group-checkbox_item">
+            <input
+              type="checkbox"
+              class="form-check-input sp-margin-4"
+              id="アンケート結果公共"
+              v-model="dataForm.statistics"
+              :disabled="!allowChangeVote"
+            />
+            <label for="投票結果公開" class="label-form">投票結果公開</label>
+          </div>
+
+          <span style="text-align: center"></span>
+
+          <div class="input-group-checkbox_item" style="padding-top: 5px">
+            <input
+              type="checkbox"
+              class="form-check-input sp-margin-4"
+              id="ログイン必須"
+              v-model="dataForm.usePassCode"
+              :disabled="!allowChangeVote"
+            />
+            <label for="ログイン必須" class="label-form">ログイン必須</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <span class="input-group-text">
+          実施期間（<span style="color: red">*</span>）
+        </span>
+
+        <div class="input-group-date-wrapper">
+          <div class="input-group-date">
+            <input
+              type="text"
+              class="form-control date-run"
+              v-model="dataForm.dateRun"
+              :disabled="!allowChangeVote"
+              :class="{'is-invalid': validates.dateRun}"
+            />
+            <div class="flex items-center justify-center px-2">〜</div>
+
+            <input
+              type="text"
+              class="form-control date-end"
+              v-model="dataForm.dateEnd"
+              :disabled="!allowChangeVote"
+              :class="{'is-invalid': validates.dateEnd}"
+            />
+          </div>
+          <div
+            v-if="errorMessage"
+            class="invalid-feedback d-block"
+            style="color: red"
+          >
+            {{ errorMessage }}
+          </div>
+        </div>
+      </div>
+      <div
+        class="text-danger"
+        v-show="validates.dateEnd"
+        v-html="validates.dateMsg"
+      ></div>
+
+      <div class="input-group rich-text" style="height: 100%">
+        <span class="input-group-text">投票説明</span>
+        <div class="rich-text-form" id="dataFormDescription"></div>
+      </div>
+    </div>
+  </div>
+  <div class="vr" style="height: 100%"></div>
+  <div id="content-pageCreateNew_context__quizDetail" class="">
+    <div
+      class=""
+      id="content-pageCreateNew_context__quizDetail___questions"
+      ref="questionsContainer"
+    >
+      <div
+        class="content-pageCreateNew_context__quizDetail___editQuestion"
+        v-show="allowChangeQuest && allowChangeVote"
+        v-for="(item, index) in formSetUpPreview.questions"
+        :key="index"
+      >
+        <div
+          class="content-pageCreateNew_context__quizDetail___editQuestion___top"
+        >
+          <span class="" style="margin-bottom: 1px" v-if="isEditing < 0"
+            >質問を追加する</span
+          >
+          <span class="" style="margin-bottom: 1px" v-else
+            >問{{ isEditing + 1 }}を編集
+          </span>
+          <div class="input-group-checkbox_item p-0" style="margin-left: 20px">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              aria-label="state"
+              :id="'はい' + index"
+              value="true"
+              v-model="item.questionRequire"
+              :disabled="!allowChangeQuest || !allowChangeVote"
+            />
+            <label :for="'はい' + index" class="label-form">必須回答</label>
+          </div>
+        </div>
+        <div class="input-group">
+          <!-- <span class="input-group-text">質問（<span style="color:red">*</span>）</span> -->
+          <input
+            type="text"
+            class="form-control"
+            placeholder="質問内容を入力してください。"
+            v-model="item.question"
+            :disabled="!allowChangeQuest || !allowChangeVote"
+            :class="{'is-invalid': item.error}"
+          />
+        </div>
+        <div
+          class="input-group"
+          style="margin-bottom: 0px; padding-bottom: 0px; margin-top: 5px"
+        >
+          <div
+            class="content-pageCreateNew_context__quizDetail___editQuestion___category editQuestion-responsive-group"
+          >
+            <span style="color: rgb(85, 85, 85)">質問の説明</span>
+            <div class="form-check" style="margin-right: 100px">
+              <input
+                class="form-check-input form-check-adjust"
+                type="radio"
+                value="なし"
+                v-model="item.typeSubject"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :id="'なし' + index"
+                style="transform: translate(12px, -2.5px)"
+              />
+              <label
+                class="form-check-label"
+                style="padding-left: 10px !important"
+                :for="'なし' + index"
+                >なし</label
+              >
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                value="補足テキスト"
+                v-model="item.typeSubject"
+                style="transform: translateY(-2.5px)"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :id="'補足テキスト' + index"
+              />
+              <label class="form-check-label" :for="'補足テキスト' + index"
+                >補足説明</label
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="input-group content-pageCreateNew_context__quizDetail___editQuestion___description"
+          v-if="item.typeSubject !== 'なし'"
+        >
+          <span class="input-group-text" style="padding-top: 2px"></span>
+          <textarea
+            rows="3"
+            class="form-control"
+            v-model="item.subject"
+            v-if="item.typeSubject === '補足テキスト'"
+            :disabled="!allowChangeQuest || !allowChangeVote"
+          ></textarea>
+        </div>
+
+        <div class="input-group">
+          <div
+            class="content-pageCreateNew_context__quizDetail___editQuestion___category editQuestion-responsive-group"
+            style="margin-top: 5px"
+          >
+            <span style="color: #555"
+              >質問種類（<span style="color: red">*</span>）</span
+            >
+            <div class="form-check" style="margin-right: 50px">
+              <input
+                class="form-check-input form-check-adjust"
+                type="radio"
+                value="1 つだけ選択"
+                v-model="item.typeQuestion"
+                style="transform: translate(12px, -2.5px)"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :id="'1 つだけ選択' + index"
+              />
+              <label
+                class="form-check-label"
+                style="padding-left: 10px !important"
+                :for="'1 つだけ選択' + index"
+                >1 つだけ選択</label
+              >
+            </div>
+
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                value="複数選択"
+                v-model="item.typeQuestion"
+                style="transform: translateY(-2.5px)"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :id="'複数選択' + index"
+                @change="onTypeChange(item)"
+              />
+              <label class="form-check-label" :for="'複数選択' + index"
+                >複数選択</label
+              >
+            </div>
+          </div>
+        </div>
+        <!-- code chỉnh sửa -->
+        <div
+          class="row align-items-start"
+          style="margin-top: 10px; flex-wrap: nowrap"
+        >
+          <!-- Tiêu chí -->
+          <div class="sp-width-52 col-12 col-md-5 mb-2">
+            <div class="form-group">
+              <label for="criteriaSelect" class="form-label" style="color: #555"
+                >投票基準の選択（<span style="color: red">*</span>）</label
+              >
+              <select
+                class="form-select w-100"
+                id="criteriaSelect"
+                v-model="item.voteOrder"
+                :disabled="item.typeQuestion === '1 つだけ選択'"
+              >
+                <option value="最大票数に基づく">最大票数に基づく</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 最大票数 -->
+          <div class="sp-width-25 col-12 col-md-3 mb-2">
+            <div class="form-group">
+              <label for="maxQuantity" class="form-label" style="color: #555"
+                >最大票数:</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="maxQuantity"
+                placeholder="例: 2"
+                v-model="item.max"
+                min="1"
+                :disabled="item.typeQuestion === '1 つだけ選択'"
+                @input="hasTouchedVoteInput = true"
+              />
+            </div>
+          </div>
+
+          <!-- 最小票数 -->
+          <div class="sp-width-25 col-12 col-md-3 mb-2">
+            <div class="form-group">
+              <label for="minQuantity" class="form-label" style="color: #555"
+                >最小票数:</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="minQuantity"
+                placeholder="例: 1"
+                v-model="item.min"
+                min="1"
+                :disabled="item.typeQuestion === '1 つだけ選択'"
+                @input="hasTouchedVoteInput = true"
+              />
+            </div>
+          </div>
+        </div>
+
+        <p
+          class="text-danger mt-1"
+          v-if="isVoteNumberInvalid && item.typeQuestion !== '1 つだけ選択'"
+        >
+          ※
+          最大票数と最小票数は0以上で、最小票数は最大票数以下である必要があります。
+        </p>
+
+        <!-- 投票方法 -->
+        <div
+          class="row align-items-start"
+          style="margin-top: 10px; flex-wrap: wrap"
+        >
+          <!-- Dropdown 投票方法 -->
+          <div class="col-12 col-md-5 mb-2">
+            <div class="form-group">
+              <label for="voteMethod" class="form-label" style="color: #555"
+                >投票方法（<span style="color: red">*</span>）</label
+              >
+              <select
+                class="form-select w-100"
+                id="voteMethod"
+                v-model="item.voteMethod"
+                @change="onVoteMethodChange(item)"
+              >
+                <option value="単純多数決">単純多数決</option>
+                <option value="特別多数決">特別多数決</option>
+                <option value="全会一致">全会一致</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 単純多数決 / 全会一致 -->
+          <div
+            class="col-12 col-md-6 mb-2"
+            v-if="item.voteMethod === '単純多数決' || item.voteMethod === '全会一致'"
+          >
+            <div class="form-group">
+              <label for="voteThreshold" class="form-label d-none d-md-block"
+                >&nbsp;</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="voteThreshold"
+                v-model="item.voteThreshold"
+                :disabled="true"
+              />
+            </div>
+          </div>
+
+          <!-- 特別多数決 -->
+          <div
+            class="col-12 col-md-6 mb-2"
+            v-if="item.voteMethod === '特別多数決'"
+          >
+            <div class="form-group">
+              <label
+                for="voteThresholdSelect"
+                class="form-label d-none d-md-block"
+                >&nbsp;</label
+              >
+              <select
+                class="form-select"
+                id="voteThresholdSelect"
+                v-model="item.voteThreshold"
+              >
+                <option value="60%">60%</option>
+                <option value="70%">70%</option>
+                <option value="80%">80%</option>
+                <option value="90%">90%</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group criteria-group">
+          <span class="input-group-text"
+            >基準候補リスト<span v-if="item.typeQuestion == '点数'"
+              >（<span style="color: red">*</span>）</span
+            ></span
+          >
+          <span
+            class="input-group-text text-danger"
+            style="display: inline-block; text-align: center; flex: 1"
+            v-if="item.notCriterias"
+            >※該当の基準候補がありません。 追加してください。</span
+          >
+          <button
+            class="new-item"
+            style="right: 0"
+            @click="newCriteria(index)"
+            v-show="allowChangeQuest && allowChangeVote"
+          >
+            【＋】基準を追加する
+          </button>
+          <div
+            class="content-pageCreateNew_context__quizDetail___editQuestion___answers"
+            v-if="item.criterias.length > 0"
+          >
+            <div
+              class="content-pageCreateNew_context__quizDetail___editQuestion___newAnswer abc criteria-layout"
+              v-for="(cri, idx) in item.criterias"
+              :key="idx"
+            >
+              <input
+                type="text"
+                class="form-control sp-text-width"
+                v-model="cri.title"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :placeholder="'※テキストを入力してください（最大150文字）。'"
+                :class="{'is-invalid': cri.error || cri.title.length > 150}"
+              />
+
+              <input
+                type="text"
+                class="form-control sp-text-width-1"
+                v-model="cri.media"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :placeholder="'※URLを入力してください。'"
+              />
+              <button
+                type="button"
+                class="btn-close close-btn-location-sp-1"
+                aria-label="Close"
+                @click="delCriteria(index, idx)"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+              ></button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="input-group"
+          style="margin-top: 5px"
+          v-show="item.typeQuestion == '1 つだけ選択' || item.typeQuestion == '複数選択'"
+        >
+          <!-- <div class="input-group" style="margin-top: 5px;"> -->
+          <span class="input-group-text"
+            >回答候補リスト<span
+              v-if="item.typeQuestion != '点数' && item.typeQuestion != '入力'"
+              >（<span style="color: red">*</span>）</span
+            ></span
+          >
+          <span
+            class="input-group-text text-danger mg-left"
+            style="display: inline-block; flex: 1"
+            v-if="item.notAnswers"
+            >※該当の回答候補がありません。 追加してください。</span
+          >
+          <button
+            class="new-item"
+            style="right: 0"
+            @click="newAnswer(index)"
+            v-show="allowChangeQuest && allowChangeVote"
+          >
+            【＋】回答を追加する
+          </button>
+          <div
+            class="content-pageCreateNew_context__quizDetail___editQuestion___answers"
+            v-if="item.answers.length > 0"
+          >
+            <div
+              class="content-pageCreateNew_context__quizDetail___editQuestion___newAnswer sp-grid-layout"
+              style="grid-template-columns: 2fr 0.965fr 58px 30px"
+              v-for="(ans, idx) in item.answers"
+              :key="idx"
+            >
+              <input
+                type="text"
+                class="form-control"
+                v-model="ans.title"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :placeholder="'※テキストを入力してください。'"
+                :class="{'is-invalid': ans.error}"
+              />
+              <input
+                type="text"
+                class="form-control"
+                v-model="ans.media"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+                :placeholder="'※URLを入力してください。'"
+              />
+
+              <div class="dropdown ml-4 mr-2">
+                <button
+                  class="btn btn-outline-success dropdown-toggle"
+                  type="button"
+                  id="dropdownMenuButton"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  style="border: 1px solid #ced4da"
+                >
+                  <span
+                    class="selected-color-circle"
+                    :style="{ backgroundColor: dataForm.colors[ans.color] }"
+                  ></span>
+                </button>
+                <ul
+                  class="dropdown-menu"
+                  aria-labelledby="dropdownMenuButton"
+                  style="min-width: auto"
+                >
+                  <li
+                    v-for="(colorValue, colorKey) in dataForm.colors"
+                    :key="colorKey"
+                  >
+                    <a
+                      class="dropdown-item d-flex align-items-center"
+                      href="#"
+                      @click.prevent="selectColor(ans, colorKey)"
+                    >
+                      <span
+                        class="color-circle"
+                        :style="{ backgroundColor: colorValue }"
+                        aria-hidden="true"
+                      ></span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                class="btn-close close-btn-location-sp-2"
+                aria-label="Close"
+                @click="delAnswer(index, idx)"
+                :disabled="!allowChangeQuest || !allowChangeVote"
+              ></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-preview">
+          <button
+            type="button"
+            class="btn btn-reset px-3"
+            :disabled="!allowChangeQuest"
+            v-if="allowChangeVote && allowChangeQuest && isEditing < 0"
+            @click="resetQuestion"
+            style="margin-left: 10px"
+          >
+            リセット
+          </button>
+          <button
+            type="button"
+            class="btn btn-reset px-2"
+            v-else-if="allowChangeVote && allowChangeQuest && isEditing >= 0"
+            @click="cancelEditQuestion"
+            style="margin-left: 10px"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            class="btn btn-success"
+            :disabled="!allowChangeQuest|| isVoteNumberInvalid"
+            v-if="allowChangeVote && allowChangeQuest"
+            @click="handleClick($event)"
+          >
+            保存
+          </button>
+        </div>
+      </div>
+      <div
+        class="preview-questions"
+        style="background-color: #f2f6f8; padding-bottom: 0px"
+        v-show="dataForm.questions.length > 0"
+      >
+        <div
+          class="content-pageCreateNew_context__quizDetail___editQuestion___top"
+        >
+          <span class="" style="margin-bottom: 1px"> プレビュー内容 </span>
+        </div>
+        <div
+          class="col-12 row g-2 mx-0 mt-0 mb-3"
+          v-for="(item, index) in dataForm.questions"
+          :key="index"
+        >
+          <div class="form-group col-12 px-0 mt-0 question-all">
+            <div class="align-items-center">
+              <div
+                class="title-question-form m-0 mb-2 sp-gap"
+                :class="{ 'pr_20': index !== dataForm.questions.length - 1 }"
+              >
+                <span class="title-question" style="color: rgb(1, 147, 46)"
+                  >問{{ index + 1 }}</span
+                >
+                <span
+                  class="title-question"
+                  style="text-align: left; word-break: break-word"
+                >
+                  {{ item.question }}
+                  <span class="text-danger" v-if="item.questionRequire">*</span>
+                  <br v-if="item.subject" /><span
+                    class="text-description"
+                    v-if="item.subject"
+                    >({{item.subject}})</span
+                  >
+                </span>
+                <!-- <span v-if="allowChangeVote && allowChangeQuest && index == 0"></span>
+                              <span v-if="allowChangeVote && allowChangeQuest && index == dataForm.questions.length - 1"></span> -->
+                <div
+                  class="icon-wrapper"
+                  :class="{'mr-allow': allowChangeQuest, 'mr-no-allow-last': !allowChangeQuest && index === dataForm.questions.length - 1,'mr-no-allow': !allowChangeQuest && index !== dataForm.questions.length - 1}"
+                  :style="{ justifyContent: !allowChangeQuest ? (index === dataForm.questions.length - 1? (isSP ? 'start' : 'flex-end'): 'flex-end'): 'flex-start' }"
+                >
+                  <span
+                    class="fa-solid fa-arrow-up button-question"
+                    title="上に移動"
+                    style="font-size: 14px; margin-right: 10px"
+                    :style="{ visibility: index > 0 ? 'visible' : 'hidden' }"
+                    @click="moveUp(index)"
+                    :disabled="!allowChangeQuest"
+                  ></span>
+
+                  <span
+                    v-if="index < dataForm.questions.length - 1"
+                    class="fa-solid fa-arrow-down button-question"
+                    title="下に移動"
+                    style="font-size: 14px; margin-right: 10px"
+                    @click="moveDown(index)"
+                    :disabled="!allowChangeQuest"
+                  ></span>
+
+                  <span
+                    v-if="allowChangeQuest"
+                    class="fa-solid fa-pencil button-question"
+                    title="編集"
+                    style="font-size: 14px; margin-right: 10px"
+                    @click="editQuestion(index)"
+                  ></span>
+
+                  <span
+                    v-if="allowChangeQuest"
+                    class="fa-solid fa-xmark button-question"
+                    title="削除"
+                    style="font-size: 20px; margin-top: -2px"
+                    @click="delQuestion(index)"
+                  >
+                  </span>
+                </div>
+              </div>
+
+              <!-- TH câu vote đa tiêu chí -->
+              <div class="row" v-if="item.criterias.length > 0">
+                <div
+                  v-for="(crit, idex) in item.criterias"
+                  v-if="item.typeQuestion === '1 つだけ選択' || item.typeQuestion === '複数選択'"
+                  class="form-group col-12 form-check"
+                >
+                  <div class="row mr-left">
+                    <div
+                      class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                      v-if="crit.media"
+                    >
+                      <div class="">
+                        <div
+                          class="form-group d-flex col-12 form-check-inline one-line-label"
+                        >
+                          <label
+                            for="checkbox-Q1-1"
+                            class="form-check-criteria mb-2"
+                            >{{ crit.title }}</label
+                          >
+                          <span
+                            class="vote-method-label"
+                            style="
+                              margin-left: 8px;
+                              margin-bottom: 8px;
+                              color: blue;
+                            "
+                          >
+                            可決条件: {{ item.voteThreshold }}
+                          </span>
+                        </div>
+
+                        <div v-if="crit.media" class="media-wrapper">
+                          <!-- Trường hợp ảnh -->
+                          <template v-if="isImage(crit.media)">
+                            <img
+                              :src="convertDriveLink(crit.media)"
+                              class="preview-img"
+                              alt="preview"
+                            />
+                            <button
+                              class="zoom-btn"
+                              @click="fullscreenTarget = { type: 'crit', index: idex, url: convertDriveLink(crit.media) }"
+                            >
+                              ⛶
+                            </button>
+                          </template>
+
+                          <!-- Trường hợp khác (video, pdf, ...) -->
+                          <template v-else>
+                            <iframe
+                              :src="convertDriveLink(crit.media)"
+                              class="preview-iframe"
+                            ></iframe>
+                          </template>
+                        </div>
+
+                        <!-- fullscreen modal -->
+                        <div v-if="fullscreenTarget" class="fullscreen-overlay">
+                          <div class="media-container">
+                            <img
+                              v-if="isImage(fullscreenTarget.url)"
+                              :src="fullscreenTarget.url"
+                              alt="preview"
+                            />
+                            <iframe
+                              v-else
+                              :src="fullscreenTarget.url"
+                              class="preview-iframe-full"
+                              frameborder="0"
+                            ></iframe>
+
+                            <button
+                              class="close-btn"
+                              @click="fullscreenTarget = null"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-12 col-md-4 col-lg-3 mb-2" v-else>
+                      <div class="form-group d-flex col-12 form-check-inline">
+                        <label class="form-check-criteria"
+                          >{{ crit.title }}</label
+                        >
+                        <span
+                          class="vote-method-label"
+                          style="
+                            margin-left: 8px;
+                            margin-bottom: 8px;
+                            color: blue;
+                          "
+                        >
+                          可決条件: {{ item.voteThreshold }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row mr-left">
+                    <div class="form-group col-12">
+                      <div class="row">
+                        <div
+                          class="col-sm-12 col-md-4 col-lg-3"
+                          v-for="(ans, idx) in item.answers"
+                        >
+                          <div class="mb-2">
+                            <div v-if="ans.media" class="media-wrapper">
+                              <!-- Nếu là ảnh -->
+                              <template v-if="isImage(ans.media)">
+                                <img
+                                  :src="convertDriveLink(ans.media)"
+                                  class="preview-img"
+                                  alt="preview"
+                                />
+                                <button
+                                  class="zoom-btn"
+                                  @click="fullscreenTarget = { type: 'ans', index: idx, url: convertDriveLink(ans.media) }"
+                                >
+                                  ⛶
+                                </button>
+                              </template>
+
+                              <!-- Nếu không phải ảnh (iframe) -->
+                              <template v-else>
+                                <iframe
+                                  :src="convertDriveLink(ans.media)"
+                                  class="preview-iframe"
+                                ></iframe>
+                              </template>
+                            </div>
+
+                            <!-- fullscreen modal -->
+                            <div
+                              v-if="fullscreenTarget"
+                              class="fullscreen-overlay"
+                            >
+                              <div class="media-container">
+                                <img
+                                  v-if="isImage(fullscreenTarget.url)"
+                                  :src="fullscreenTarget.url"
+                                  alt="preview"
+                                />
+                                <iframe
+                                  v-else
+                                  :src="fullscreenTarget.url"
+                                  class="preview-iframe-full"
+                                  frameborder="0"
+                                ></iframe>
+
+                                <button
+                                  class="close-btn"
+                                  @click="fullscreenTarget = null"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                            <!-- input type oneSelect -->
+                            <div
+                              class="form-group d-flex col-12 form-check-inline"
+                              style="align-items: baseline"
+                              v-if="item.typeQuestion === '1 つだけ選択'"
+                            >
+                              <input
+                                type="radio"
+                                class=""
+                                :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                :value="ans.title"
+                                disabled
+                                style="
+                                  vertical-align: middle;
+                                  position: relative;
+                                  top: 1.5px;
+                                "
+                              />
+                              <span
+                                class="color-square"
+                                :style="{
+                                                              backgroundColor: dataForm.colors[ans.color] || '#cccccc',
+                                                              marginLeft: '10px',
+                                                              width: '10px',
+                                                              height: '10px',
+                                                              display: 'inline-block',
+                                                              marginRight: '6px',
+                                                              flexShrink: 0
+                                                            }"
+                              >
+                              </span>
+                              <label
+                                class="form-check-label mx-2 label-break"
+                                :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                >{{ ans.title }}</label
+                              >
+                            </div>
+                            <!-- input type multiSelect -->
+                            <div
+                              class="form-group d-flex col-12 form-check-inline"
+                              style="align-items: baseline"
+                              v-if="item.typeQuestion === '複数選択'"
+                            >
+                              <input
+                                type="checkbox"
+                                class=""
+                                :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                :value="ans.title"
+                                disabled
+                                style="
+                                  vertical-align: middle;
+                                  position: relative;
+                                  top: 1.5px;
+                                "
+                              />
+                              <span
+                                class="color-square"
+                                :style="{
+                                                              backgroundColor: dataForm.colors[ans.color] || '#cccccc',
+                                                              marginLeft: '10px',
+                                                              width: '10px',
+                                                              height: '10px',
+                                                              display: 'inline-block',
+                                                              marginRight: '6px',
+                                                              flexShrink: 0
+                                                            }"
+                              >
+                              </span>
+                              <label
+                                class="form-check-label mx-2 label-break"
+                                :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                >{{ ans.title }}</label
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- input type score -->
+                <div
+                  class="form-group col-12 form-check"
+                  v-if="item.typeQuestion === '点数'"
+                >
+                  <div class="row">
+                    <div
+                      class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                      v-for="(crit, idex) in item.criterias"
+                    >
+                      <div class="">
+                        <div v-if="crit.media" class="media-wrapper">
+                          <!-- Trường hợp ảnh -->
+                          <template v-if="isImage(crit.media)">
+                            <img
+                              :src="convertDriveLink(crit.media)"
+                              class="preview-img"
+                              alt="preview"
+                            />
+                            <button
+                              class="zoom-btn"
+                              @click="fullscreenTarget = { type: 'crit', index: idex, url: convertDriveLink(crit.media) }"
+                            >
+                              ⛶
+                            </button>
+                          </template>
+
+                          <!-- Trường hợp khác (video, pdf, ...) -->
+                          <template v-else>
+                            <iframe
+                              :src="convertDriveLink(crit.media)"
+                              class="preview-iframe"
+                            ></iframe>
+                          </template>
+                        </div>
+
+                        <!-- fullscreen modal -->
+                        <div v-if="fullscreenTarget" class="fullscreen-overlay">
+                          <div class="media-container">
+                            <img
+                              v-if="isImage(fullscreenTarget.url)"
+                              :src="fullscreenTarget.url"
+                              alt="preview"
+                            />
+                            <iframe
+                              v-else
+                              :src="fullscreenTarget.url"
+                              class="preview-iframe-full"
+                              frameborder="0"
+                            ></iframe>
+
+                            <button
+                              class="close-btn"
+                              @click="fullscreenTarget = null"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          class="form-check-criteria d-flex col-12 form-check-inline"
+                        >
+                          <label>{{ crit.title }}</label>
+                        </div>
+                        <input
+                          type="number"
+                          class="form-control form-control-number my-2"
+                          :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                          disabled
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- input type text -->
+                <div
+                  class="form-group col-12 form-check"
+                  v-if="item.typeQuestion === '入力'"
+                >
+                  <div class="row">
+                    <div
+                      class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                      v-for="(crit, idex) in item.criterias"
+                    >
+                      <div class="">
+                        <div v-if="crit.media" class="media-wrapper">
+                          <!-- Trường hợp ảnh -->
+                          <template v-if="isImage(crit.media)">
+                            <img
+                              :src="convertDriveLink(crit.media)"
+                              class="preview-img"
+                              alt="preview"
+                            />
+                            <button
+                              class="zoom-btn"
+                              @click="fullscreenTarget = { type: 'crit', index: idex, url: convertDriveLink(crit.media) }"
+                            >
+                              ⛶
+                            </button>
+                          </template>
+
+                          <!-- Trường hợp khác (video, pdf, ...) -->
+                          <template v-else>
+                            <iframe
+                              :src="convertDriveLink(crit.media)"
+                              class="preview-iframe"
+                            ></iframe>
+                          </template>
+                        </div>
+
+                        <!-- fullscreen modal -->
+                        <div v-if="fullscreenTarget" class="fullscreen-overlay">
+                          <div class="media-container">
+                            <img
+                              v-if="isImage(fullscreenTarget.url)"
+                              :src="fullscreenTarget.url"
+                              alt="preview"
+                            />
+                            <iframe
+                              v-else
+                              :src="fullscreenTarget.url"
+                              class="preview-iframe-full"
+                              frameborder="0"
+                            ></iframe>
+
+                            <button
+                              class="close-btn"
+                              @click="fullscreenTarget = null"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          class="form-check-criteria d-flex col-12 form-check-inline"
+                        >
+                          <label>{{ crit.title }}</label>
+                        </div>
+                        <textarea
+                          name=""
+                          id=""
+                          class="form-control form-control-textarea my-2"
+                          :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                          disabled
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- TH câu vote không phải đa tiêu chí -->
+              <div class="row" v-else>
+                <div class="form-group col-12 form-check">
+                  <div
+                    class="vote-method-label"
+                    style="margin-left: 38px; margin-bottom: 6px; color: blue"
+                  >
+                    可決条件: {{ item.voteThreshold }}
+                  </div>
+                  <div
+                    class="row"
+                    v-if="item.typeQuestion === '1 つだけ選択' || item.typeQuestion === '複数選択'"
+                  >
+                    <div class="form-group col-12 align-left">
+                      <div class="row">
+                        <div
+                          class="col-sm-12 col-md-4 col-lg-3"
+                          v-for="(ans, idx) in item.answers"
+                        >
+                          <div class="mb-2">
+                            <div v-if="ans.media" class="media-wrapper">
+                              <!-- Nếu là ảnh -->
+                              <template v-if="isImage(ans.media)">
+                                <img
+                                  :src="convertDriveLink(ans.media)"
+                                  class="preview-img"
+                                  alt="preview"
+                                />
+                                <button
+                                  class="zoom-btn"
+                                  @click="fullscreenTarget = { type: 'ans', index: idx, url: convertDriveLink(ans.media) }"
+                                >
+                                  ⛶
+                                </button>
+                              </template>
+
+                              <!-- Nếu không phải ảnh (iframe) -->
+                              <template v-else>
+                                <iframe
+                                  :src="convertDriveLink(ans.media)"
+                                  class="preview-iframe"
+                                ></iframe>
+                              </template>
+                            </div>
+
+                            <!-- fullscreen modal -->
+                            <div
+                              v-if="fullscreenTarget"
+                              class="fullscreen-overlay"
+                            >
+                              <div class="media-container">
+                                <img
+                                  v-if="isImage(fullscreenTarget.url)"
+                                  :src="fullscreenTarget.url"
+                                  alt="preview"
+                                />
+                                <iframe
+                                  v-else
+                                  :src="fullscreenTarget.url"
+                                  class="preview-iframe-full"
+                                  frameborder="0"
+                                ></iframe>
+
+                                <button
+                                  class="close-btn"
+                                  @click="fullscreenTarget = null"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                            <!-- input type oneSelect -->
+                            <div
+                              class="form-group d-flex col-12 form-check-inline"
+                              style="align-items: baseline"
+                              v-if="item.typeQuestion === '1 つだけ選択'"
+                            >
+                              <input
+                                type="radio"
+                                :id="`radio-Q${index + 1}-${idx + 1}`"
+                                :value="ans.title"
+                                disabled
+                                style="
+                                  vertical-align: middle;
+                                  position: relative;
+                                  top: 1.5px;
+                                "
+                              />
+                              <span
+                                class="color-square"
+                                :style="{
+                                                              backgroundColor: dataForm.colors[ans.color] || '#cccccc',
+                                                              marginLeft: '10px',
+                                                              width: '10px',
+                                                              height: '10px',
+                                                              display: 'inline-block',
+                                                              marginRight: '6px',
+                                                              flexShrink: 0
+                                                            }"
+                              >
+                              </span>
+                              <label
+                                :for="`radio-Q${index + 1}-${idx + 1}`"
+                                class="form-check-label mx-2 label-break"
+                              >
+                                {{ ans.title }}
+                              </label>
+                            </div>
+                            <!-- input type multiSelect -->
+                            <div
+                              class="form-group d-flex col-12 form-check-inline"
+                              style="align-items: baseline"
+                              v-if="item.typeQuestion === '複数選択'"
+                            >
+                              <input
+                                type="checkbox"
+                                :id="`checkbox-Q${index + 1}-${idx + 1}`"
+                                :value="ans.title"
+                                disabled
+                                style="
+                                  vertical-align: middle;
+                                  position: relative;
+                                  top: 1.5px;
+                                "
+                              />
+                              <span
+                                class="color-square"
+                                :style="{
+                                                                backgroundColor: dataForm.colors[ans.color] || '#cccccc',
+                                                                marginLeft: '10px',
+                                                                width: '10px',
+                                                                height: '10px',
+                                                                display: 'inline-block',
+                                                                marginRight: '6px',
+                                                                flexShrink: 0
+                                                              }"
+                              >
+                              </span>
+                              <label
+                                :for="`checkbox-Q${index + 1}-${idx + 1}`"
+                                class="form-check-label mx-2 label-break"
+                              >
+                                {{ ans.title }}
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- input type text -->
+                  <div class="row" v-if="item.typeQuestion === '入力'">
+                    <div class="col-sm-12 col-md-6 col-lg-6 mb-2">
+                      <div class="">
+                        <textarea
+                          name=""
+                          id=""
+                          class="form-control my-2 form-control-textarea"
+                          :id="`input-Q${index + 1}-${idx + 1}`"
+                          disabled
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="content-pageCreateNew_context__footer">
+    <button type="button" class="btn btn-reset px-3 py-2" @click="cancel">
+      キャンセル
+    </button>
+    <button
+      type="button"
+      class="btn btn-success px-3 py-2"
+      @click="createVote"
+      v-if="isRegister"
+    >
+      登録する
+    </button>
+    <button
+      type="button"
+      class="btn btn-success px-3 py-2"
+      @click="editVote"
+      v-if="!isRegister"
+    >
+      保存する
+    </button>
+  </div>
+</template>
+
+<script>
+  // Vue component definition
+  const voteTab = {
+    props: ["id", "index"],
+    template: "#content-pageCreateNew_context",
+    data() {
+      return {
+        fullscreenTarget: null,
+        isSP: false,
+        hasTouchedVoteInput: false,
+        dataForm: {
+          questions: [],
+          isVoteChange: false,
+          isQuestChange: false,
+          displayType: "１ページで全て表示",
+          statistics: false,
+          status: "作成中",
+          usePassCode: false,
+          informationRequired: false,
+        },
+        selectedColor: "bg-success", // Lưu màu đã chọn
+        colors: [
+          { value: "bg-success", label: "Success" },
+          { value: "bg-info", label: "Info" },
+          { value: "bg-warning", label: "Warning" },
+          { value: "bg-danger", label: "Danger" },
+          { value: "bg-primary", label: "Primary" },
+        ],
+        formSetUpPreview: {
+          questions: [
+            {
+              question: "",
+              answers: [],
+              criterias: [],
+              participants: [],
+              typeSubject: "なし",
+              typeQuestion: "1 つだけ選択",
+              subject: null,
+              questionRequire: true,
+              voteMethod: "単純多数決",
+              voteThreshold: "50.1%",
+            },
+          ],
+        },
+        isEditing: -1,
+        isRegister: true,
+        allowChangeQuest: true,
+        allowChangeVote: true,
+        validates: {
+          nameVote: false,
+          dateRun: false,
+          dateEnd: false,
+          displayType: false,
+          statistics: false,
+          status: false,
+          dateMsg: "",
+        },
+        errorMessage: "",
+        editting: false,
+        quill: null,
+        changeContent: false,
+        lastClickedPosition: null,
+      };
+    },
+    computed: {
+      isVoteNumberInvalid() {
+        const currentQuestion = this.formSetUpPreview.questions[0];
+        if (!currentQuestion) return false;
+
+        const max = Number(currentQuestion.max);
+        const min = Number(currentQuestion.min);
+
+        if (!this.hasTouchedVoteInput) return false;
+
+        return isNaN(max) || isNaN(min) || max < 0 || min < 0 || min > max;
+      },
+    },
+    watch: {
+      id: {
+        async handler(newVal, oldVal) {
+          if (!newVal) {
+            this.isRegister = true;
+            this.dataForm = {
+              questions: [],
+              isVoteChange: false,
+              isQuestChange: false,
+              displayType: "１ページで全て表示",
+              statistics: false,
+              status: "作成中",
+              usePassCode: false,
+              informationRequired: false,
+            };
+            (this.validates = {
+              nameVote: false,
+              dateRun: false,
+              dateEnd: false,
+              displayType: false,
+              statistics: false,
+              status: false,
+            }),
+              (this.allowChangeVote = true);
+            this.allowChangeQuest = true;
+          } else {
+            this.editting = true;
+            await this.getDataQuestionsVote(newVal);
+          }
+        },
+        immediate: true,
+      },
+      "dataForm.status": {
+        handler(newVal, oldVal) {
+          if (newVal == "作成中" || newVal == "非公開") {
+            this.allowChangeVote = true;
+            if (this.quill) {
+              this.quill.enable(); // Kiểm tra this.quill trước khi gọi enable
+            }
+          } else if (newVal == "公開中" || newVal == "終了済") {
+            this.allowChangeVote = false;
+            if (this.quill) {
+              this.quill.disable(); // Kiểm tra this.quill trước khi gọi disable
+            }
+          }
+        },
+        immediate: true,
+      },
+      changeContent: {
+        handler(newVal, oldVal) {
+          if (newVal) {
+            this.$emit("changeContent");
+          }
+        },
+        immediate: true,
+      },
+      "dataForm.dateRun"(newVal) {
+        this.validateDate();
+      },
+      "dataForm.dateEnd"(newVal) {
+        this.validateDate();
+      },
+    },
+    mounted() {
+      this.checkDevice();
+      window.addEventListener("resize", this.checkDevice);
+      this.getDataColors();
+      let questEra = document.querySelector(
+        "#content-pageCreateNew_context__quizDetail"
+      );
+      questEra.addEventListener("change", () => {
+        // console.log('quest change')
+        this.dataForm.isQuestChange = true;
+        this.changeContent = true;
+      });
+
+      let quizEra = document.querySelector(
+        "#content-pageCreateNew_context__quizInfo"
+      );
+      quizEra.addEventListener("change", () => {
+        // console.log('vote change')
+        this.dataForm.isVoteChange = true;
+        this.changeContent = true;
+      });
+
+      flatpickr(".date-run", {
+        enableTime: true,
+        dateFormat: "Y年m月d日 H:i",
+        time_24hr: true,
+        locale: "ja",
+        onChange: function (selectedDates, dateStr, instance) {
+          let target = instance.input;
+          let name = target.name;
+          let value = dateStr;
+          // Update your form data here
+          this.dataForm.isVoteChange = true;
+          this.changeContent = true;
+          this.dataForm.dateRun = value;
+        }.bind(this),
+      });
+      document.querySelectorAll(".date-run").forEach((input) => {
+        input.removeAttribute("readonly");
+      });
+      flatpickr(".date-end", {
+        enableTime: true,
+        dateFormat: "Y年m月d日 H:i",
+        time_24hr: true,
+        locale: "ja",
+        onChange: function (selectedDates, dateStr, instance) {
+          let target = instance.input;
+          let name = target.name;
+          let value = dateStr;
+          // Update your form data here
+          this.dataForm.isVoteChange = true;
+          this.changeContent = true;
+          this.dataForm.dateEnd = value;
+        }.bind(this),
+      });
+      document.querySelectorAll(".date-end").forEach((input) => {
+        input.removeAttribute("readonly");
+      });
+
+      this.quill = new Quill("#dataFormDescription", {
+        theme: "snow",
+        modules: {
+          toolbar: [
+            ["bold", "italic", "underline"],
+            [{ list: "ordered" }, { list: "bullet" }],
+          ],
+        },
+      });
+      let isFirstLoad = true;
+      this.quill.on("text-change", () => {
+        if (isFirstLoad) {
+          isFirstLoad = false;
+          return;
+        }
+        this.dataForm.isVoteChange = true;
+        this.dataForm.description = this.quill.root.innerHTML;
+        this.changeContent = true;
+      });
+      this.quill.root.addEventListener("blur", () => {
+        this.dataForm.description = this.quill.root.innerHTML;
+        this.changeContent = true;
+        this.dataForm.isVoteChange = true;
+      });
+      this.adjustHeight();
+      window.onresize = () => this.adjustHeight();
+    },
+    methods: {
+      onVoteMethodChange(item) {
+        console.log('Vote method changing to:', item.voteMethod);
+  
+        // Set threshold based on method, preserve current threshold for 特別多数決 if valid
+        const currentThreshold = item.voteThreshold;
+        item.voteThreshold = this.getDefaultThreshold(item.voteMethod, currentThreshold);
+        
+        // Force Vue reactivity
+        this.$forceUpdate();
+        
+        // Mark as changed
+        this.dataForm.isQuestChange = true;
+        this.changeContent = true;
+        
+        console.log('Vote method changed to:', item.voteMethod, 'with threshold:', item.voteThreshold);
+      },
+      isImage(url) {
+        return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
+      },
+      onTypeChange(item) {
+        if (item.typeQuestion === "複数選択") {
+          item.voteOrder = "最大票数に基づく";
+          item.max = 2;
+          item.min = 1;
+        }
+      },
+      checkDevice() {
+        this.isSP = window.innerWidth <= 480;
+      },
+      validateDate() {
+        if (!this.dataForm.dateRun || !this.dataForm.dateEnd) {
+          this.errorMessage = "";
+          return;
+        }
+
+        // chuyển format "2025年08月22日 12:00" -> Date object
+        const start = new Date(
+          this.dataForm.dateRun
+            .replace("年", "-")
+            .replace("月", "-")
+            .replace("日", "")
+        );
+        const end = new Date(
+          this.dataForm.dateEnd
+            .replace("年", "-")
+            .replace("月", "-")
+            .replace("日", "")
+        );
+
+        // reset
+        this.validates.dateRun = false;
+        this.validates.dateEnd = false;
+        this.errorMessage = "";
+
+        if (end <= start) {
+          this.validates.dateEnd = true;
+          this.errorMessage = "終了日は開始日以降を選択してください。"; // 👈 message tiếng Nhật
+        }
+      },
+      defaultColor(index, customColors = null) {
+        const defaultColors = [
+          "#0B5394",
+          "#93C47D",
+          "#FBBC04",
+          "#FF0000",
+          "#9FC5E8",
+          "#38761D",
+        ];
+        const colors = customColors || defaultColors;
+        return colors[index % colors.length];
+      },
+      colorMap(name) {
+        const map = {
+          濃い青: "#0B5394",
+          緑色: "#93C47D",
+          オレンジ: "#FBBC04",
+          赤: "#FF0000",
+          水色: "#9FC5E8",
+        };
+        return map[name] || null;
+      },
+      handleClick(event) {
+        event.target.blur();
+
+        if (this.isEditing >= 0) {
+          this.updateQuestion();
+        } else {
+          this.createQuestion();
+        }
+      },
+      adjustHeight() {
+        const referenceElements = document.getElementsByClassName("rich-text");
+        const referenceHeight = referenceElements[0].offsetHeight - 60;
+        const targetElements =
+          document.getElementsByClassName("rich-text-form");
+        targetElements[0].style.height = `${referenceHeight}px`;
+      },
+      selectColor(ans, value) {
+        ans.color = value; // Cập nhật màu cho đối tượng ans
+        this.dataForm.isQuestChange = true; // Đặt là true khi có sự thay đổi màu
+      },
+      successHandler(msg) {
+        this.$emit("success", msg);
+      },
+      failureHandler(error) {
+        this.$emit("failure", error);
+      },
+      convertDriveLink(originalLink) {
+        if (!originalLink) return "";
+
+        // Kiểm tra nếu là link ảnh trực tiếp
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(originalLink)) {
+          return originalLink; // giữ nguyên
+        }
+
+        // Kiểm tra nếu là link Google Drive dạng /d/xxx/
+        const fileIdMatch = originalLink.match(/\/d\/(.*?)\//);
+        if (fileIdMatch && fileIdMatch[1]) {
+          const fileId = fileIdMatch[1];
+          return "https://drive.google.com/file/d/" + fileId + "/preview";
+        }
+
+        // Nếu không thuộc dạng nào thì trả về link gốc
+        return originalLink;
+      },
+      getDataColors() {
+        document.getElementById("loading-edit").style.display = "block";
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              console.log("rrr");
+              console.log(res.data.colors);
+              this.dataForm.colors = res.data.colors;
+              console.log(this.dataForm.colors);
+              document.getElementById("loading-edit").style.display = "";
+            })
+            .withFailureHandler((error) => {
+              console.log("ttt");
+              console.log(error);
+              document.getElementById("loading-edit").style.display = "";
+            })
+            .getDataColors();
+        });
+      },
+      getDataQuestionsVote(surveyID) {
+        this.allowChangeVote = true;
+        this.allowChangeQuest = true;
+
+        document.getElementById("loading-edit").style.display = "block";
+        this.isAnswered2(surveyID);
+        
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              if (!res.status) {
+                this.failureHandler(res.msg);
+                this.isRegister = true;
+                resolve({ questions: [] });
+              } else {
+                this.isRegister = false;
+                let data = res.data;
+                this.dataForm = data;
+          
+          // Ensure questions array exists
+          if (!Array.isArray(this.dataForm.questions)) {
+            this.dataForm.questions = [];
+          }
+
+          // **QUAN TRỌNG: Đảm bảo mỗi question có voteMethod và voteThreshold**
+          this.dataForm.questions.forEach((q, index) => {
+            // Ensure voteMethod exists
+            if (!q.voteMethod) {
+              q.voteMethod = "単純多数決";
+              console.warn(`Question ${index} missing voteMethod, set to default`);
+            }
+            
+            // Ensure voteThreshold exists and is valid for the voteMethod
+            if (!q.voteThreshold) {
+              q.voteThreshold = this.getDefaultThreshold(q.voteMethod);
+              console.warn(`Question ${index} missing voteThreshold, set to ${q.voteThreshold}`);
+            } else {
+              // Validate existing threshold matches method rules
+              const validThreshold = this.getDefaultThreshold(q.voteMethod, q.voteThreshold);
+              if (validThreshold !== q.voteThreshold) {
+                console.warn(`Question ${index} invalid threshold ${q.voteThreshold} for method ${q.voteMethod}, correcting to ${validThreshold}`);
+                q.voteThreshold = validThreshold;
+              }
+            }
+            
+            // Ensure answers array exists and has proper structure
+            if (!Array.isArray(q.answers)) q.answers = [];
+            q.answers = q.answers.map((ans) => {
+              if (ans && ans.title && !ans.name) ans.name = ans.title;
+              return ans;
+            });
+
+            // Ensure criterias array exists and has proper structure  
+            if (!Array.isArray(q.criterias)) q.criterias = [];
+            q.criterias = q.criterias.map((cr) => {
+              if (cr && cr.title && !cr.name) cr.name = cr.title;
+              return cr;
+            });
+            
+            console.log(`Question ${index} loaded:`, {
+              voteMethod: q.voteMethod,
+              voteThreshold: q.voteThreshold
+            });
+          });
+
+          // Convert boolean fields
+          this.dataForm.statistics = this.dataForm.statistics == "表示" ? true : false;
+          this.dataForm.usePassCode = this.dataForm.usePassCode == "はい" ? true : false;
+          this.dataForm.informationRequired = this.dataForm.informationRequired == "あり" ? true : false;
+          
+          // Set description in Quill editor
+          if (this.quill) {
+            this.quill.root.innerHTML = this.dataForm.description || "";
+          }
+          
+          // Handle edit permissions based on status
+          if (this.dataForm.status == "公開中" || this.dataForm.status == "終了済") {
+            this.allowChangeVote = false;
+            if (this.quill) {
+              this.quill.disable();
+            }
+          }
+          
+          document.getElementById("loading-edit").style.display = "";
+          
+          console.log('Vote data loaded successfully with', this.dataForm.questions.length, 'questions');
+        }
+      })
+      .withFailureHandler((error) => {
+        console.error('Load vote data failed:', error);
+        this.failureHandler(error);
+        this.isRegister = true;
+        document.getElementById("loading-edit").style.display = "";
+        resolve({ questions: [] });
+      })
+      .getDataQuestionsVote(surveyID);
+      });
+      },
+      newQuestion() {
+        if (!this.allowChangeQuest) return;
+        this.dataForm.isQuestChange = true;
+        this.changeContent = true;
+        const newQuestion = {
+          question: "",
+          answers: [],
+          criterias: [],
+          participants: [],
+          typeSubject: "なし",
+          typeQuestion: "1 つだけ選択",
+          subject: null,
+          questionRequire: true,
+          voteMethod: "単純多数決",
+          voteThreshold: "50.1%",
+        };
+        
+        this.dataForm.questions.push(newQuestion);
+        
+        this.$nextTick(() => {
+          const element = this.$refs.questionsContainer;
+          if (element) {
+            element.scrollTop = element.scrollHeight;
+          }
+        });
+      },
+      delQuestion(index) {
+        // console.log('quest change')
+        this.dataForm.isQuestChange = true;
+        this.dataForm.questions.splice(index, 1);
+        this.changeContent = true;
+      },
+      newAnswer(index) {
+        if (!this.allowChangeQuest) return;
+        // console.log('quest change')
+        this.dataForm.isQuestChange = true;
+        console.log("sss");
+        console.log(this.formSetUpPreview.questions[index]);
+        console.log(this.dataForm.colors);
+        // Lấy tên màu đầu tiên từ this.dataForm.colors
+        const firstColorKey = Object.keys(this.dataForm.colors)[0];
+        const firstColorValue =
+          this.dataForm.colors[firstColorKey] || "#000000"; // Màu mặc định là đen nếu không có phần tử
+        this.formSetUpPreview.questions[index].answers.push({
+          title: "",
+          media: "",
+          color: firstColorKey,
+        });
+        this.changeContent = true;
+      },
+      newParticipant(index) {
+        if (!this.allowChangeQuest) return;
+        this.dataForm.isQuestChange = true;
+        console.log("aaa");
+        console.log(this.formSetUpPreview.questions[index]);
+        this.formSetUpPreview.questions[index].participants.push({
+          title: "",
+          media: "",
+        });
+        this.changeContent = true;
+      },
+      delAnswer(index, idx) {
+        // console.log('quest change')
+        this.dataForm.isQuestChange = true;
+        this.formSetUpPreview.questions[index].answers.splice(idx, 1);
+        this.changeContent = true;
+      },
+      newCriteria(index) {
+        if (!this.allowChangeQuest) return;
+        // console.log('quest change')
+        this.dataForm.isQuestChange = true;
+        this.formSetUpPreview.questions[index].criterias.push({
+          title: "",
+          media: "",
+        });
+        this.changeContent = true;
+      },
+      delCriteria(index, idx) {
+        // console.log('quest change')
+        this.dataForm.isQuestChange = true;
+        this.formSetUpPreview.questions[index].criterias.splice(idx, 1);
+        this.changeContent = true;
+      },
+      editQuestion(index) {
+        const element = this.$refs.questionsContainer;
+        if (element) {
+          this.lastClickedPosition = element.scrollTop;
+        }
+        
+        this.isEditing = index;
+        
+        // Deep clone question data
+        const questionData = JSON.parse(JSON.stringify(this.dataForm.questions[index]));
+        
+        // Đảm bảo có voteMethod và voteThreshold
+        if (!questionData.voteMethod) {
+          questionData.voteMethod = "単純多数決";
+        }
+        if (!questionData.voteThreshold) {
+          questionData.voteThreshold = this.getDefaultThreshold(questionData.voteMethod, questionData.voteThreshold);
+        }
+        
+        // Set vào form preview
+        this.formSetUpPreview = {
+          questions: [questionData]
+        };
+        
+        console.log('Edit question loaded with:', {
+          voteMethod: questionData.voteMethod,
+          voteThreshold: questionData.voteThreshold
+        });
+      },
+      getDefaultThreshold(voteMethod, currentThreshold = null) {
+        switch (voteMethod) {
+          case "単純多数決":
+            return "50.1%";
+          case "全会一致":
+            return "100%";
+          case "特別多数決":
+            // Nếu đã có threshold và là giá trị hợp lệ cho 特別多数決, giữ nguyên
+            const validSpecialValues = ["60%", "70%", "80%", "90%"];
+            if (currentThreshold && validSpecialValues.includes(currentThreshold)) {
+              return currentThreshold;
+            }
+            // Nếu không có hoặc không hợp lệ, set default là 60%
+            return "60%";
+          default:
+            return "50.1%";
+        }
+      },
+      isValidThreshold(voteMethod, threshold) {
+        switch (voteMethod) {
+          case "単純多数決":
+            return threshold === "50.1%";
+          case "全会一致":
+            return threshold === "100%";
+          case "特別多数決":
+            return ["60%", "70%", "80%", "90%"].includes(threshold);
+          default:
+            return false;
+        }
+      },
+
+      cancelEditQuestion() {
+        this.isEditing = -1;
+        this.resetQuestion(); 
+      },
+      updateQuestion() {
+        if (!this.validationQuestion()) return;
+  
+        // Scroll back to position
+        const element = this.$refs.questionsContainer;
+        if (element && this.lastClickedPosition !== null) {
+          element.scrollTo({
+            top: this.lastClickedPosition,
+            behavior: "smooth",
+          });
+        }
+        
+        // Deep clone the preview data
+        const updatedQuestion = JSON.parse(JSON.stringify(this.formSetUpPreview.questions[0]));
+        
+        // Ensure voteMethod and voteThreshold exist
+        if (!updatedQuestion.voteMethod) {
+          updatedQuestion.voteMethod = "単純多数決";
+          updatedQuestion.voteThreshold = "50.1%";
+        }
+        if (!updatedQuestion.voteThreshold) {
+          updatedQuestion.voteThreshold = this.getDefaultThreshold(updatedQuestion.voteMethod);
+        }
+        
+        // Update the main data
+        this.dataForm.questions[this.isEditing] = updatedQuestion;
+        
+        console.log('Question updated with vote method:', {
+          voteMethod: updatedQuestion.voteMethod,
+          voteThreshold: updatedQuestion.voteThreshold
+        });
+        
+        // Reset editing state
+        this.isEditing = -1;
+        this.resetQuestion();
+      },
+      createQuestion() {
+        if (!this.validationQuestion()) return;
+  
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
+        
+        // Deep clone and ensure vote method exists
+        const newQuestion = JSON.parse(JSON.stringify(this.formSetUpPreview.questions[0]));
+        
+        if (!newQuestion.voteMethod) {
+          newQuestion.voteMethod = "単純多数決";
+          newQuestion.voteThreshold = "50.1%";
+        }
+        if (!newQuestion.voteThreshold) {
+          newQuestion.voteThreshold = this.getDefaultThreshold(newQuestion.voteMethod);
+        }
+        
+        this.dataForm.questions.push(newQuestion);
+        
+        console.log('New question created with vote method:', {
+          voteMethod: newQuestion.voteMethod,
+          voteThreshold: newQuestion.voteThreshold
+        });
+        
+        this.resetQuestion();
+        
+        Toast.fire({
+          icon: "success",
+          title: "新しい質問がプレビューリストに追加されました。",
+        });
+      },
+      resetQuestion() {
+        this.formSetUpPreview = {
+        questions: [
+          {
+            question: "",
+            answers: [],
+            criterias: [],
+            participants: [],
+            typeSubject: "なし",
+            typeQuestion: "1 つだけ選択",
+            subject: null,
+            questionRequire: true,
+            voteMethod: "単純多数決",
+            voteThreshold: "50.1%",
+          },
+        ],
+  };
+  
+  // Reset touched state
+  this.hasTouchedVoteInput = false;
+      },
+      moveUp(index) {
+        if (index > 0) {
+          this.dataForm.isQuestChange = true;
+          this.changeContent = true;
+          const itemToMove = this.dataForm.questions[index];
+          this.dataForm.questions.splice(index, 1);
+          this.dataForm.questions.splice(index - 1, 0, itemToMove);
+        }
+      },
+      moveDown(index) {
+        if (index < this.dataForm.questions.length - 1) {
+          this.dataForm.isQuestChange = true;
+          this.changeContent = true;
+          const itemToMove = this.dataForm.questions[index];
+          this.dataForm.questions.splice(index, 1);
+          this.dataForm.questions.splice(index + 1, 0, itemToMove);
+        }
+      },
+      validationQuestion() {
+        let isValid = true;
+  
+        this.formSetUpPreview.questions.forEach((item, index) => {
+          // Validate question text
+          if (!item.question || item.question.trim() === "") {
+            isValid = false;
+            item.error = true;
+          } else {
+            item.error = false;
+          }
+          
+          // **Validate voteMethod exists**
+          if (!item.voteMethod) {
+            console.error('Question missing voteMethod');
+            item.voteMethod = "単純多数決";
+            item.voteThreshold = "50.1%";
+          }
+          
+          // **Validate voteThreshold exists**
+          if (!item.voteThreshold) {
+            console.error('Question missing voteThreshold');
+            item.voteThreshold = this.getDefaultThreshold(item.voteMethod);
+          }
+          
+          // Validate answers for choice questions
+          if (item.answers.length == 0 && item.typeQuestion != "点数" && item.typeQuestion != "入力") {
+            isValid = false;
+            item.notAnswers = true;
+          } else {
+            item.notAnswers = false;
+            if (item.answers.length > 0) {
+              item.answers.forEach((ans) => {
+                if (!ans.title || ans.title.trim() === "") {
+                  isValid = false;
+                  ans.error = true;
+                } else {
+                  ans.error = false;
+                }
+              });
+            }
+          }
+          
+          // Validate criterias for score questions
+          if (item.criterias.length == 0 && item.typeQuestion == "点数") {
+            isValid = false;
+            item.notCriterias = true;
+          } else {
+            item.notCriterias = false;
+            if (item.criterias.length > 0) {
+              item.criterias.forEach((crit) => {
+                if (!crit.title || crit.title.trim() === "") {
+                  isValid = false;
+                  crit.error = true;
+                } else {
+                  crit.error = false;
+                }
+              });
+            }
+          }
+          
+          // Special handling for text input questions
+          if (item.typeQuestion == "入力") {
+            item.notAnswers = false;
+            item.notCriterias = false;
+            
+            if (item.answers.length > 0) {
+              item.answers.forEach((ans) => {
+                if (!ans.title || ans.title.trim() === "") {
+                  isValid = false;
+                  ans.error = true;
+                } else {
+                  ans.error = false;
+                }
+              });
+            }
+            
+            if (item.criterias.length > 0) {
+              item.criterias.forEach((crit) => {
+                if (!crit.title || crit.title.trim() === "") {
+                  isValid = false;
+                  crit.error = true;
+                } else {
+                  crit.error = false;
+                }
+              });
+            }
+          }
+        });
+        
+        return isValid;
+      },
+      createVote() {
+        if (this.quill) {
+          this.dataForm.description = this.quill.root.innerHTML;
+        }
+        let form = JSON.parse(JSON.stringify(this.dataForm));
+        form.numberQuestion =
+          this.dataForm.questions.length == 0
+            ? "0"
+            : this.dataForm.questions.length;
+        form.numberVoted = "0";
+        let scope = this;
+        // console.log({ form })
+        if (!this.validation()) {
+          return;
+        }
+        let dateEnd = new Date(
+          this.dataForm.dateEnd
+            .replace("年", "-")
+            .replace("月", "-")
+            .replace("日", "")
+        );
+        let currentDate = new Date();
+        if (this.dataForm.status == "終了済" && dateEnd > currentDate) {
+          Swal.fire({
+            title:
+              "現在はまだ予定の終了時間ではありません。現在の時間で終了を確認しますか？",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#01932e",
+            confirmButtonText: "はい",
+            cancelButtonText: "閉じる",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              document.getElementById("loading-edit").style.display = "block";
+              google.script.run
+                .withSuccessHandler((res) => {
+                  // console.log({ res })
+                  if (!res.status) {
+                    scope.failureHandler(res.msg);
+                    document.getElementById("loading-edit").style.display = "";
+                    return;
+                  } else {
+                    // console.log(res.data)
+                    document.getElementById("loading-edit").style.display = "";
+                    scope.$emit("new-vote", res.data);
+                    this.dataForm = {
+                      ...this.dataForm,
+                      isVoteChange: false,
+                      isQuestChange: false,
+                      status: "作成中",
+                    };
+                    const Toast = Swal.mixin({
+                      toast: true,
+                      position: "top-end",
+                      showConfirmButton: false,
+                      timer: 3000,
+                      timerProgressBar: true,
+                      didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                      },
+                    });
+                    Toast.fire({
+                      icon: "success",
+                      title: "成功を作成します。",
+                    });
+                    // scope.successHandler('成功を作成します。')
+                  }
+                })
+                .withFailureHandler((error) => {
+                  // console.log({ error })
+                  scope.failureHandler(error);
+                })
+                .createVote(form);
+            }
+          });
+        } else {
+          document.getElementById("loading-edit").style.display = "block";
+          google.script.run
+            .withSuccessHandler((res) => {
+              // console.log({ res })
+              if (!res.status) {
+                scope.failureHandler(res.msg);
+                document.getElementById("loading-edit").style.display = "";
+                return;
+              } else {
+                // console.log(res.data)
+                document.getElementById("loading-edit").style.display = "";
+                scope.$emit("new-vote", res.data);
+                this.dataForm = {
+                  ...this.dataForm,
+                  isVoteChange: false,
+                  isQuestChange: false,
+                  status: "作成中",
+                };
+                const Toast = Swal.mixin({
+                  toast: true,
+                  position: "top-end",
+                  showConfirmButton: false,
+                  timer: 3000,
+                  timerProgressBar: true,
+                  didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                  },
+                });
+                Toast.fire({
+                  icon: "success",
+                  title: "成功を作成します。",
+                });
+                // scope.successHandler('成功を作成します。')
+              }
+            })
+            .withFailureHandler((error) => {
+              // console.log({ error })
+              scope.failureHandler(error);
+            })
+            .createVote(form);
+        }
+      },
+      editVote() {
+        let form = this.dataForm;
+        form.numberQuestion =
+          this.dataForm.questions.length == 0
+            ? "0"
+            : this.dataForm.questions.length;
+        let scope = this;
+        if (!this.validation()) {
+          return;
+        }
+        let dateEnd = new Date(
+          this.dataForm.dateEnd
+            .replace("年", "-")
+            .replace("月", "-")
+            .replace("日", "")
+        );
+        let currentDate = new Date();
+        if (this.dataForm.status == "終了済" && dateEnd > currentDate) {
+          Swal.fire({
+            title:
+              "現在はまだ予定の終了時間ではありません。現在の時間で終了を確認しますか？",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#01932e",
+            confirmButtonText: "はい",
+            cancelButtonText: "閉じる",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              form.dateEnd = `${currentDate.getFullYear()}年${String(
+                currentDate.getMonth() + 1
+              ).padStart(2, "0")}月${String(currentDate.getDate()).padStart(
+                2,
+                "0"
+              )}日 ${String(currentDate.getHours()).padStart(2, "0")}:${String(
+                currentDate.getMinutes()
+              ).padStart(2, "0")}`;
+              document.getElementById("loading-edit").style.display = "block";
+              google.script.run
+                .withSuccessHandler((res) => {
+                  // console.log({ res })
+                  if (!res.status) {
+                    scope.failureHandler(res.msg);
+                    document.getElementById("loading-edit").style.display = "";
+                    return;
+                  } else {
+                    this.$emit("cancel");
+                    scope.$emit("change-vote", form, scope.index);
+                    // Thông báo thành công
+                    document.getElementById("loading-edit").style.display = "";
+                    const Toast = Swal.mixin({
+                      toast: true,
+                      position: "top-end",
+                      showConfirmButton: false,
+                      timer: 3000,
+                      timerProgressBar: true,
+                      didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                      },
+                    });
+                    Toast.fire({
+                      icon: "success",
+                      title: "更新しました。",
+                    });
+                    // scope.successHandler('編集プロセスは成功しました。')
+                  }
+                })
+                .withFailureHandler((error) => {
+                  scope.failureHandler(error);
+                })
+                .updateVote(form, this.dataForm.id);
+            }
+          });
+        } else {
+          document.getElementById("loading-edit").style.display = "block";
+          google.script.run
+            .withSuccessHandler((res) => {
+              // console.log({ res })
+              if (!res.status) {
+                scope.failureHandler(res.msg);
+                document.getElementById("loading-edit").style.display = "";
+                return;
+              } else {
+                // document.getElementById('loading-edit').style.display = ''
+                scope.$emit("change-vote", form, scope.index);
+                // Thông báo thành công
+                document.getElementById("loading-edit").style.display = "";
+                const Toast = Swal.mixin({
+                  toast: true,
+                  position: "top-end",
+                  showConfirmButton: false,
+                  timer: 3000,
+                  timerProgressBar: true,
+                  didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                  },
+                });
+                Toast.fire({
+                  icon: "success",
+                  title: "更新しました。",
+                });
+                // scope.successHandler('編集プロセスは成功しました。')
+              }
+            })
+            .withFailureHandler((error) => {
+              scope.failureHandler(error);
+            })
+            .updateVote(form, this.dataForm.id);
+        }
+      },
+      cancel() {
+        // console.log(this.changeContent);
+        if (this.changeContent) {
+          Swal.fire({
+            title: "本当にキャンセルしますか？",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#01932e",
+            confirmButtonText: "はい",
+            cancelButtonText: "いいえ",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.dataForm = {
+                questions: [],
+                isVoteChange: false,
+                isQuestChange: false,
+                informationRequired: false,
+              };
+              this.allowChangeQuest = true;
+              this.$emit("cancel");
+              let tabSearch = document.querySelector("#tab-pageSearch");
+              tabSearch.click();
+            }
+          });
+        } else {
+          this.dataForm = {
+            questions: [],
+            isVoteChange: false,
+            isQuestChange: false,
+          };
+          this.allowChangeQuest = true;
+          this.$emit("cancel");
+          let tabSearch = document.querySelector("#tab-pageSearch");
+          tabSearch.click();
+        }
+      },
+      validation() {
+        let isValid = true;
+        if (
+          this.dataForm.nameVote == "" ||
+          !this.dataForm.nameVote ||
+          this.dataForm.nameVote == null
+        ) {
+          this.validates.nameVote = true;
+          isValid = false;
+        } else {
+          this.validates.nameVote = false;
+        }
+        if (
+          this.dataForm.dateRun == "" ||
+          !this.dataForm.dateRun ||
+          this.dataForm.dateRun == null
+        ) {
+          this.validates.dateRun = true;
+          isValid = false;
+        } else {
+          this.validates.dateRun = false;
+        }
+        if (
+          this.dataForm.dateEnd == "" ||
+          !this.dataForm.dateEnd ||
+          this.dataForm.dateEnd == null
+        ) {
+          this.validates.dateEnd = true;
+          isValid = false;
+        } else {
+          this.validates.dateEnd = false;
+
+          let dateRun = new Date(
+            this.dataForm.dateRun
+              .replace("年", "-")
+              .replace("月", "-")
+              .replace("日", "")
+          );
+          let dateEnd = new Date(
+            this.dataForm.dateEnd
+              .replace("年", "-")
+              .replace("月", "-")
+              .replace("日", "")
+          );
+          let currentDate = new Date();
+
+          if (dateEnd <= dateRun) {
+            this.validates.dateEnd = true;
+            this.validates.dateMsg =
+              "終了時間は開始時間よりも早いか、または同じであってはなりません。";
+            isValid = false;
+          } else if (dateEnd < currentDate) {
+            if (!this.editting) {
+              this.validates.dateEnd = true;
+              this.validates.dateMsg =
+                "終了時間は現在の時間よりも遅くなければなりません。";
+              isValid = false;
+            }
+          } else {
+            this.validates.dateEnd = false;
+          }
+        }
+        if (
+          this.dataForm.questions.length <= 0 &&
+          this.dataForm.status == "公開中"
+        ) {
+          this.validates.status = true;
+          isValid = false;
+        } else {
+          this.validates.status = false;
+        }
+        return isValid;
+      },
+      toGlobalDate(date) {
+        return date.replace("年", "/").replace("月", "/").replace("日", "");
+      },
+      isAnswered2(surveyID) {
+        document.getElementById("loading-edit").style.display = "block";
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              if (res == true) {
+                this.allowChangeQuest = false;
+              }
+              this.$emit("change-quest", this.allowChangeQuest);
+            })
+            .withFailureHandler((error) => {
+              return false;
+            })
+            .isAnswered2(surveyID);
+        });
+      },
+    },
+  };
+</script>

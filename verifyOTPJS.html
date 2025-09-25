@@ -1,0 +1,233 @@
+<template id="content-verify__otp">
+    <section id="information" class="m-3 row" v-show="!checkVerify">
+        <div class="row mb-1 px-0 col-xl-9 col-12 mx-auto w-full h-full flex justify-center" id="enter-otp-code">
+            <div class="flex flex-col gap-[32px] items-center w-[540px] mt-[75px] rounded-[10px] p-[19px] md:p-[40px] bg-white">
+                <!-- <p class="text-[#01932e] text-[28px]">投票応用</p> -->
+                <div class="flex flex-col gap-2 justify-center items-center">
+                    <p class="text-[24px]">サインイン</p>
+                    <p class="text-[#949CA9]">メールアドレスとログインコードを入力してログインしてください。</p>
+                </div>
+
+                <div class="flex flex-col gap-[20px] w-full">
+                    <div class="align-items-center w-full">
+                        <span class="font-medium" style="color: #555;">Eメール</span>
+                        <div class="border border-[#E8E9EA] flex gap-2 rounded-[6px] overflow-hidden ">
+                            <input type="text"
+                                class="border-none min-h-[40px] pl-[10px] min-w-[115px] grow" v-model="email"
+                                placeholder="メールアドレスを入力してください。" style="outline: none;">
+                            <button type="button" class="text-[#01932e] pr-[15px]"
+                                @click="checkEmail ? resendOTP() : sendOTP()">
+                                <span v-if="checkEmail" class="text-nowrap" style="color: #01932e;">ログインコードを送信する</span>
+                                <span v-else class="text-nowrap" style="color: #01932e;">ログインコード送信</span>
+                            </button>
+                        </div>
+                        <span class="text-danger" v-if="!validate.email">※メールを入力してください。</span>
+                    </div>
+                    <div class="align-items-center w-full" v-if="checkEmail">
+                        <span class="font-medium">ログインコード</span>
+                        <div class="border border-[#E8E9EA] flex gap-2 rounded-[6px] overflow-hidden ">
+                            <input :type="isShowPW ? 'text' : 'password'" inputmode="numeric" pattern="[0-9]*"
+                                class="border-none min-h-[40px] pl-[10px]" style="flex: 1 1 auto; outline: none;" v-model="otpCode"
+                                placeholder="ログインコードを入力してください">
+                            <i class="fa-solid fa-eye flex items-center pr-[15px]" @click="showPassword"></i>
+                        </div>
+                        <span class="text-danger" v-if="!validate.otpCode">※メールに送信するログインコードを入力し、ログインください</span>
+                    </div>
+                    <button type="button"
+                        class="w-full text-[24px] h-[52px] flex justify-center items-center bg-[#01932e] text-white rounded-[6px]"
+                        @click="submitVerify(this.email, this.otpCode)" v-if="checkEmail">
+                        <span style="color: white;">ログイン</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</template>
+
+<script>
+    const app = document.querySelector('#app');
+    app.style.backgroundColor = '#f2f6f8'
+    app.style.height = '100vh'
+    // Vue component definition
+    const verifyOTP = {
+        // props: ['email', 'otp'],
+        template: '#content-verify__otp',
+        data() {
+            return {
+                email: null,
+                otpCode: null,
+                validate: {
+                    email: true,
+                    otpCode: true,
+                },
+                checkEmail: false,
+                checkVerify: true,
+                isShowPW: false,
+                // checkVerify: false,
+            }
+        },
+        computed: {
+
+        },
+        created() {
+
+        },
+        mounted() {
+            if (email != 'false' && otp != 'false') {
+                this.firstSubmitVerify(email, otp)
+            } else {
+                if (login) {
+                    email = login.email;
+                    otp = login.otp;
+                    this.firstSubmitVerify(email, otp)
+                } else {
+                    this.firstSubmitVerify(email, otp)
+                }
+            }
+        },
+        watch: {
+
+        },
+        methods: {
+            resetForm() {
+                this.email = null;
+                this.otpCode = null;
+            },
+            validation() {
+                let check = true;
+                if (!this.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(String(this.email).toLowerCase())) {
+                    check = false
+                    this.validate.email = false
+                } else {
+                    this.validate.email = true
+                }
+                // if(this.checkEmail){
+                //   if(!this.otpCode){
+                //     this.validate.otpCode = false
+                //     check = false
+                //   }else{
+                //     this.validate.otpCode = true
+                //   }
+                // }
+                return check;
+            },
+            sendOTP() {
+                let check = this.validation();
+                if (!check) {
+                    return
+                }
+                this.$emit('loading')
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler((res) => {
+                            if (!res.status) {
+                                this.failureHandler('アクセス許可がありません。')
+                                return;
+                            }
+                            this.checkEmail = true;
+                            this.$emit('hide-loading')
+                            this.successHandler('ログインコードを送信されました。メールをチェックしてください。')
+                            resolve(res);
+                        })
+                        .withFailureHandler((error) => {
+                            this.$emit('hide-loading')
+                            this.failureHandler(error)
+                            reject(error)
+                        })
+                        .sendOTP(this.email);
+                })
+            },
+            resendOTP() {
+                let check = true;
+                if (!this.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(String(this.email).toLowerCase())) {
+                    check = false
+                    this.validate.email = false
+                } else {
+                    this.validate.email = true
+                }
+                if (!check) {
+                    return
+                }
+                this.$emit('loading')
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler((res) => {
+                            if (!res.status) {
+                                this.failureHandler('アクセス許可がありません。')
+                                return;
+                            }
+                            this.$emit('hide-loading')
+                            this.successHandler('ログインコードを再送信されました。')
+                            resolve(res);
+                        })
+                        .withFailureHandler((error) => {
+                            this.$emit('hide-loading')
+                            this.failureHandler(error)
+                            reject(error)
+                        })
+                        .sendOTP(this.email);
+                })
+            },
+            firstSubmitVerify(email, otp) {
+                this.$emit('loading')
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler((res) => {
+                            if (!res.status) {
+                                // this.failureHandler('OTP が正しくありません。')
+                                this.checkVerify = false
+                                this.$emit('hide-loading')
+                                return;
+                            }
+                            let fullname = res.data;
+                            localStorage.setItem('login', JSON.stringify({ email: email, otp: otp, fullname: fullname }))
+                            this.$emit('verified', email, fullname)
+                            app.style.backgroundColor = 'white';
+                            resolve(res);
+                        })
+                        .withFailureHandler((error) => {
+                            this.$emit('hide-loading')
+                            this.failureHandler(error)
+                            reject(error)
+                        })
+                        .submitVerify(email, otp);
+                })
+            },
+            submitVerify(email, otp) {
+                this.$emit('loading')
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler((res) => {
+                            if (!res.status) {
+                                this.failureHandler('ログインコードが正しくありません。')
+                                this.checkVerify = false
+                                this.$emit('hide-loading')
+                                return;
+                            }
+                            let fullname = res.data;
+                            localStorage.setItem('login', JSON.stringify({ email: email, otp: otp, fullname: fullname }))
+                            this.$emit('verified', email, fullname)
+                            app.style.backgroundColor = 'white';
+                            resolve(res);
+                        })
+                        .withFailureHandler((error) => {
+                            this.$emit('hide-loading')
+                            this.failureHandler(error)
+                            reject(error)
+                        })
+                        .submitVerify(email, otp);
+                })
+            },
+            showPassword() {
+                this.isShowPW = !this.isShowPW
+            },
+            successHandler(msg) {
+                this.$emit('success', msg)
+            },
+            failureHandler(error) {
+                this.$emit('failure', error)
+            },
+        },
+    };
+</script>

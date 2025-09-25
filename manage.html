@@ -1,0 +1,287 @@
+<?
+    var email = requestParams['email'] || false;
+    var otp = requestParams['otp'] || false;
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <!-- CommonJS Lib -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <?!= include('jquery-3.3.1.slim.min.js') ?>
+  <?!= include('popper.min.js') ?>
+  <?!= include('bootstrap.bundle.min.js') ?>
+  <?!= include('bootstrap-datepicker.min.js') ?>
+  <?!= include('bootstrap-datepicker.ja.min.js') ?>
+  <?!= include('sweetalert2.min.js') ?>
+  <!-- <?!= include('commonJS') ?> -->
+  <!-- StyleCSS Lib -->
+  <?!= include('bootstrap.min.css') ?>
+  <?!= include('bootstrap-datepicker.min.css') ?>
+  <!-- <?!= include('all.min.css') ?> -->
+  <?!= include('sweetalert2.min.css') ?>
+  <!-- Flatpickr datetime -->
+  <?!= include('flatpickr.min.css') ?>
+  <?!= include('flatpickrJS') ?>
+  <?!= include('flatpickrJAJS') ?>
+  <!-- Quill lib -->
+  <?!= include('quill.snow.css') ?>
+  <?!= include('quill.js') ?>
+   <?!= include('stylesCss2') ?>
+  <?!= include('stylesCss') ?>
+  <script>
+    var email = '<?= email ?>'
+    var otp = '<?= otp ?>'
+  </script>
+  <script>
+    var sessionData = localStorage.getItem('login');
+    var login = JSON.parse(sessionData);
+  </script>
+</head>
+
+<body>
+  <div id="app" style="overflow-y: auto;">
+    <!-- Header -->
+    <div class="container-fuild d-none d-md-flex mb-3 position-relative"
+      style="color: #fff; background: #01932e; width: 100%; font-weight: 700;">
+      <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;">
+        <img
+          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+          alt="" width="28px" height="28px" style="margin-right: 5px;">
+        <span class="title-addon" style="font-size: 24px; color: white;">汎用投票アプリ</span>
+      </span>
+      <div class="d-flex flex-column text-end ms-auto m-0 p-2 px-3" id="email-user"
+        style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;"
+        v-if="userEmail && userEmail != '' && userEmail != 'false' && verified">
+        <span style="font-weight: 510; font-size: 14px; color: white;" v-if="userName != ''">{{ userName }}</span>
+        <span style="font-weight: 400; font-size: 12px; color: whitesmoke;" v-if="userEmail != '' && userName != ''">{{
+          userEmail }}</span>
+        <span style="font-weight: 510; font-size: 14px;" v-if="userName == '' && userEmail != ''">{{ userEmail
+          }}</span>
+      </div>
+    </div>
+    <div class="d-flex d-md-none align-items-center mb-3" style="color: #fff; background: #01932e; font-weight: 700;">
+      <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;color: #fff;">
+        <img
+          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+          alt="" width="28px" height="28px" style="margin-right: 5px;">
+        <span class="title-addon" style="font-size: 20px; color: white;">汎用投票アプリ</span>
+      </span>
+      <div class="d-flex flex-column text-end ms-auto m-0 p-2 px-3" style="position: relative;"
+        v-if="userEmail && userEmail != '' && userEmail != 'false'  && verified">
+        <div id="user-avatar"
+          style="width: 30px; height: 30px; background-color: #87CEEB; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 400; cursor: pointer;"
+          v-if="userEmail != ''" @click="toggleUserInfo">
+          {{ getInitial() }}
+        </div>
+        <div id="user-info"
+          style="position: absolute; top: 100%; right: 0; background-color: #fff; border: 1px solid #ccc; padding: 10px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);"
+          v-show="showUserInfo">
+          <span id="user-name" style="font-weight: 510; font-size: 14px; color: #555;" v-if="userName != ''">{{ userName
+            }}</span><br v-if="userName != ''">
+          <span id="user-email" style="font-weight: 400; font-size: 12px; color: #555;" v-if="userEmail != ''">{{
+            userEmail }}</span>
+        </div>
+      </div>
+    </div>
+    <!--End Header -->
+
+    <div class="container-fuild px-3">
+      <div class="modal" id="loading" data-backdrop="static" style="z-index: 2000;">
+        <div class="modal-dialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+          <div id="circle">
+            <div class="loader"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal" id="loading-edit" data-backdrop="static" style="z-index: 2000;">
+        <div class="modal-dialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+          <div id="circle-edit">
+            <div class="loader"></div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!verified">
+        <verify-otp v-on:success="successHandler" v-on:failure="failureHandler" v-on:loading="showLoading"
+          v-on:hide-loading="hideLoading" v-on:verified="verifyManager"></verify-otp>
+      </div>
+
+      <nav class="nav nav-tabs mb-3 d-flex justify-content-between align-items-center" id="myTab" role="tablist" v-if="verified">
+        <div class="d-flex justify-content-start">
+          <li class="nav-item">
+            <a id="tab-pageSearch" class="nav-link active" data-toggle="tab" role="tab" aria-controls="content-pageSearch"
+              aria-selected="true" @click="showTab('pageSearch')">投票一覧</a>
+          </li>
+          <li class="nav-item">
+            <a href="#content-pageCreateNew" id="tab-pageCreateNew" class="nav-link" data-toggle="tab" role="tab"
+              aria-controls="content-pageCreateNew" aria-selected="false" @click="showTab('pageCreateNew')">投票設定</a>
+          </li>
+        </div>
+        <div class="table-action d-flex justify-content-end" style="margin:4px 0px" v-if="isEdit">
+          <span class="fa-solid fa-chart-pie" @click="statistic(nowRow.id, nowRow.dateRun)" title="統計"></span>
+          <span class="fa-solid fa-copy" @click="makeAcopy(nowRow)" title="コピー"></span>
+          <span class="fa-solid fa-link" @click="shareVote(nowRow.url)" title="投票URLをコピー"></span>
+          <span class="fa-solid fa-qrcode" @click="openQR(nowRow)" title="QR コード"></span>
+          <span class="fa-solid fa-trash" @click="delVote(nowRow.id, nowIndex)" title="削除"></span>
+        </div>
+      </nav>
+
+      <p class="text-danger my-2 text-center wrap-text" v-if="isEdit" v-show="!allowChangeQuest">この投票をすでに回答した人がいるため、質問が編集できません。</p>
+      <div id="content" class="container-fuild" v-if="verified">
+        <div id="content-pageSearch" class="tab-pane fade show active">
+          <div id="content-pageSearch_header" class="">
+            <section id="content-pageSearch_header__searchBar" class="">
+              <div class="input-group">
+                <span class="input-group-text" id="content-pageSearch_header__searchBar___title">キーワード</span>
+                <input type="text" class="form-control sp-keyword-width" placeholder="投票タイトル、担当者名、投票説明、投票結果公開" aria-label="title"
+                  aria-describedby="content-pageSearch_header__searchBar___title" v-model="formSearch.keywords">
+              </div>
+              <div class="input-group"><span class="input-group-text">ステータス</span>
+                <select class="form-select" v-model="formSearch.status">
+                  <option value="全て" style="color: black;">全て</option>
+                  <option value="作成中" style="color: #46BDC6">作成中</option>
+                  <option value="非公開" style="color: #ff9900">非公開</option>
+                  <option value="公開中" style="color: #007bff">公開中</option>
+                  <option value="終了済" style="color: #28a745">終了済</option>
+                </select>
+              </div>
+              <div class="input-group"><span class="input-group-text">実施期間</span>
+                <div class="scroll-date-wrapper ">
+                <div class="input-group-date">
+                  <input type="text" class="form-control input-date-search" aria-label="state" name="startDateRun"
+                    v-model="formSearch.startDateRun">
+                  <span style="align-items: center; display: flex;">〜</span>
+                  <input type="text" class="form-control input-date-search" aria-label="state" name="endDateRun"
+                    v-model="formSearch.endDateRun">
+                </div>
+              </div>
+            </section>
+            <section id="content-pageSearch_header__btns" class="">
+              <button type="button" class="btn btn-success text-nowrap" @click="search()" style="font-size: 14px;"><i class="fas fa-search"></i> 検索</button>
+              <button type="button" class="btn btn-reset text-nowrap" @click="reset()" style="font-size: 14px;">リセット</button>
+            </section>
+          </div>
+          <!-- list view -->
+                 <div id="content-pageSearch_body" class="">
+            <section id="content-pageSearch_body__table">
+              <div class="table-events sp-width">
+                <div class="table-outer-wrapper">
+                <div class="table-scroll-wrapper ">
+                 <div class="table-inner-wrapper">
+                <table class="table table-hover overflow-auto">
+                  <thead class="">
+                    <tr>
+                      <th scope="col" style="width: 50px;text-align:center">#</th>
+                      <th v-for="(col, index) in columns"
+                          :key="index"
+                          class="text-nowrap"
+                          :class="[(index === 0 || index === 1) ? 'text-start' : (index === 4 || index === 5 ? 'text-end' : 'text-center')]"
+                          :style="col.width !== -1 ? { width: col.width + 'px' } : {}">
+                        {{ col.label }}
+                      </th>
+                      <th style="min-width: 50px; text-align: center;">アクション</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, index) in paginatedData" :key="index">
+                      <td class="text-center line-35">{{ index + perPage*(currentPage - 1) + 1 }}</td>
+                      <td v-for="(col, idx) in columns" :key="idx" :class="{
+                                'text-center line-35' : col.id === 'passRate' || col.id === 'displayType' || col.id === 'status' || col.id === 'informationRequired' || col.id === 'statistics'|| col.id === 'dateRun'|| col.id === 'dateEnd',
+                                'text-end line-35' : col.id === 'numberVoted' || col.id === 'numberQuestion','line-35 ellipsis' : col.id === 'nameVote',
+                                'text-left line-35' : col.id === 'passcode'
+                              }">
+                      
+                        <span class="rounded w-75 m-auto text-nowrap"
+                          v-if="col.id === 'passcode' && row['usePassCode'] === 'いいえ'">
+                          使用なし
+                        </span>
+                        <span class="rounded w-75 m-auto text-nowrap copy-icon"
+                          v-else-if="col.id === 'passcode' && row['usePassCode'] !== 'いいえ'" title="パスコードをコピー"
+                          @click="copyPassCode(row[col.id])">
+                          {{ row[col.id] }} <i class="fas fa-copy"></i>
+                        </span>
+                        <span class="rounded w-75 m-auto" v-else-if="!row[col.id] || row[col.id] == ''">
+                          ー
+                        </span>
+                        <span class="rounded w-75 m-auto text-center" style="font-size:14px" v-else :class="{
+                                    'text-nowrap': col.id != 'nameVote',
+                                    'status': col.id === 'status',
+                                    'is-creating': col.id === 'status' && row[col.id] === '作成中',
+                                    'not-open': col.id === 'status' && row[col.id] === '非公開',
+                                    'in-progress': col.id === 'status' && row[col.id] === '公開中',
+                                    'completed': col.id === 'status' && row[col.id] === '終了済',
+                                  }">{{row[col.id] }}</span>
+                      </td>
+                      <td class="td-action text-end">
+                        <div class="table-action">
+                          <span class="fa-solid fa-chart-pie" @click="statistic(row.id, row.dateRun)" title="統計"></span>
+                          <span class="fa-solid fa-pencil" @click="editVote(row, index)" title="編集"
+                            data-bs-toggle="modal" :data-bs-target="'#edit-vote-' + row.id"></span>
+                          <span class="fa-solid fa-copy" @click="makeAcopy(row)" title="コピー"></span>
+                          <span class="fa-solid fa-link" @click="shareVote(row.url)" title="投票URLをコピー"></span>
+                          <span class="fa-solid fa-qrcode" @click="openQR(row)" title="QR コード"></span>
+                          <span class="fa-solid fa-trash" @click="delVote(row.id, index)" title="削除"></span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              </div>
+              </div>
+              <div class="table-scroll-padding-spacer"></div>
+              </div>
+              
+              <div class="pagination-wrapper row px-3 float-right mb-2" v-if="totalPages > 1">
+              <nav aria-label="Page navigation" class="d-flex px-0">
+                <ul class="pagination" style="margin-left: auto; flex-wrap: nowrap;margin-right: 10px;">
+                  
+                  <!-- Nút Prev -->
+                  <li class="page-item" :class="{ 'disabled': currentPage === 1 }">
+                    <a class="page-link" @click.prevent="changePage(currentPage - 1)" href="#" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+
+                  <!-- Danh sách trang -->
+                  <li v-for="page in visiblePages" :key="page" 
+                      class="page-item"
+                      :class="{ 'active': currentPage === page, 'disabled': page === '...' }">
+                    <a v-if="page !== '...'" class="page-link" @click.prevent="changePage(page)" href="#">
+                      {{ page }}
+                    </a>
+                    <span v-else class="page-link">…</span>
+                  </li>
+
+                  <!-- Nút Next -->
+                  <li class="page-item" :class="{ 'disabled': currentPage === totalPages }">
+                    <a class="page-link" @click.prevent="changePage(currentPage + 1)" href="#" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+
+                </ul>
+              </nav>
+            </div>
+            </section>
+          </div>
+        </div>
+        
+        <div id="content-pageCreateNew" role="tabpanel" aria-labelledby="tab-total" class="tab-pane fade d-none">
+          <vote-register :id="surveyID" :index="voteIndex" v-if="showComponent" v-on:success="successHandler"
+            v-on:failure="failureHandler" v-on:loading="showLoading" v-on:hide-loading="hideLoading" v-on:cancel="cancel"
+            v-on:new-vote="newVote" v-on:change-vote="changeVote" v-on:change-quest="changeQuest" v-on:change-content="changeContent"></vote-register>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <?!= include('VueJS') ?>
+  <?!= include('voteRegisterJS') ?>
+  <?!= include('manageJS') ?>
+  <?!= include('verifyOTPJS') ?>
+</body>
+</html>

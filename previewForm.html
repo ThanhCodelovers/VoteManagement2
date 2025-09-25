@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <!-- CommonJS Lib -->
+    <?!= include('jquery-3.3.1.slim.min.js') ?>
+    <?!= include('popper.min.js') ?>
+    <?!= include('bootstrap.bundle.min.js') ?>
+    <?!= include('bootstrap-datepicker.min.js') ?>
+    <?!= include('bootstrap-datepicker.ja.min.js') ?>
+    <?!= include('sweetalert2.min.js') ?>
+    <!-- <?!= include('commonJS') ?> -->
+    <!-- StyleCSS Lib -->
+    <?!= include('bootstrap.min.css') ?>
+    <?!= include('bootstrap-datepicker.min.css') ?>
+    <!-- <?!= include('all.min.css') ?> -->
+    <?!= include('sweetalert2.min.css') ?>
+    <?!= include('stylesCss') ?>
+    <style>
+        .form-check {
+            padding-left: 12px !important;
+        }
+    </style>
+    <script>
+        var sessionData = sessionStorage.getItem('vote_data');
+        var { question, user, response, vote, surveyID } = JSON.parse(sessionData);
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <div class="container-fuild d-none d-md-flex mb-3 position-relative"
+            style="color: #fff; background: #01932e; width: 100%; font-weight: 700;">
+            <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+                    alt="" width="28px" height="28px" style="margin-right: 5px;">
+                <span class="title-addon" style="font-size: 24px; color: white;">汎用投票アプリ</span>
+            </span>
+            <div class="d-flex flex-column text-end ms-auto m-0 p-2 px-3" id="email-user"
+                style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;"
+                v-if="user.name && user.email != '' && user.email != 'false'">
+                <span style="font-weight: 510; font-size: 14px; color: white;" v-if="user.name != ''">{{ user.name
+                    }}</span>
+                <span style="font-weight: 400; font-size: 12px; color: whitesmoke;"
+                    v-if="user.email != '' && user.name != ''">{{
+                    user.email }}</span>
+                <span style="font-weight: 510; font-size: 14px;" v-if="user.name == '' && user.email != ''">{{
+                    user.email
+                    }}</span>
+            </div>
+        </div>
+        <div class="d-flex d-md-none align-items-center mb-3"
+            style="color: #fff; background: #01932e; font-weight: 700;">
+            <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+                    alt="" width="28px" height="28px" style="margin-right: 5px;">
+                <span class="title-addon" style="font-size: 20px; color: white;">汎用投票アプリ</span>
+            </span>
+        </div>
+        <!--End Header -->
+
+        <div class="container-fuild px-3" style="background-color: #F2F6F8;">
+            <div class="modal" id="loading" data-backdrop="static" style="z-index: 2000;">
+                <div class="modal-dialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div id="circle">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content" class="container">
+                <!-- Form vote chế độ tất cả-->
+                <section id="content-form" class="row g-3">
+                    <div class="row g-2 mb-1" style="text-align: center; font-size: 17px;">
+                        <h5>{{ vote.nameVote }}</h5>
+                    </div>
+                    <div class="d-none">
+                        <div class="row d-flex justify-content-end">
+                            <div class="d-flex col-sm-12 col-md-6 col-lg-3 mb-1">
+                                <label for="name" class="text-nowrap form-label mb-0 mt-auto label-identify">名前</label>
+                                <span class="status validate"
+                                    :class="[!validates.name ? 'input-identify-danger' : 'd-none']">必須</span>
+                                <input type="text" class="form-control input-identify" name="name" v-model="user.name"
+                                    :class="[!validates.name ? 'input-identify-danger' : '']" disabled>
+                            </div>
+                            <div class="d-flex col-sm-12 col-md-6 col-lg-3 mb-1">
+                                <label for="phone_number"
+                                    class="text-nowrap form-label mb-0 mt-auto label-identify">電話番号</label>
+                                <span class="status validate"
+                                    :class="[!validates.phone_number ? 'input-identify-danger' : 'd-none']">必須</span>
+                                <input type="text" class="form-control input-identify" name="phone_number"
+                                    v-model="user.phone_number"
+                                    :class="[!validates.phone_number ? 'input-identify-danger' : '']" disabled>
+                            </div>
+                            <div class="d-flex col-sm-12 col-md-6 col-lg-3 mb-1">
+                                <label for="email"
+                                    class="text-nowrap form-label mb-0 mt-auto label-identify">Eメール</label>
+                                <span class="status validate"
+                                    :class="[!validates.email ? 'input-identify-danger' : 'd-none']">必須</span>
+                                <input type="text" class="form-control input-identify" name="email" v-model="user.email"
+                                    :class="[!validates.email ? 'input-identify-danger' : '']" disabled>
+                            </div>
+                            <div class="d-flex col-sm-12 col-md-6 col-lg-3">
+                                <label for="address"
+                                    class="text-nowrap form-label mb-0 mt-auto label-identify text-end">住所</label>
+                                <span class="status validate"
+                                    :class="[!validates.address ? 'input-identify-danger' : 'd-none']">必須</span>
+                                <input type="text" class="form-control input-identify" name="address"
+                                    v-model="user.address" :class="[!validates.address ? 'input-identify-danger' : '']"
+                                    disabled>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 row g-2 mx-0 mt-0 mb-3" v-for="(item, index) in questions" :key="index">
+                        <div class="form-group col-12 px-0 mt-0 question-all">
+                            <div class="align-items-center">
+                                <p class="title-question-form m-0 mb-2"
+                                    style="padding-bottom: 0px; gap: 7px; padding-left: 0px;">
+                                    <span class="title-question" style="color: rgb(1, 147, 46);">問{{ index + 1 }}</span>
+                                    <span class="title-question" style="text-align: left;">
+                                        {{ item.question }} <span class="text-danger"
+                                            v-if="item.question_required">*</span>
+                                        <br v-if="item.description_for_answer"><span class="text-description"
+                                            v-if="item.description_for_answer">({{item.description_for_answer}})</span>
+                                    </span>
+                                </p>
+
+                                <!-- TH câu vote đa tiêu chí -->
+                                <div class="row" v-if="form[`${index + 1}．${item.question}`].criteria == true">
+                                    <div v-for="(crit, idex) in item.criterias"
+                                        v-if="item.question_type === 'oneSelect' || item.question_type === 'multiSelect'"
+                                        class="form-group col-12 form-check">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-4 col-lg-3 mb-2" v-if="crit.media">
+                                                <div class="">
+                                                    <div class="form-group d-flex col-12 form-check-inline">
+                                                        <label for="checkbox-Q1-1" class="form-check-criteria mb-2">{{
+                                                            crit.name }}</label>
+                                                    </div>
+                                                    <iframe :src="crit.link"></iframe>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12 col-md-4 col-lg-3 mb-2" v-else>
+                                                <div class="form-group d-flex col-12 form-check-inline">
+                                                    <label class="form-check-criteria">{{ crit.name }}</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group col-12">
+                                                <div class="row">
+                                                    <div class="col-sm-12 col-md-4 col-lg-3"
+                                                        v-for="(ans, idx) in item.question_answers">
+                                                        <div class="mb-2">
+                                                            <iframe :src="ans.link" v-if="ans.media"></iframe>
+                                                            <!-- input type oneSelect -->
+                                                            <div class="form-group d-flex col-12 form-check-inline"
+                                                                v-if="item.question_type === 'oneSelect'">
+                                                                <input type="radio" class=""
+                                                                    v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                                                    :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                                                    :value="ans.name" disabled>
+                                                                <label class="form-check-label mx-2"
+                                                                    :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`">{{
+                                                                    ans.name }}</label>
+                                                            </div>
+                                                            <!-- input type multiSelect -->
+                                                            <div class="form-group d-flex col-12 form-check-inline"
+                                                                v-if="item.question_type === 'multiSelect'">
+                                                                <input type="checkbox" class=""
+                                                                    v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                                                    :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                                                    :value="ans.name" disabled>
+                                                                <label class="form-check-label mx-2"
+                                                                    :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`">{{
+                                                                    ans.name }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- input type score -->
+                                    <div class="form-group col-12 form-check" v-if="item.question_type === 'score'">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                                                v-for="(crit, idex) in item.criterias">
+                                                <div class="">
+                                                    <iframe :src="crit.link" v-if="crit.media"></iframe>
+                                                    <div class="form-check-criteria d-flex col-12 form-check-inline">
+                                                        <label>{{ crit.name }}</label>
+                                                    </div>
+                                                    <input type="number" class="form-control form-control-number my-2"
+                                                        v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                                        :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- input type text -->
+                                    <div class="form-group col-12 form-check" v-if="item.question_type === 'input'">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                                                v-for="(crit, idex) in item.criterias">
+                                                <div class="">
+                                                    <iframe :src="crit.link" v-if="crit.media"></iframe>
+                                                    <div class="form-check-criteria d-flex col-12 form-check-inline">
+                                                        <label>{{ crit.name }}</label>
+                                                    </div>
+                                                    <textarea name="" id=""
+                                                        class="form-control form-control-textarea my-2"
+                                                        v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                                        :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`" disabled></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- TH câu vote không phải đa tiêu chí -->
+                                <div class="row" v-else>
+                                    <div class="form-group col-12 form-check">
+                                        <div class="row"
+                                            v-if="item.question_type === 'oneSelect' || item.question_type === 'multiSelect'">
+                                            <div class="form-group col-12">
+                                                <div class="row">
+                                                    <div class="col-sm-12 col-md-4 col-lg-3"
+                                                        v-for="(ans, idx) in item.question_answers">
+                                                        <div class=" mb-2">
+                                                            <iframe :src="ans.link" v-if="ans.media"></iframe>
+                                                            <!-- input type oneSelect -->
+                                                            <div class="form-group d-flex col-12 form-check-inline"
+                                                                v-if="item.question_type === 'oneSelect'">
+                                                                <input type="radio"
+                                                                    v-model="form[`${index + 1}．${item.question}`]['value']"
+                                                                    :id="`radio-Q${index + 1}-${idx + 1}`"
+                                                                    :value="ans.name" disabled>
+                                                                <label :for="`radio-Q${index + 1}-${idx + 1}`"
+                                                                    class="form-check-label mx-2"> {{ ans.name }}
+                                                                </label>
+                                                            </div>
+                                                            <!-- input type multiSelect -->
+                                                            <div class="form-group d-flex col-12 form-check-inline"
+                                                                v-if="item.question_type === 'multiSelect'">
+                                                                <input type="checkbox"
+                                                                    v-model="form[`${index + 1}．${item.question}`]['value']"
+                                                                    :id="`checkbox-Q${index + 1}-${idx + 1}`"
+                                                                    :value="ans.name" disabled>
+                                                                <label :for="`checkbox-Q${index + 1}-${idx + 1}`"
+                                                                    class="form-check-label mx-2"> {{ ans.name }}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- input type text -->
+                                        <div class="row" v-if="item.question_type === 'input'">
+                                            <div class="col-sm-12 col-md-6 col-lg-6 mb-2">
+                                                <div class="">
+                                                    <textarea name="" id=""
+                                                        class="form-control my-2 form-control-textarea"
+                                                        v-model="form[`${index + 1}．${item.question}`]['value']"
+                                                        :id="`input-Q${index + 1}-${idx + 1}`" disabled></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- validation -->
+                                <span class="text-danger" v-if="validates[`${index + 1}．${item.question}`] == false">
+                                    ※このフィールドを記入してください。
+                                </span>
+
+                                <span class="text-danger" v-if="item.question_type === 'email' && invalidEmail">
+                                    ※メールが無効です。
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="btn-action" class="row pb-5" v-show="Object.keys(vote).length > 0">
+                    <div class="col-12 d-flex justify-content-center px-2">
+                        <button class="btn btn-success col-12 btn-save" @click="saveResponse"
+                            :disabled="invalidLocation || disabledClick">確認する</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <?!= include('VueJS') ?>
+    <?!= include('previewFormJS') ?>
+</body>
+
+</html>

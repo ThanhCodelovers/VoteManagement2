@@ -1,0 +1,1922 @@
+<?
+    var surveyID = requestParams['surveyID'] || false;
+?>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title></title>
+    <!-- CommonJS Lib -->
+    <?!= include('jquery-3.3.1.slim.min.js') ?>
+    <?!= include('popper.min.js') ?>
+    <?!= include('bootstrap.bundle.min.js') ?>
+    <?!= include('bootstrap-datepicker.min.js') ?>
+    <?!= include('bootstrap-datepicker.ja.min.js') ?>
+    <?!= include('sweetalert2.min.js') ?>
+    <!-- <?!= include('commonJS') ?> -->
+    <!-- StyleCSS Lib -->
+    <?!= include('bootstrap.min.css') ?>
+    <?!= include('bootstrap-datepicker.min.css') ?>
+    <!-- <?!= include('all.min.css') ?> -->
+    <?!= include('sweetalert2.min.css') ?>
+    <?!= include('stylesCss') ?>
+    <style>
+      .table.table-bordered.custom-table thead tr th,
+      .table.table-bordered.custom-table tbody tr td {
+        min-width: 70px;
+      }
+
+      .form-check {
+        padding-left: 10px;
+      }
+      .border-bottom-row .border-bottom {
+        border-bottom: none !important;
+      }
+      @media (max-width: 768px) {
+        .border-md-bottom,
+        .border-right {
+          border: none !important;
+        }
+        .content-slideForm__question .text-danger {
+          font-size: 12px;
+        }
+        .content-slideForm__question .text-right {
+          padding-top: 2px !important;
+        }
+        .content-slideForm__question .justify-content-start h4 {
+          font-size: 16px;
+        }
+        .content-slideForm__question .justify-content-start .btn-sm {
+          padding: 0 10px;
+        }
+        .content-slideForm__question .justify-content-start .text-left {
+          padding-top: 2px !important;
+        }
+        /* .border-bottom-row .border-bottom{
+            border-bottom: 1px solid #dee2e6 !important;
+          } */
+      }
+      .border-right {
+        border-right: 1px dashed #dee2e6;
+      }
+      .color-square {
+        border-radius: 3px;
+        margin-left: 10px;
+      }
+    </style>
+    <script>
+      var surveyID = "<?= surveyID ?>";
+      var sessionData = localStorage.getItem("login");
+      var login = JSON.parse(sessionData);
+    </script>
+  </head>
+
+  <body>
+    <div id="app">
+      <!-- Header -->
+      <div
+        class="container-fuild d-none d-md-flex mb-3 position-relative"
+        style="color: #fff; background: #01932e; width: 100%; font-weight: 700"
+      >
+        <span
+          class="navbar-brand m-0 p-2 px-3"
+          style="display: flex; align-items: center"
+        >
+          <img
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+            alt=""
+            width="28px"
+            height="28px"
+            style="margin-right: 5px"
+          />
+          <span class="title-addon" style="font-size: 24px; color: white"
+            >汎用投票アプリ</span
+          >
+        </span>
+        <div
+          class="d-flex flex-column text-end ms-auto m-0 p-2 px-3"
+          id="email-user"
+          style="
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+          "
+          v-if="user.name && user.email != '' && user.email != 'false'"
+        >
+          <span
+            style="font-weight: 510; font-size: 14px; color: white"
+            v-if="user.name != ''"
+            >{{ user.name }}</span
+          >
+          <span
+            style="font-weight: 400; font-size: 12px; color: whitesmoke"
+            v-if="user.email != '' && user.name != ''"
+            >{{ user.email }}</span
+          >
+          <span
+            style="font-weight: 510; font-size: 14px"
+            v-if="user.name == '' && user.email != ''"
+            >{{ user.email }}</span
+          >
+        </div>
+      </div>
+      <div
+        class="d-flex d-md-none align-items-center mb-3"
+        style="color: #fff; background: #01932e; font-weight: 700"
+      >
+        <span
+          class="navbar-brand m-0 p-2 px-3"
+          style="display: flex; align-items: center; color: #fff"
+        >
+          <img
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+            alt=""
+            width="28px"
+            height="28px"
+            style="margin-right: 5px"
+          />
+          <span class="title-addon" style="font-size: 20px; color: white"
+            >汎用投票アプリ</span
+          >
+        </span>
+      </div>
+      <!--End Header -->
+
+      <div
+        class="container-fuild px-3"
+        :style="{backgroundColor: (isNGCheck && vote.displayType == 'all' && identified) ? '#F2F6F8' : '',minHeight: '100vh'}"
+      >
+        <div class="modal" id="loading" data-backdrop="static">
+          <div
+            class="modal-dialog"
+            style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            "
+          >
+            <div id="circle">
+              <div class="loader"></div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="modal fade"
+          id="passcodeModal"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+          data-backdrop="static"
+          data-keyboard="false"
+          style="display: block"
+          v-if="vote != null & !checkPasscode && isNGCheck"
+        >
+          <div
+            class="modal-dialog custom-width"
+            role="document"
+            style="top: 10%"
+          >
+            <div
+              class="modal-content"
+              style="padding: 15px; border-radius: 10px"
+            >
+              <div class="modal-footer-passcode">
+                <div class="form-group">
+                  <small>ログインコード</small>
+                  <div class="row">
+                    <div class="col-9">
+                      <div class="input-container">
+                        <input
+                          :type="isShowPW ? 'text' : 'password'"
+                          class="form-control"
+                          placeholder="ログインコードを入れてください。"
+                          v-model="passcode"
+                          style="font-size: 16px"
+                        />
+                        <i class="fa-solid fa-eye" @click="showPassword"></i>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-success col-3"
+                      @click="checkPasscodeVote()"
+                    >
+                      送信
+                    </button>
+                  </div>
+                  <small class="form-text text-danger" v-if="!validatePasscode"
+                    >※
+                    ログインコードを持ってない方は管理者へ連絡してください。</small
+                  >
+                  <small
+                    class="form-text text-danger"
+                    v-if="validatePasscode && passcodeIncorrect"
+                    >※ ログインコードが間違っています。</small
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="showNotStart" v-if="vote != null & !isNGCheck">
+          <div class="message-box">
+            <h5>{{vote.nameVote}}</h5>
+            <h5 class="text-danger" v-if="isOutOfDate">{{ msgOutDate }}</h5>
+            <h5 class="text-danger" v-else-if="msgStatus">{{ msgStatus }}</h5>
+            <h5 class="text-danger" v-else-if="questions.length == 0">
+              現在、この投票には投票コンテンツがありません。
+            </h5>
+          </div>
+        </div>
+        <div id="content" class="container" v-if="isNGCheck">
+          <!-- Nhập thông tin định danh -->
+          <section id="content-slideForm" v-if="!identified">
+            <div class="background-top custom-header">
+              <div class="vote-title">{{ vote.nameVote }}</div>
+            </div>
+
+            <div class="background-bottom" style="background-color: #fff"></div>
+            <div
+              class="modal fade"
+              id="userInformation"
+              tabindex="-1"
+              role="dialog"
+              aria-labelledby="userInformationLabel"
+              aria-modal="true"
+              data-backdrop="static"
+              data-keyboard="false"
+            >
+              <div
+                class="modal-dialog custom-width"
+                role="document"
+                style="top: 5%"
+              >
+                <div
+                  class="modal-content"
+                  style="padding: 15px; border-radius: 10px"
+                >
+                  <div
+                    class="modal-header-passcode text-center mb-2"
+                    style="position: relative"
+                  >
+                    <p
+                      class="modal-title text-center"
+                      id="userInformationLabel"
+                      style="font-size: 15px"
+                    >
+                      名前とメールアドレスを入力してください
+                    </p>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                      style="
+                        position: absolute;
+                        top: -5px;
+                        right: -5px;
+                        font-size: 14px;
+                      "
+                    ></button>
+                  </div>
+                  <div class="modal-footer-passcode" style="padding: 0rem 1rem">
+                    <div class="form-group">
+                      <div class="mb-2">
+                        <label
+                          >名前（<span class="text-danger">＊</span>）</label
+                        ><br />
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="input-container">
+                              <input
+                                type="text"
+                                class="form-control"
+                                name="user_name"
+                                aria-label="name"
+                                v-model="user.name"
+                                style="font-size: 16px"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <small
+                          class="text-danger"
+                          v-show="vote.informationRequired == 'あり' && !validates.name"
+                          >※名前を入力してください。</small
+                        >
+                      </div>
+                      <div class="mb-2">
+                        <label
+                          >メール（<span class="text-danger">＊</span>）</label
+                        ><br />
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="input-container">
+                              <input
+                                type="email"
+                                class="form-control"
+                                name="user_email"
+                                aria-label="email"
+                                v-model="user.email"
+                                style="font-size: 16px"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <small
+                          class="text-danger"
+                          v-show="vote.informationRequired == 'あり' && !validates.email"
+                          >※メールを入力してください。</small
+                        >
+                      </div>
+                      <div class="mb-2" style="margin-top: 10px">
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="input-container">
+                              <button
+                                type="button"
+                                class="btn btn-success col-12"
+                                @click="startVote"
+                              >
+                                スタート！
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              id="content-slideForm_carousel"
+              class="carousel slide"
+              data-bs-ride="carousel"
+              data-bs-interval="false"
+            >
+              <!-- First slide: Vote Information and input User Info -->
+              <div class="carousel-inner" style="overflow-y: auto">
+                <div
+                  class="carousel-item active content-slideForm_identifyUser"
+                >
+                  <div class="vote-description" v-if="vote.description">
+                    <span v-html="vote.description"></span>
+                  </div>
+                  <div class="content-slideForm_identifyUser-quizInfo row">
+                    <!-- Số câu hỏi -->
+                    <div
+                      class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-2 mb-2"
+                    >
+                      <i class="fa-regular fa-file-lines"></i>
+                      <span
+                        class="content-slideForm_identifyUser-quizInfo___group-firstLine first-line"
+                        style="display: flex; align-items: center"
+                      >
+                        質問数&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ：
+                        {{questions.length}}問</span
+                      >
+                    </div>
+                    <!-- Chế độ hiển thị -->
+                    <div
+                      class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-2 mb-2"
+                    >
+                      <i class="fa-regular fa-clock"></i>
+                      <span
+                        class="content-slideForm_identifyUser-quizInfo___group-firstLine"
+                        style="display: flex; align-items: center"
+                        >表示モード：{{ vote.display_type }}</span
+                      >
+                    </div>
+                    <!-- Hiển thị kết quả khảo sát -->
+                    <div
+                      class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-2 mb-2"
+                    >
+                      <i class="fa-regular fa-star"></i>
+                      <span
+                        class="content-slideForm_identifyUser-quizInfo___group-firstLine"
+                        style="display: flex; align-items: center"
+                        >結果公開&nbsp;&nbsp; ： {{ vote.statistics}}</span
+                      >
+                    </div>
+                    <!-- Nhập thông tin hay không-->
+                    <div
+                      class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-2 mb-2"
+                    >
+                      <i class="fa-regular fa-user"></i>
+                      <span
+                        class="content-slideForm_identifyUser-quizInfo___group-firstLine"
+                        style="display: flex; align-items: center"
+                        >参加者情報&nbsp;&nbsp; ： {{
+                        vote.informationRequired}}</span
+                      >
+                    </div>
+                    <!-- Thời gian bắt đầu - kết thúc -->
+                    <div
+                      class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-4 mb-2 width-custom"
+                    >
+                      <i class="fa-regular fa-calendar-check"></i>
+                      <span
+                        class="content-slideForm_identifyUser-quizInfo___group-firstLine"
+                        style="align-content: center"
+                        >実施期間&nbsp;&nbsp; ： {{vote.dateRun}} 〜
+                        <span class="sp-time-end" style="white-space: nowrap"
+                          >&nbsp;&nbsp; {{vote.dateEnd}}</span
+                        ></span
+                      >
+                    </div>
+
+                    <div class="">
+                      <div class="carousel-footer__start" v-show="!identified">
+                        <button
+                          type="button"
+                          class="btn btn-success"
+                          data-slide="next"
+                          :disabled="invalidLocation || disabledClick"
+                          @click="vote.informationRequired === 'あり' ? openModalInfomation() : startVote()"
+                          style="width: 100%; height: 50px"
+                        >
+                          <span class="" style="color: white">始める</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <!-- Form vote chế độ tất cả-->
+          <section
+            id="content-form"
+            class="row g-3"
+            v-if="vote.displayType == 'all' && identified"
+          >
+            <div
+              class="row g-2 mb-1"
+              style="text-align: center; font-size: 17px"
+            >
+              <h5>{{ vote.nameVote }}</h5>
+            </div>
+            <div class="d-none">
+              <div class="row d-flex justify-content-end">
+                <div class="d-flex col-sm-12 col-md-6 col-lg-3 mb-1">
+                  <label
+                    for="name"
+                    class="text-nowrap form-label mb-0 mt-auto label-identify"
+                    >名前</label
+                  >
+                  <span
+                    class="status validate"
+                    :class="[!validates.name ? 'input-identify-danger' : 'd-none']"
+                    >必須</span
+                  >
+                  <input
+                    type="text"
+                    class="form-control input-identify"
+                    name="name"
+                    v-model="user.name"
+                    :class="[!validates.name ? 'input-identify-danger' : '']"
+                    disabled
+                  />
+                </div>
+                <div class="d-flex col-sm-12 col-md-6 col-lg-3 mb-1">
+                  <label
+                    for="phone_number"
+                    class="text-nowrap form-label mb-0 mt-auto label-identify"
+                    >電話番号</label
+                  >
+                  <span
+                    class="status validate"
+                    :class="[!validates.phone_number ? 'input-identify-danger' : 'd-none']"
+                    >必須</span
+                  >
+                  <input
+                    type="text"
+                    class="form-control input-identify"
+                    name="phone_number"
+                    v-model="user.phone_number"
+                    :class="[!validates.phone_number ? 'input-identify-danger' : '']"
+                    disabled
+                  />
+                </div>
+                <div class="d-flex col-sm-12 col-md-6 col-lg-3 mb-1">
+                  <label
+                    for="email"
+                    class="text-nowrap form-label mb-0 mt-auto label-identify"
+                    >Eメール</label
+                  >
+                  <span
+                    class="status validate"
+                    :class="[!validates.email ? 'input-identify-danger' : 'd-none']"
+                    >必須</span
+                  >
+                  <input
+                    type="text"
+                    class="form-control input-identify"
+                    name="email"
+                    v-model="user.email"
+                    :class="[!validates.email ? 'input-identify-danger' : '']"
+                    disabled
+                  />
+                </div>
+                <div class="d-flex col-sm-12 col-md-6 col-lg-3">
+                  <label
+                    for="address"
+                    class="text-nowrap form-label mb-0 mt-auto label-identify text-end"
+                    >住所</label
+                  >
+                  <span
+                    class="status validate"
+                    :class="[!validates.address ? 'input-identify-danger' : 'd-none']"
+                    >必須</span
+                  >
+                  <input
+                    type="text"
+                    class="form-control input-identify"
+                    name="address"
+                    v-model="user.address"
+                    :class="[!validates.address ? 'input-identify-danger' : '']"
+                    disabled
+                  />
+                </div>
+              </div>
+            </div>
+            <div
+              class="col-12 row g-2 mx-0 mt-0 mb-3"
+              v-for="(item, index) in questions"
+              :key="index"
+              v-if="vote.displayType == 'all'"
+            >
+              <div class="form-group col-12 px-0 mt-0 question-all">
+                <div class="align-items-center">
+                  <p
+                    class="title-question-form m-0 mb-2"
+                    style="
+                      padding-bottom: 0px;
+                      gap: 7px;
+                      padding-left: 0px;
+                      grid-template-columns: auto 1fr;
+                      display: grid;
+                    "
+                  >
+                    <span class="title-question" style="color: rgb(1, 147, 46)"
+                      >問{{ index + 1 }}</span
+                    >
+                    <span
+                      class="title-question"
+                      style="text-align: left; word-break: break-all"
+                    >
+                      {{ item.question }}
+                      <span class="text-danger" v-if="item.question_required"
+                        >*</span
+                      >
+                      <br v-if="item.description_for_answer" /><span
+                        class="text-description"
+                        style="word-break: break-word"
+                        v-if="item.description_for_answer"
+                        >({{item.description_for_answer}})</span
+                      >
+                      <div
+                        class="vote-method-label"
+                        style="margin-left: 32px; color: blue"
+                        v-if="item.voteThreshold"
+                      >
+                        可決条件: {{ item.voteThreshold }}
+                      </div>
+                    </span>
+                  </p>
+
+                  <!-- TH câu vote đa tiêu chí -->
+                  <div
+                    class="row"
+                    v-if="form[`${index + 1}．${item.question}`].criteria == true"
+                  >
+                    <div
+                      v-for="(crit, idex) in item.criterias"
+                      v-if="item.question_type === 'oneSelect' || item.question_type === 'multiSelect'"
+                      class="form-group col-12 form-check form-check1"
+                    >
+                      <div class="row">
+                        <div
+                          class="col-sm-12 col-md-4 col-lg-3 mb-2 form-margin-left"
+                        >
+                          <div class="">
+                            <div
+                              class="form-group d-flex col-12 form-check-inline"
+                            >
+                              <label
+                                for="checkbox-Q1-1"
+                                class="form-check-criteria mb-2"
+                                >{{ crit.name }}</label
+                              >
+                            </div>
+
+                            <!-- media cho crit -->
+                            <div v-if="crit.media" class="media-wrapper">
+                              <!-- Nếu là ảnh -->
+                              <template v-if="isImage(crit.media)">
+                                <img
+                                  :src="convertDriveLink(crit.media)"
+                                  class="preview-img"
+                                  alt="preview"
+                                />
+                                <button
+                                  class="zoom-btn"
+                                  @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
+                                >
+                                  ⛶
+                                </button>
+                              </template>
+
+                              <!-- Nếu không phải ảnh -->
+                              <template v-else>
+                                <iframe
+                                  :src="convertDriveLink(crit.media)"
+                                  class="iframe-vote1"
+                                ></iframe>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row mg_18">
+                        <div class="form-group col-12">
+                          <div class="mag-right0 row">
+                            <div
+                              class="col-sm-12 col-md-4 col-lg-3"
+                              v-for="(ans, idx) in item.question_answers"
+                            >
+                              <div class="mb-2">
+                                <!-- media cho ans -->
+                                <div v-if="ans.media" class="media-wrapper">
+                                  <!-- Nếu là ảnh -->
+                                  <template v-if="isImage(ans.media)">
+                                    <img
+                                      :src="convertDriveLink(ans.media)"
+                                      class="preview-img"
+                                      alt="preview"
+                                    />
+                                    <button
+                                      class="zoom-btn"
+                                      @click="fullscreenTarget = { type: 'ans', index: idx, url: convertDriveLink(ans.media) }"
+                                    >
+                                      ⛶
+                                    </button>
+                                  </template>
+
+                                  <!-- Nếu không phải ảnh -->
+                                  <template v-else>
+                                    <iframe
+                                      :src="convertDriveLink(ans.media)"
+                                      class="iframe-vote1"
+                                    ></iframe>
+                                  </template>
+                                </div>
+
+                                <!-- fullscreen modal -->
+                                <div
+                                  v-if="fullscreenTarget"
+                                  class="fullscreen-overlay"
+                                >
+                                  <div class="media-container">
+                                    <img
+                                      v-if="isImage(fullscreenTarget.url)"
+                                      :src="fullscreenTarget.url"
+                                      alt="preview"
+                                    />
+                                    <iframe
+                                      v-else
+                                      :src="fullscreenTarget.url"
+                                      class="preview-iframe-full"
+                                      frameborder="0"
+                                    ></iframe>
+
+                                    <button
+                                      class="close-btn"
+                                      @click="fullscreenTarget = null"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <!-- input type oneSelect -->
+                                <div
+                                  class="form-group d-flex col-12 align-items-baseline"
+                                  style="gap: 5px"
+                                  v-if="item.question_type === 'oneSelect'"
+                                >
+                                  <input
+                                    type="radio"
+                                    style="transform: translateY(1.5px)"
+                                    v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                    :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                    :value="ans.name"
+                                    :disabled="isPreview"
+                                  />
+                                  <span
+                                    class="color-square"
+                                    :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                    style="
+                                      width: 10px;
+                                      height: 10px;
+                                      display: inline-block;
+                                      margin-right: 1px;
+                                      flex-shrink: 0;
+                                    "
+                                  ></span>
+                                  <label
+                                    class="form-check-label mx-2"
+                                    style="word-break: break-all"
+                                    :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                    >{{ ans.name }}</label
+                                  >
+                                </div>
+
+                                <!-- input type multiSelect -->
+                                <div
+                                  class="form-group d-flex1 col-12 form-check-inline"
+                                  v-if="item.question_type === 'multiSelect'"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    style="transform: translateY(1.5px)"
+                                    v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                    :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                    :value="ans.name"
+                                    :disabled="isPreview || (form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value'].length >= (item.max || 999) && form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value'].indexOf(ans.name) === -1)"
+                                  />
+                                  <span
+                                    class="color-square"
+                                    :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                    style="
+                                      width: 10px;
+                                      height: 10px;
+                                      display: inline-block;
+                                      margin-right: 1px;
+                                      flex-shrink: 0;
+                                    "
+                                  ></span>
+                                  <label
+                                    class="form-check-label mx-2"
+                                    style="word-break: break-all"
+                                    :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                    >{{ ans.name }}</label
+                                  >
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- input type score -->
+                    <div
+                      class="form-group col-12 form-check form-check1"
+                      v-if="item.question_type === 'score'"
+                    >
+                      <div class="row mg_18">
+                        <div
+                          class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                          v-for="(crit, idex) in item.criterias"
+                        >
+                          <div class="">
+                            <div v-if="crit.media" class="media-wrapper">
+                              <!-- Nếu là ảnh -->
+                              <template v-if="isImage(crit.media)">
+                                <img
+                                  :src="convertDriveLink(crit.media)"
+                                  class="preview-img"
+                                  alt="preview"
+                                />
+                                <button
+                                  class="zoom-btn"
+                                  @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
+                                >
+                                  ⛶
+                                </button>
+                              </template>
+
+                              <!-- Nếu không phải ảnh -->
+                              <template v-else>
+                                <iframe
+                                  :src="convertDriveLink(crit.media)"
+                                  class="iframe-vote1"
+                                ></iframe>
+                              </template>
+                            </div>
+                            <div
+                              class="form-check-criteria d-flex col-12 form-check-inline"
+                            >
+                              <label>{{ crit.name }}</label>
+                            </div>
+                            <input
+                              type="number"
+                              class="form-control form-control-number my-2"
+                              v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                              :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                              :disabled="isPreview"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- input type text -->
+                    <div
+                      class="form-group col-12 form-check form-check1"
+                      v-if="item.question_type === 'input'"
+                    >
+                      <div class="row">
+                        <div
+                          class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                          v-for="(crit, idex) in item.criterias"
+                        >
+                          <div class="">
+                            <div v-if="crit.media" class="media-wrapper">
+                              <!-- Nếu là ảnh -->
+                              <template v-if="isImage(crit.media)">
+                                <img
+                                  :src="convertDriveLink(crit.media)"
+                                  class="preview-img"
+                                  alt="preview"
+                                />
+                                <button
+                                  class="zoom-btn"
+                                  @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
+                                >
+                                  ⛶
+                                </button>
+                              </template>
+
+                              <!-- Nếu không phải ảnh -->
+                              <template v-else>
+                                <iframe
+                                  :src="convertDriveLink(crit.media)"
+                                  class="iframe-vote1"
+                                ></iframe>
+                              </template>
+                            </div>
+                            <div
+                              class="form-check-criteria d-flex col-12 form-check-inline"
+                            >
+                              <label>{{ crit.name }}</label>
+                            </div>
+                            <textarea
+                              class="form-control form-control-textarea my-2"
+                              v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                              :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                              :disabled="isPreview"
+                            ></textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- TH câu vote không phải đa tiêu chí -->
+                  <div class="row" v-else>
+                    <div class="form-group col-12 form-check form-check1">
+                      <div
+                        class="row"
+                        v-if="item.question_type === 'oneSelect' || item.question_type === 'multiSelect'"
+                      >
+                        <div class="form-group col-12">
+                          <div class="row pad-left30 mag-right0">
+                            <div
+                              class="col-sm-12 col-md-4 col-lg-3"
+                              v-for="(ans, idx) in item.question_answers"
+                            >
+                              <div class="mb-2">
+                                <div v-if="ans.media" class="media-wrapper">
+                                  <!-- Nếu là ảnh -->
+                                  <template v-if="isImage(ans.media)">
+                                    <img
+                                      :src="convertDriveLink(ans.media)"
+                                      class="preview-img"
+                                      alt="preview"
+                                    />
+                                    <button
+                                      class="zoom-btn"
+                                      @click="fullscreenTarget = { type: 'ans', index: idx, url: convertDriveLink(ans.media) }"
+                                    >
+                                      ⛶
+                                    </button>
+                                  </template>
+
+                                  <!-- Nếu không phải ảnh -->
+                                  <template v-else>
+                                    <iframe
+                                      :src="convertDriveLink(ans.media)"
+                                      class="iframe-vote1"
+                                    ></iframe>
+                                  </template>
+                                </div>
+
+                                <!-- fullscreen modal -->
+                                <div
+                                  v-if="fullscreenTarget"
+                                  class="fullscreen-overlay"
+                                >
+                                  <div class="media-container">
+                                    <img
+                                      v-if="isImage(fullscreenTarget.url)"
+                                      :src="fullscreenTarget.url"
+                                      alt="preview"
+                                    />
+                                    <iframe
+                                      v-else
+                                      :src="fullscreenTarget.url"
+                                      class="preview-iframe-full"
+                                      frameborder="0"
+                                    ></iframe>
+
+                                    <button
+                                      class="close-btn"
+                                      @click="fullscreenTarget = null"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                </div>
+                                <!-- input type oneSelect -->
+                                <div
+                                  class="form-group d-flex col-12 align-items-baseline"
+                                  style="gap: 5px"
+                                  v-if="item.question_type === 'oneSelect'"
+                                >
+                                  <input
+                                    type="radio"
+                                    style="transform: translateY(1.5px)"
+                                    v-model="form[`${index + 1}．${item.question}`]['value']"
+                                    :id="`radio-Q${index + 1}-${idx + 1}`"
+                                    :value="ans.name"
+                                    :disabled="isPreview"
+                                  />
+                                  <span
+                                    class="color-square"
+                                    :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                    style="
+                                      width: 10px;
+                                      height: 10px;
+                                      display: inline-block;
+                                      margin-right: 1px;
+                                      flex-shrink: 0;
+                                    "
+                                  ></span>
+                                  <label
+                                    :for="`radio-Q${index + 1}-${idx + 1}`"
+                                    class="form-check-label mx-2"
+                                    style="word-break: break-all"
+                                  >
+                                    {{ ans.name }}
+                                  </label>
+                                </div>
+                                <!-- input type multiSelect -->
+                                <div
+                                  class="form-group d-flex1 col-12 form-check-inline"
+                                  v-if="item.question_type === 'multiSelect'"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    style="transform: translateY(1.5px)"
+                                    v-model="form[`${index + 1}．${item.question}`]['value']"
+                                    :id="`checkbox-Q${index + 1}-${idx + 1}`"
+                                    :value="ans.name"
+                                    :disabled="isPreview || (form[`${index + 1}．${item.question}`]['value'].length >= (item.max || 999) && form[`${index + 1}．${item.question}`]['value'].indexOf(ans.name) === -1)"
+                                  />
+                                  <span
+                                    class="color-square"
+                                    :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                    style="
+                                      width: 10px;
+                                      height: 10px;
+                                      display: inline-block;
+                                      margin-right: 1px;
+                                      flex-shrink: 0;
+                                    "
+                                  ></span>
+                                  <label
+                                    :for="`checkbox-Q${index + 1}-${idx + 1}`"
+                                    class="form-check-label mx-2"
+                                    style="word-break: break-all"
+                                  >
+                                    {{ ans.name }}
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- input type text -->
+                      <div class="row" v-if="item.question_type === 'input'">
+                        <div class="col-sm-12 col-md-6 col-lg-6 mb-2">
+                          <div class="">
+                            <textarea
+                              name=""
+                              id=""
+                              class="form-control my-2 form-control-textarea"
+                              v-model="form[`${index + 1}．${item.question}`]['value']"
+                              :id="`input-Q${index + 1}-${idx + 1}`"
+                              :disabled="isPreview"
+                            ></textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- validation -->
+                  <span
+                    class="text-danger"
+                    v-if="validates[`${index + 1}．${item.question}`] == false"
+                  >
+                    <template
+                      v-if="item.question_type === 'multiSelect' && item.min && form[`${index + 1}．${item.question}`]['value'] && form[`${index + 1}．${item.question}`]['value'].length < item.min"
+                    >
+                      ※最低({{item.min}})個の選択肢を選んでください。
+                    </template>
+                    <template v-else>
+                      ※このフィールドを記入してください。
+                    </template>
+                  </span>
+
+                  <span
+                    class="text-danger"
+                    v-if="item.question_type === 'email' && invalidEmail"
+                  >
+                    ※メールが無効です。
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+          <!-- Form vote chế độ một câu-->
+          <section
+            id="content-slideForm"
+            v-if="vote.displayType == 'one' && identified"
+          >
+            <div
+              class="background-top background-top-oneQuest"
+              style="background-color: rgb(1, 147, 46)"
+            >
+              <span
+                style="
+                  color: white;
+                  font-size: 20px;
+                  display: inline-block;
+                  vertical-align: middle;
+                "
+                >{{ vote.nameVote }}</span
+              >
+              <p style="color: rgb(255, 255, 255)" v-show="user.name != ''">
+                名前：{{user.name}}
+              </p>
+            </div>
+
+            <div
+              class="background-bottom background-bottom-oneQuest"
+              style="background-color: whitesmoke; height: 100vh"
+            ></div>
+            <div
+              id="content-slideForm_carousel"
+              class="carousel slide form-slide"
+              data-bs-ride="carousel"
+              data-bs-interval="false"
+            >
+              <div class="carousel-inner">
+                <div class="content-otherInfo form-section-spacing">
+                  <div class="content-otherInfo__progress">
+                    <div class="progress">
+                      <div
+                        class="progress-bar"
+                        role="progressbar"
+                        :aria-valuenow="currentQuestionIndex"
+                        aria-valuemin="1"
+                        :aria-valuemax="questions.length"
+                      ></div>
+                      <div class="progress-bar-segments">
+                        <div
+                          v-for="(segment, index) in questions.length"
+                          :key="index"
+                          :class="['progress-bar-segment', getSegmentClass(index), {'active-segment': currentQuestionIndex === index}]"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="content-otherInfo__counterQuestion text-center">
+                    <span class="">
+                      <span style="font-size: 15px; font-weight: 600"
+                        >{{currentQuestionIndex + 1}}</span
+                      >/{{questions.length}}
+                    </span>
+                  </div>
+                </div>
+                <div
+                  class="content-slideForm__question-detail carousel-item content-slideForm__doQuestion"
+                  style="padding: 0px"
+                  v-for="(item, index) in questions"
+                  :key="index"
+                  :class="(index === currentQuestionIndex) ? 'active' : ''"
+                >
+                  <div
+                    class="content-slideForm__question"
+                    style="padding: 15px"
+                  >
+                    <div class="row">
+                      <div class="col">
+                        <div class="d-flex justify-content-start">
+                          <div class="text-left" style="padding-right: 15px">
+                            <h4 style="white-space: nowrap">
+                              <strong>投票結果</strong>
+                            </h4>
+                          </div>
+                          <div class="">
+                            <button
+                              class="btn btn-outline-success btn-sm"
+                              @click="reloadPage"
+                              style="white-space: nowrap"
+                            >
+                              <i class="fas fa-sync-alt"></i> リロード
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="col text-right"
+                        style="text-align: right; padding-top: 8px"
+                      >
+                        <p
+                          class="text-danger"
+                          style="display: inline-block; white-space: nowrap"
+                        >
+                          {{vote.dateEnd}}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      class="row mb-3 border-bottom border-bottom-row"
+                      v-for="(crit, cIdx) in item.criterias"
+                      :key="crit.name || cIdx"
+                    >
+                      <!-- Tiêu chí -->
+                      <div class="col-12 col-md-2 fw-bold mb-1 mb-md-0">
+                        {{ crit.name }}:
+                      </div>
+
+                      <!-- Ứng viên thắng -->
+                      <div class="col-12 col-md-2 mb-1 mb-md-0">
+                        <span
+                          >{{ getWinner(results[currentQuestionIndex],
+                          crit).name }}</span
+                        >
+                      </div>
+
+                      <!-- Các đáp án -->
+                      <div class="col-12 col-md-8">
+                        <div
+                          v-for="(ans, aIdx) in results[currentQuestionIndex].question_answers"
+                          :key="aIdx"
+                          class="d-flex align-items-center mb-2"
+                        >
+                          <!-- Progress bar -->
+                          <div
+                            class="progress flex-grow-1 me-2"
+                            style="height: 12px"
+                          >
+                            <div
+                              class="progress-bar"
+                              role="progressbar"
+                              :style="{
+            width: getPercentageFor(ans, results[currentQuestionIndex], crit) + '%',
+            backgroundColor: getColor(item, aIdx)
+          }"
+                            ></div>
+                          </div>
+
+                          <!-- Số phiếu -->
+                          <small class="text-nowrap">
+                            <template v-if="isCriteriaEmpty(ans)">
+                              {{ ans.total || 0 }}/{{
+                              safeTotal(results[currentQuestionIndex],
+                              crit.name) }}票 ({{
+                              safeCalculatePercentage(ans.total || 0,
+                              safeTotal(results[currentQuestionIndex],
+                              crit.name)) }}%)
+                            </template>
+                            <template v-else>
+                              {{ (ans.criteria && (ans.criteria[crit.name]) ||
+                              0) }}/{{ safeTotal(results[currentQuestionIndex],
+                              crit.name) }}票 ({{
+                              safeCalculatePercentage((ans.criteria &&
+                              ans.criteria[crit.name]) || 0,
+                              safeTotal(results[currentQuestionIndex],
+                              crit.name)) }}%)
+                            </template>
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 row g-2 mx-0">
+                      <div class="form-group col-12 px-0">
+                        <div class="align-items-center mt-3">
+                          <p
+                            class="title-question-form m-0 mb-2"
+                            style="
+                              padding-bottom: 0px;
+                              gap: 2px;
+                              padding-left: 0px;
+                              grid-template-columns: auto 1fr;
+                              display: grid;
+                            "
+                          >
+                            <span
+                              class="title-question"
+                              style="color: rgb(1, 147, 46)"
+                              >問{{ index + 1 }}</span
+                            >
+                            <span
+                              class="title-question"
+                              style="text-align: left; word-break: break-all"
+                            >
+                              {{ item.question }}<span
+                                class="text-danger"
+                                v-if="item.question_required"
+                                >*</span
+                              >
+                              <br v-if="item.description_for_answer" /><span
+                                class="text-description"
+                                style="word-break: break-word"
+                                v-if="item.description_for_answer"
+                                >({{item.description_for_answer}})</span
+                              >
+                            </span>
+                          </p>
+                          <div
+                            class="vote-method-label"
+                            style="margin-left: 26px; color: blue"
+                            v-if="item.voteThreshold"
+                          >
+                            可決条件: {{ item.voteThreshold }}
+                          </div>
+                          <!-- TH câu vote đa tiêu chí -->
+                          <div
+                            class="row"
+                            v-if="form[`${index + 1}．${item.question}`].criteria == true"
+                          >
+                            <div
+                              v-for="(crit, idex) in item.criterias"
+                              v-if="item.question_type === 'oneSelect' || item.question_type === 'multiSelect'"
+                              class="form-group col-12 form-check rounded mb-2 pt-2"
+                            >
+                              <div class="row">
+                                <div
+                                  class="col-sm-12 col-md-4 col-lg-3 mb-2 padding-left38"
+                                  v-if="crit.media"
+                                >
+                                  <div class="">
+                                    <div
+                                      class="form-group d-flex col-12 form-check-inline"
+                                    >
+                                      <label
+                                        for="checkbox-Q1-1"
+                                        class="form-check-criteria mb-2"
+                                        >{{ crit.name }}</label
+                                      >
+                                    </div>
+                                    <div
+                                      v-if="crit.media"
+                                      class="media-wrapper"
+                                    >
+                                      <!-- Nếu là ảnh -->
+                                      <template v-if="isImage(crit.media)">
+                                        <img
+                                          :src="convertDriveLink(crit.media)"
+                                          class="preview-img"
+                                          alt="preview"
+                                        />
+                                        <button
+                                          class="zoom-btn"
+                                          @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
+                                        >
+                                          ⛶
+                                        </button>
+                                      </template>
+
+                                      <!-- Nếu không phải ảnh -->
+                                      <template v-else>
+                                        <iframe
+                                          :src="convertDriveLink(crit.media)"
+                                          class="iframe-vote1"
+                                        ></iframe>
+                                      </template>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div
+                                  class="col-sm-12 col-md-4 col-lg-3 mb-2 padding-left38"
+                                  v-else
+                                >
+                                  <div
+                                    class="form-group d-flex col-12 form-check-inline"
+                                  >
+                                    <label class="form-check-criteria"
+                                      >{{ crit.name }}</label
+                                    >
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="row mg_18">
+                                <div class="form-group col-12">
+                                  <div class="row mag-right0">
+                                    <div
+                                      class="col-sm-12 col-md-4 col-lg-3"
+                                      v-for="(ans, idx) in item.question_answers"
+                                    >
+                                      <div class="mb-2">
+                                        <div
+                                          v-if="ans.media"
+                                          class="media-wrapper"
+                                        >
+                                          <!-- Nếu là ảnh -->
+                                          <template v-if="isImage(ans.media)">
+                                            <img
+                                              :src="convertDriveLink(ans.media)"
+                                              class="preview-img"
+                                              alt="preview"
+                                            />
+                                            <button
+                                              class="zoom-btn"
+                                              @click="fullscreenTarget = { type: 'ans', index: idx, url: convertDriveLink(ans.media) }"
+                                            >
+                                              ⛶
+                                            </button>
+                                          </template>
+
+                                          <!-- Nếu không phải ảnh -->
+                                          <template v-else>
+                                            <iframe
+                                              :src="convertDriveLink(ans.media)"
+                                              class="iframe-vote1"
+                                            ></iframe>
+                                          </template>
+                                        </div>
+
+                                        <!-- fullscreen modal -->
+                                        <div
+                                          v-if="fullscreenTarget"
+                                          class="fullscreen-overlay"
+                                        >
+                                          <div class="media-container">
+                                            <img
+                                              v-if="isImage(fullscreenTarget.url)"
+                                              :src="fullscreenTarget.url"
+                                              alt="preview"
+                                            />
+                                            <iframe
+                                              v-else
+                                              :src="fullscreenTarget.url"
+                                              class="preview-iframe-full"
+                                              frameborder="0"
+                                            ></iframe>
+
+                                            <button
+                                              class="close-btn"
+                                              @click="fullscreenTarget = null"
+                                            >
+                                              ✕
+                                            </button>
+                                          </div>
+                                        </div>
+                                        <div
+                                          class="form-group d-flex col-12 align-items-baseline"
+                                          style="gap: 5px"
+                                          v-if="item.question_type === 'oneSelect'"
+                                        >
+                                          <input
+                                            type="radio"
+                                            style="transform: translateY(1.5px)"
+                                            v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                            :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                            :value="ans.name"
+                                          />
+                                          <!-- <span :class="['color-square', item.colors[idx]]" style="width: 20px; height: 20px; display: inline-block;"></span> -->
+                                          <!-- Hiển thị màu sắc hình vuông -->
+                                          <span
+                                            class="color-square"
+                                            :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                            style="
+                                              width: 10px;
+                                              height: 10px;
+                                              display: inline-block;
+                                              margin-right: 1px;
+                                              flex-shrink: 0;
+                                            "
+                                          ></span>
+
+                                          <label
+                                            class="form-check-label mx-2"
+                                            style="word-break: break-all"
+                                            :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                            >{{ ans.name }}</label
+                                          >
+                                        </div>
+                                        <!-- input type multiSelect -->
+                                        <div
+                                          class="form-group d-flex1 col-12 form-check-inline"
+                                          v-if="item.question_type === 'multiSelect'"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            style="transform: translateY(1.5px)"
+                                            v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                            :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                            :value="ans.name"
+                                          />
+                                          <span
+                                            class="color-square"
+                                            :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                            style="
+                                              width: 10px;
+                                              height: 10px;
+                                              display: inline-block;
+                                              margin-right: 1px;
+                                              flex-shrink: 0;
+                                            "
+                                          ></span>
+                                          <label
+                                            class="mx-2 form-check-label mx-2"
+                                            style="word-break: break-all"
+                                            :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                            >{{ ans.name }}</label
+                                          >
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- input type score -->
+                            <div
+                              class="form-group col-12 form-check form-check1"
+                              v-if="item.question_type === 'score'"
+                            >
+                              <div class="row">
+                                <div
+                                  class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                                  v-for="(crit, idex) in item.criterias"
+                                >
+                                  <div class="">
+                                    <div
+                                      v-if="crit.media"
+                                      class="media-wrapper"
+                                    >
+                                      <!-- Nếu là ảnh -->
+                                      <template v-if="isImage(crit.media)">
+                                        <img
+                                          :src="convertDriveLink(crit.media)"
+                                          class="preview-img"
+                                          alt="preview"
+                                        />
+                                        <button
+                                          class="zoom-btn"
+                                          @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
+                                        >
+                                          ⛶
+                                        </button>
+                                      </template>
+
+                                      <!-- Nếu không phải ảnh -->
+                                      <template v-else>
+                                        <iframe
+                                          :src="convertDriveLink(crit.media)"
+                                          class="iframe-vote1"
+                                        ></iframe>
+                                      </template>
+                                    </div>
+                                    <div
+                                      class="form-check-criteria d-flex col-12 form-check-inline"
+                                    >
+                                      <label>{{ crit.name }}</label>
+                                    </div>
+                                    <input
+                                      type="number"
+                                      class="form-control form-control-number my-2"
+                                      v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                      :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- input type text -->
+                            <div
+                              class="form-group col-12 form-check form-check1"
+                              v-if="item.question_type === 'input'"
+                            >
+                              <div class="row">
+                                <div
+                                  class="col-sm-12 col-md-4 col-lg-3 mb-2"
+                                  v-for="(crit, idex) in item.criterias"
+                                >
+                                  <div class="">
+                                    <div
+                                      v-if="crit.media"
+                                      class="media-wrapper"
+                                    >
+                                      <!-- Nếu là ảnh -->
+                                      <template v-if="isImage(crit.media)">
+                                        <img
+                                          :src="convertDriveLink(crit.media)"
+                                          class="preview-img"
+                                          alt="preview"
+                                        />
+                                        <button
+                                          class="zoom-btn"
+                                          @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
+                                        >
+                                          ⛶
+                                        </button>
+                                      </template>
+
+                                      <!-- Nếu không phải ảnh -->
+                                      <template v-else>
+                                        <iframe
+                                          :src="convertDriveLink(crit.media)"
+                                          class="iframe-vote1"
+                                        ></iframe>
+                                      </template>
+                                    </div>
+                                    <div
+                                      class="form-check-criteria d-flex col-12 form-check-inline"
+                                    >
+                                      <label>{{ crit.name }}</label>
+                                    </div>
+                                    <textarea
+                                      name=""
+                                      id=""
+                                      class="form-control form-control-textarea my-2"
+                                      v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
+                                      :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                    ></textarea>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- TH câu vote không phải đa tiêu chí -->
+                          <div class="row" v-else>
+                            <div
+                              class="form-group col-12 form-check form-check1"
+                            >
+                              <div
+                                class="row mg_18"
+                                v-if="item.question_type === 'oneSelect' || item.question_type === 'multiSelect'"
+                              >
+                                <div class="form-group col-12">
+                                  <div class="row mag-right0">
+                                    <div
+                                      class="col-sm-12 col-md-4 col-lg-3"
+                                      v-for="(ans, idx) in Object.values(item.question_answers)"
+                                      :key="idx"
+                                    >
+                                      <div class="mb-2">
+                                        <div
+                                          v-if="ans.media"
+                                          class="media-wrapper"
+                                        >
+                                          <!-- Nếu là ảnh -->
+                                          <template v-if="isImage(ans.media)">
+                                            <img
+                                              :src="convertDriveLink(ans.media)"
+                                              class="preview-img"
+                                              alt="preview"
+                                            />
+                                            <button
+                                              class="zoom-btn"
+                                              @click="fullscreenTarget = { type: 'ans', index: idx, url: convertDriveLink(ans.media) }"
+                                            >
+                                              ⛶
+                                            </button>
+                                          </template>
+
+                                          <!-- Nếu không phải ảnh -->
+                                          <template v-else>
+                                            <iframe
+                                              :src="convertDriveLink(ans.media)"
+                                              class="iframe-vote1"
+                                            ></iframe>
+                                          </template>
+                                        </div>
+
+                                        <!-- fullscreen modal -->
+                                        <div
+                                          v-if="fullscreenTarget"
+                                          class="fullscreen-overlay"
+                                        >
+                                          <div class="media-container">
+                                            <img
+                                              v-if="isImage(fullscreenTarget.url)"
+                                              :src="fullscreenTarget.url"
+                                              alt="preview"
+                                            />
+                                            <iframe
+                                              v-else
+                                              :src="fullscreenTarget.url"
+                                              class="preview-iframe-full"
+                                              frameborder="0"
+                                            ></iframe>
+                                            <button
+                                              class="close-btn"
+                                              @click="fullscreenTarget = null"
+                                            >
+                                              ✕
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        <!-- input type oneSelect -->
+                                        <div
+                                          class="form-group d-flex col-12 align-items-baseline"
+                                          style="gap: 5px"
+                                          v-if="item.question_type === 'oneSelect'"
+                                        >
+                                          <input
+                                            type="radio"
+                                            style="transform: translateY(1.5px)"
+                                            v-model="form[`${index + 1}．${item.question}`]['value']"
+                                            :id="`radio-Q${index + 1}-${idx + 1}`"
+                                            :value="ans.name"
+                                          />
+                                          <span
+                                            class="color-square"
+                                            :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                            style="
+                                              width: 10px;
+                                              height: 10px;
+                                              display: inline-block;
+                                              margin-right: 1px;
+                                              flex-shrink: 0;
+                                            "
+                                          ></span>
+                                          <label
+                                            :for="`radio-Q${index + 1}-${idx + 1}`"
+                                            class="form-check-label mx-2"
+                                            style="word-break: break-all"
+                                          >
+                                            {{ ans.name }}
+                                          </label>
+                                        </div>
+
+                                        <!-- input type multiSelect -->
+                                        <div
+                                          class="form-group d-flex1 col-12 form-check-inline"
+                                          v-if="item.question_type === 'multiSelect'"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            style="transform: translateY(1.5px)"
+                                            v-model="form[`${index + 1}．${item.question}`]['value']"
+                                            :id="`checkbox-Q${index + 1}-${idx + 1}`"
+                                            :value="ans.name"
+                                          />
+                                          <span
+                                            class="color-square"
+                                            :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
+                                            style="
+                                              width: 10px;
+                                              height: 10px;
+                                              display: inline-block;
+                                              margin-right: 1px;
+                                              flex-shrink: 0;
+                                            "
+                                          ></span>
+                                          <label
+                                            :for="`checkbox-Q${index + 1}-${idx + 1}`"
+                                            class="form-check-label mx-2"
+                                            style="word-break: break-all"
+                                          >
+                                            {{ ans.name }}
+                                          </label>
+                                        </div>
+
+                                        <!-- Progress bar + số phiếu -->
+                                        <div
+                                          class="d-flex align-items-center mt-1"
+                                        >
+                                          <div
+                                            class="progress flex-grow-1 me-2"
+                                            style="height: 12px"
+                                          >
+                                            <div
+                                              class="progress-bar"
+                                              role="progressbar"
+                                              :style="{
+                                                width: getPercentageNoCriteria(getResultAnswer(ans.name), results[currentQuestionIndex]) + '%',
+                                                backgroundColor: getColor(item, idx)
+                                              }"
+                                            ></div>
+                                          </div>
+
+                                          <small class="text-nowrap">
+                                            {{ getResultAnswer(ans.name)?.total
+                                            || 0 }}/{{
+                                            getTotalAnswers(results[currentQuestionIndex])
+                                            }}票 ({{
+                                            getPercentageNoCriteria(getResultAnswer(ans.name),
+                                            results[currentQuestionIndex]).toFixed(1)
+                                            }}%)
+                                          </small>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- input type text -->
+                              <div
+                                class="row"
+                                v-if="item.question_type === 'input'"
+                              >
+                                <div class="col-sm-12 col-md-6 col-lg-6 mb-2">
+                                  <div class="">
+                                    <textarea
+                                      name=""
+                                      id=""
+                                      class="form-control form-control-textarea my-2"
+                                      v-model="form[`${index + 1}．${item.question}`]['value']"
+                                      :id="`input-Q${index + 1}-${idx + 1}`"
+                                    ></textarea>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- validation -->
+                          <span
+                            class="text-danger"
+                            v-if="validates[`${index + 1}．${item.question}`] == false"
+                          >
+                            ※このフィールドを記入してください。
+                          </span>
+
+                          <span
+                            class="text-danger"
+                            v-if="item.question_type === 'email' && invalidEmail"
+                          >
+                            ※メールが無効です。
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Footer -->
+              <div
+                class="carousel-footer"
+                :style="[currentSlide > 0 ? cssDoQuestFooter : '']"
+              >
+                <div
+                  class="carousel-footer__run"
+                  :style="questions.length <= 1 ? 'grid-template-columns: 1fr;' : ''"
+                >
+                  <button
+                    v-if="questions.length > 1"
+                    type="button"
+                    class="btn btn-light"
+                    data-slide="prev"
+                    @click="prevQuestion"
+                    :disabled="currentQuestionIndex === 0"
+                  >
+                    <span
+                      class="fa-solid fa-angle-left"
+                      style="align-self: center"
+                    ></span>
+                    <span></span>
+                    <span class="">前へ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-success"
+                    data-slide="next"
+                    @click="nextQuestion"
+                    v-show="currentQuestionIndex !== questions.length - 1"
+                  >
+                    <span class="" style="color: white">次へ</span>
+                    <!-- <span class="vr"></span> -->
+                    <span></span>
+                    <span
+                      class="fa-solid fa-angle-right"
+                      style="align-self: center; color: white"
+                    ></span>
+                  </button>
+
+                  <button
+                    class="btn btn-success"
+                    @click="previewForm"
+                    :disabled="invalidLocation || disabledClick"
+                    v-show="currentQuestionIndex === questions.length - 1"
+                  >
+                    <span class="" style="color: white">送信</span>
+                    <span></span>
+                    <span
+                      class="fa-solid fa-angle-right"
+                      style="align-self: center; color: white"
+                    ></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="btn-action"
+            class="row pb-5"
+            v-show="vote.displayType == 'all'"
+          >
+            <div
+              class="col-12 d-flex justify-content-center px-2 btn-compact-rounded"
+              v-if="!isPreview"
+            >
+              <button
+                class="btn btn-success col-12 btn-save"
+                @click="previewForm"
+                :disabled="invalidLocation || disabledClick"
+                v-if="identified && !isBacked"
+              >
+                確認する
+              </button>
+              <button
+                class="btn btn-success col-12 btn-save"
+                @click="saveResponse"
+                :disabled="invalidLocation || disabledClick"
+                v-if="identified && isBacked"
+              >
+                送信
+              </button>
+            </div>
+            <div class="px-2 button-bottom" v-if="isPreview">
+              <!-- Nút Quay lại -->
+              <button
+                class="btn btn-reset btn-back"
+                @click="goBack"
+                :disabled="disabledClick"
+              >
+                編集
+              </button>
+
+              <!-- Nút Gửi -->
+              <button
+                class="btn btn-success btn-save"
+                @click="saveResponse"
+                :disabled="disabledClick"
+              >
+                送信
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <?!= include('VueJS') ?>
+    <?!= include('formJS') ?>
+  </body>
+  <script>
+    function adjustHeight() {
+      let divElement = document.getElementById(
+          "content-slideForm_identifyUser-userInfo"
+        ),
+        momElement = document.getElementById("content-slideForm_carousel");
+
+      if (divElement && momElement) {
+        let height = divElement.offsetHeight,
+          momHeight = momElement.offsetHeight,
+          finalHeightPercentage = 100 - (height / momHeight) * 100 - 9;
+        if (finalHeightPercentage < 32) finalHeightPercentage = 18;
+        let quizInfoElement = document.querySelector(
+          ".content-slideForm_identifyUser-quizInfo"
+        );
+        if (quizInfoElement) {
+          quizInfoElement.style.maxHeight = finalHeightPercentage + "%";
+        }
+      }
+    }
+
+    adjustHeight();
+    setInterval(adjustHeight, 1000);
+    window.addEventListener("resize", adjustHeight);
+  </script>
+</html>

@@ -1,0 +1,1389 @@
+<script type="module">
+  // Create a Vue app
+  const app = Vue.createApp({
+    data() {
+      return {
+        fullscreenTarget: null,
+        questions: [],
+        loading: true,
+        url_top: null,
+        user: {},
+        form: {},
+        results: {},
+        dayOfWeekJp: ["日", "月", "火", "水", "木", "金", "土"],
+        validates: {},
+        invalidEmail: false,
+        invalidLocation: false,
+        dimensionAllow: 0,
+        vote: null,
+        settings: {},
+        surveySetting: {},
+        location: null,
+        disabledClick: false,
+        isDescription: "text-description",
+        showModal: false,
+        ipAddress: null,
+        currentQuestionIndex: 0,
+        passcode: "",
+        checkPasscode: false,
+        validatePasscode: true,
+        isOutOfDate: false,
+        isNGCheck: null,
+        checkStatus: true,
+        msgStatus: null,
+        identified: false,
+        quesVisit: 0,
+        cssDoQuestFooter: {
+          bottom: "10px",
+          // left: '20px',
+          // right: '20px'
+        },
+        msgOutDate: "",
+        emailUser: null,
+        isShowPW: false,
+        passcodeIncorrect: false,
+        showUserInfo: false,
+        isPreview: false,
+        isBacked: false,
+        colorClasses: [
+          "bg-success",
+          "bg-info",
+          "bg-warning",
+          "bg-danger",
+          "bg-primary",
+        ],
+        colors: {},
+      };
+    },
+    created() {},
+    watch: {},
+    async mounted() {
+      for (let key in this.questions) {
+        console.log(key, this.questions[key]);
+      }
+
+      document.getElementById("loading").style.display = "block";
+      document.addEventListener("click", this.handleClickOutside);
+      this.emailUser = login ? login.email : "";
+      this.url_top = await this.getUrlTop();
+      this.settings = this.getDataSetting();
+      await this.getQuestions(surveyID);
+      await this.dataStatistics(surveyID);
+
+      this.debugData();
+
+      this.ipAddress = await this.getIPAddress();
+      this.isNGCheck = await this.checkNG();
+      setTimeout(() => {
+        if (!this.checkPasscode) {
+          $("#passcodeModal").modal({
+            backdrop: "static",
+            keyboard: false,
+          });
+          $("#passcodeModal").modal("show");
+        }
+        // this.updateElementHeights();
+        // window.addEventListener('resize', this.updateElementHeights);
+      }, 500);
+      this.ensureFormStructure();
+    },
+    computed: {},
+    methods: {
+      getAnswersArray(questionResult) {
+        if (!questionResult || !questionResult.question_answers) return [];
+        return Array.isArray(questionResult.question_answers)
+          ? questionResult.question_answers
+          : Object.values(questionResult.question_answers);
+      },
+
+      getTotalAnswers(questionResult) {
+        const arr = this.getAnswersArray(questionResult);
+        return arr.reduce((sum, a) => sum + Number(a.total || 0), 0);
+      },
+
+      // Method mới để tìm answer result theo name
+      getResultAnswer(answerName) {
+        if (
+          !this.results[this.currentQuestionIndex] ||
+          !this.results[this.currentQuestionIndex].question_answers
+        ) {
+          return { total: 0 };
+        }
+
+        const answers = this.getAnswersArray(
+          this.results[this.currentQuestionIndex]
+        );
+        const found = answers.find((a) => a.name === answerName);
+        return found || { total: 0 };
+      },
+
+      getPercentageNoCriteria(ans, questionResult) {
+        if (!ans || !questionResult) return 0;
+
+        const arr = this.getAnswersArray(questionResult);
+        const total = arr.reduce((sum, a) => sum + Number(a.total || 0), 0);
+        return total > 0 ? (Number(ans.total || 0) / total) * 100 : 0;
+      },
+
+      // Debug method để kiểm tra data
+      debugData() {
+        console.log("Current Question Index:", this.currentQuestionIndex);
+        console.log(
+          "Item question_answers:",
+          this.questions[this.currentQuestionIndex]?.question_answers
+        );
+        console.log(
+          "Results question_answers:",
+          this.results[this.currentQuestionIndex]?.question_answers
+        );
+        console.log("Full results:", this.results[this.currentQuestionIndex]);
+      },
+      getWinner(questionResult, crit) {
+        if (!questionResult) return { name: "-" };
+
+        const qa = questionResult.question_answers;
+
+        // Chuyển về mảng an toàn:
+        let answers = [];
+        if (Array.isArray(qa)) {
+          answers = qa;
+        } else if (qa && typeof qa === "object") {
+          // Nếu muốn giữ id/key, dùng Object.keys -> map; nếu không cần id thì dùng Object.values
+          answers = Object.keys(qa).map((key) => {
+            // nếu giá trị đã có answer/label... giữ nguyên, bổ sung id
+            return Object.assign({ id: key }, qa[key]);
+          });
+          // hoặc: answers = Object.values(qa);
+        } else {
+          // unexpected type
+          console.warn("getWinner: unexpected question_answers type", qa);
+          return { name: "-" };
+        }
+
+        // Tìm answer có số vote lớn nhất (an toàn với trường hợp thiếu fields)
+        let maxAns = null;
+        let maxVotes = -Infinity;
+        answers.forEach((ans) => {
+          const votes =
+            crit && ans.criteria
+              ? ans.criteria[crit.name] || 0
+              : ans.total || 0 || 0;
+          if (typeof votes === "number" && votes > maxVotes) {
+            maxVotes = votes;
+            maxAns = ans;
+          }
+        });
+
+        // Lấy tên hiển thị: ưu tiên các field thường thấy
+        const name = maxAns
+          ? maxAns.answer || maxAns.label || maxAns.name || maxAns.title || "-"
+          : "-";
+        return { name };
+      },
+      convertDriveLink(originalLink) {
+        if (!originalLink) return "";
+
+        // ép về string để chắc chắn .match() không lỗi
+        const link = String(originalLink);
+
+        // Kiểm tra nếu là link ảnh trực tiếp
+        if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(link)) {
+          return link; // giữ nguyên
+        }
+
+        // Kiểm tra nếu là link Google Drive dạng /d/xxx/
+        const fileIdMatch = link.match(/\/d\/(.*?)\//);
+        if (fileIdMatch && fileIdMatch[1]) {
+          const fileId = fileIdMatch[1];
+          return "https://drive.google.com/file/d/" + fileId + "/preview";
+        }
+
+        // Nếu không thuộc dạng nào thì trả về link gốc
+        return link;
+      },
+      isImage(url) {
+        if (!url) return false;
+        return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(String(url));
+      },
+      isCriteriaEmpty(ans) {
+        return ans == null || ans.criteria === "" || ans.criteria == null;
+      },
+
+      // Trả total an toàn (number)
+      safeTotal(item1, critName) {
+        if (!item1 || !item1.total) {
+          console.log(
+            "safeTotal for crit:",
+            critName,
+            "= 0 (item1 invalid)",
+            item1
+          );
+          return 0;
+        }
+        const v = item1.total[critName];
+        const total = Number(v) || 0;
+
+        console.log(
+          "safeTotal for crit:",
+          critName,
+          "=",
+          total,
+          "from item1.total:",
+          item1.total
+        );
+
+        return total;
+      },
+
+      // Tính % an toàn. decimals mặc định 1 (ví dụ 12.3)
+      safeCalculatePercentage(numerator, denominator, decimals = 1) {
+        const num = Number(numerator) || 0;
+        const den = Number(denominator) || 0;
+        if (den === 0) return 0;
+        return Number(((num / den) * 100).toFixed(decimals));
+      },
+
+      // Lấy % để binding width / aria-valuenow — dùng logic: nếu ans.criteria rỗng -> ans.total, ngược lại -> ans.criteria[crit.name]
+      getPercentageFor(ans, item1, crit) {
+        const total = this.safeTotal(item1, crit.name);
+        let num = 0;
+        if (this.isCriteriaEmpty(ans)) {
+          num = Number(ans && ans.total) || 0;
+        } else {
+          // nếu ans.criteria tồn tại nhưng không có crit.name -> fallback 0
+          num = Number(ans.criteria && ans.criteria[crit.name]) || 0;
+        }
+        return total > 0 ? Math.round((num / total) * 100) : 0;
+      },
+
+      // Lấy màu an toàn (fallback '#ffffff')
+      getColor(item, idx) {
+        if (!item || !item.colors || !this.colors) return "#ffffff";
+        const key = item.colors[idx];
+        return key && this.colors[key] ? this.colors[key] : "#ffffff";
+      },
+
+      // Gọi khi component load hoặc ngay sau khi 'items' / 'form' / 'criterias' được load từ API
+      ensureFormStructure() {
+        (this.items || []).forEach((it, i) => {
+          const key = `${i + 1}．${it.question}`;
+
+          // Nếu form[key] chưa tồn tại → tạo mới
+          if (!this.form[key]) {
+            if (this.$set) {
+              this.$set(this.form, key, {
+                criterias: {}, // cho trường hợp đa tiêu chí
+                value: it.question_type === "multiSelect" ? [] : "", // cho trường hợp không đa tiêu chí
+              });
+            } else {
+              this.form[key] = {
+                criterias: {},
+                value: it.question_type === "multiSelect" ? [] : "",
+              };
+            }
+          }
+
+          // Nếu có tiêu chí → khởi tạo sẵn
+          (it.criterias || []).forEach((crit) => {
+            if (!this.form[key].criterias[crit.name]) {
+              const defaultValue = it.question_type === "multiSelect" ? [] : "";
+              if (this.$set) {
+                this.$set(this.form[key].criterias, crit.name, {
+                  value: defaultValue,
+                });
+              } else {
+                this.form[key].criterias[crit.name] = { value: defaultValue };
+              }
+            }
+          });
+        });
+      },
+      calculatePercentage(value, total) {
+        if (total == 0 || total == undefined) {
+          return 0; // Tránh chia cho 0
+        }
+        return Math.floor((value / total) * 100); // Làm tròn xuống và trả về số nguyên
+      },
+      async reloadPage() {
+        await this.dataStatistics(surveyID);
+      },
+      getProgressBarClass(idx) {
+        // Lấy màu từ mảng, sử dụng toán tử % để lặp lại khi idx vượt quá 4
+        return this.colorClasses[idx % this.colorClasses.length];
+      },
+      getInitial() {
+        return this.user.email.charAt(0).toUpperCase();
+      },
+      toggleUserInfo(event) {
+        event.stopPropagation();
+        this.showUserInfo = !this.showUserInfo;
+      },
+      handleClickOutside(event) {
+        const userInfo = document.getElementById("user-info");
+        const userAvatar = document.getElementById("user-avatar");
+        if (
+          userInfo &&
+          userAvatar &&
+          !userAvatar.contains(event.target) &&
+          !userInfo.contains(event.target)
+        ) {
+          this.showUserInfo = false;
+        }
+      },
+      getUrlTop() {
+        let scope = this;
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              resolve(res);
+            })
+            .withFailureHandler((error) => {
+              reject(error);
+            })
+            .getUrlTop();
+        });
+      },
+      getDataSetting() {
+        let scope = this;
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              resolve(res);
+            })
+            .withFailureHandler((error) => {
+              reject(error);
+            })
+            .getDataSetting();
+        });
+      },
+      checkNG() {
+        let check = true;
+        if (this.questions.length == 0) {
+          check = false;
+        }
+        if (this.isOutOfDate) {
+          check = false;
+        }
+        if (this.vote.status == "終了済") {
+          check = false;
+          this.msgStatus =
+            "この投票が終了しましたので、投票を行うことはできません。";
+        }
+        if (this.vote.status == "作成中") {
+          check = false;
+          this.msgStatus =
+            "この投票が作成中ですので、投票を行うことはできません。";
+        }
+        if (this.vote.status == "非公開") {
+          check = false;
+          this.msgStatus =
+            "この投票が非公開ですので、投票を行うことはできません。";
+        }
+        document.getElementById("loading").style.display = "";
+        return check;
+      },
+      checkPasscodeVote() {
+        // Validate
+        if (this.passcode == "") {
+          this.validatePasscode = false;
+          this.passcodeIncorrect = false;
+          this.checkPasscode = false;
+          return;
+        } else {
+          this.validatePasscode = true;
+          if (this.passcode == this.vote.passcode) {
+            this.checkPasscode = true;
+            $("#passcodeModal").modal("hide");
+            this.initialDatepicker();
+            this.isAnswered();
+          } else {
+            this.passcodeIncorrect = true;
+          }
+        }
+      },
+      openModalInfomation() {
+        // $('#userInformation').modal({
+        //     backdrop: 'static',
+        //     keyboard: false
+        // });
+        $("#userInformation").modal("show");
+      },
+      toGlobalDate(date) {
+        return date.replace("年", "/").replace("月", "/").replace("日", "");
+      },
+      checkDate(startDate, endDate) {
+        if (!startDate && !endDate) return false;
+        let scope = this;
+        let now = new Date();
+        let res = {
+          isOutOfDate: false,
+          msgOutDate: "",
+        };
+
+        let startVal = !startDate
+          ? now
+          : new Date(scope.toGlobalDate(startDate));
+        let endVal = !endDate ? now : new Date(scope.toGlobalDate(endDate));
+        if (now - endVal > 0) {
+          res.isOutOfDate = true;
+          res.msgOutDate =
+            "投票を受ける時間はもう過ぎましたので、投票を行うことはできません。";
+        } else if (startVal - now > 0) {
+          res.isOutOfDate = true;
+          res.msgOutDate =
+            "まだ投票を受ける時間ではありませんので、投票を行うことはできません。";
+        } else {
+          res.isOutOfDate = false;
+          res.msgOutDate = "";
+        }
+        return res;
+      },
+      getQuestions(surveyID) {
+        let scope = this;
+        return new Promise((resolve, reject) => {
+          let scope = this;
+          google.script.run
+            .withSuccessHandler((res) => {
+              if (!res) {
+                scope.failureHandler(res.msg);
+                reject("Failed to get questions");
+                return;
+              }
+              let { keys, rows, surveySetting, vote } = res.data;
+              // this.data.colors = res.colors;
+              // Gán giá trị res.colors vào this.colors
+              this.colors = res.colors;
+              scope.surveySetting = surveySetting;
+              scope.vote = vote;
+              vote.display_type = vote.displayType;
+              vote.displayType =
+                vote.displayType == "１ページで全て表示" ? "all" : "one";
+              if (this.vote.usePassCode == "いいえ") {
+                this.checkPasscode = true;
+              }
+              let { isOutOfDate, msgOutDate } = scope.checkDate(
+                this.vote.dateRun,
+                this.vote.dateEnd
+              );
+              scope.formatData(keys, rows);
+              scope.isOutOfDate = isOutOfDate;
+              scope.msgOutDate = msgOutDate;
+              resolve(); // resolve the promise when everything is done
+            })
+            .getQuestions(surveyID);
+        });
+      },
+
+      dataStatistics(surveyID) {
+        let scope = this;
+        document.getElementById("loading").style.display = "block";
+
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              if (!res) {
+                document.getElementById("loading").style.display = "none";
+                scope.failureHandler("No data from server");
+                reject(new Error("No data"));
+                return;
+              }
+
+              // Luôn giữ đúng index, thay null/undefined bằng object trống
+              const rawData = res.data;
+              let normalizedArray = [];
+
+              if (Array.isArray(rawData)) {
+                normalizedArray = rawData;
+              } else if (rawData && typeof rawData === "object") {
+                normalizedArray = Object.values(rawData); // 👈 biến object có key số thành array
+              }
+
+              this.results = normalizedArray.map(
+                (q) =>
+                  q || {
+                    total: {},
+                    maxChoices: {},
+                    question_answers: {},
+                  }
+              );
+
+              const qList = Array.isArray(this.questions) ? this.questions : [];
+
+              this.results.forEach((question, qIndex) => {
+                const questionAnswers = question.question_answers || {};
+                const answersArray = Object.values(questionAnswers);
+                const max =
+                  qList[qIndex] && qList[qIndex].max !== undefined
+                    ? qList[qIndex].max
+                    : 1;
+                const min =
+                  qList[qIndex] && qList[qIndex].min !== undefined
+                    ? qList[qIndex].min
+                    : 0;
+
+                let totals = {};
+                let maxChoices = {};
+
+                // 🔹 Tính totals
+                answersArray.forEach((answer) => {
+                  if (
+                    !answer ||
+                    answer.criteria == undefined ||
+                    answer.criteria === ""
+                  ) {
+                    if (!totals["投票結果"]) totals["投票結果"] = 0;
+                    totals["投票結果"] += Number(answer && answer.total) || 0;
+                    if (answer) answer.criteria = "";
+                  } else {
+                    Object.keys(answer.criteria).forEach((key) => {
+                      if (!totals[key]) totals[key] = 0;
+                      totals[key] += Number(answer.criteria[key]) || 0;
+                    });
+                  }
+                });
+
+                // 🔹 Chuẩn bị keyValueArray / keyArray
+                let keyValueArray = [];
+                let keyArray = [];
+                let i = 0;
+                answersArray.forEach((answer) => {
+                  if (!answer || answer.criteria === "") {
+                    if (!keyValueArray[i]) {
+                      keyValueArray[i] = [];
+                      keyArray.push("投票結果");
+                    }
+                    keyValueArray[i].push({
+                      key: Number(answer && answer.total) || 0,
+                      value: answer && answer.name ? answer.name : "",
+                    });
+                  } else {
+                    let j = 0;
+                    Object.keys(answer.criteria).forEach((key) => {
+                      if (i === 0) {
+                        keyValueArray[j] = keyValueArray[j] || [];
+                        keyArray.push(key);
+                      }
+                      keyValueArray[j].push({
+                        key: Number(answer.criteria[key]) || 0,
+                        value: answer && answer.name ? answer.name : "",
+                      });
+                      j++;
+                    });
+                    i++;
+                  }
+                });
+
+                // 🔹 Chọn maxChoices
+                let resultArray = [];
+                let num1 = 0;
+                keyValueArray.forEach((array) => {
+                  if (!array || array.length === 0) {
+                    resultArray.push("");
+                    num1++;
+                    return;
+                  }
+
+                  let sortedArray = [...array].sort((a, b) => b.key - a.key);
+                  let selectedElements = [];
+                  let count = 0;
+                  let currentKey = sortedArray[0].key;
+                  let keyPosition = keyArray[num1];
+                  const totalForKey =
+                    totals && totals[keyPosition] ? totals[keyPosition] : 0;
+
+                  if (
+                    totalForKey > 0 &&
+                    Math.floor((currentKey / totalForKey) * 100) >= min
+                  ) {
+                    sortedArray.forEach((item) => {
+                      if (item.key === currentKey) {
+                        selectedElements.push(item.value);
+                        count++;
+                      }
+                    });
+
+                    if (count < max) {
+                      const nextKeyObj = sortedArray.find(
+                        (item) => item.key < currentKey
+                      );
+                      if (nextKeyObj) {
+                        const nextKey = nextKeyObj.key;
+                        if (Math.floor((nextKey / totalForKey) * 100) >= min) {
+                          sortedArray.forEach((item) => {
+                            if (item.key === nextKey) {
+                              selectedElements.push(item.value);
+                              count++;
+                            }
+                          });
+                        }
+                      }
+                    }
+                  }
+
+                  resultArray.push(selectedElements.join(", "));
+                  num1++;
+                });
+
+                // 🔹 gán maxChoices tương ứng
+                let idx = 0;
+                Object.keys(totals).forEach((key) => {
+                  maxChoices[key] = resultArray[idx] || "";
+                  idx++;
+                });
+
+                // 🔹 Gán vào từng question
+                this.results[qIndex].total = totals;
+                this.results[qIndex].maxChoices = maxChoices;
+              });
+
+              console.log("👉 Processed results:", this.results);
+
+              document.getElementById("loading").style.display = "none";
+              resolve(this.results);
+            })
+            .withFailureHandler((error) => {
+              document.getElementById("loading").style.display = "none";
+              console.error(error);
+              scope.failureHandler(error);
+              reject(error);
+            })
+            .dataStatistics(surveyID);
+        });
+      },
+      formatData(keys, rows) {
+        var i = 0;
+        this.questions = [];
+        let linkRegex = /<([^>]+)>/;
+
+        let storage = localStorage.getItem(surveyID)
+          ? JSON.parse(localStorage.getItem(surveyID))
+          : null;
+        let user = localStorage.getItem("user")
+          ? JSON.parse(localStorage.getItem("user"))
+          : null;
+
+        if (storage && user) {
+          this.user.address = user.address ? user.address : "";
+          this.user.phone_number = user.phone_number ? user.phone_number : "";
+          this.user.email = user.email ? user.email : "";
+          this.user.name = user.name ? user.name : "";
+        } else {
+          this.user.address = "";
+          this.user.phone_number = "";
+          this.user.email = "";
+          this.user.name = "";
+        }
+
+        if (this.vote.informationRequired == "あり") {
+          this.validates = {
+            email: true,
+            name: true,
+          };
+        } else {
+          this.validates = {};
+        }
+
+        for (let i = 0; i < rows.length; i++) {
+          let obj = {};
+          for (const [k, v] of Object.entries(keys)) {
+            if (v === -1) continue;
+            obj[k] = rows[i][v];
+
+            if (k === "question") {
+              this.form[`${i + 1}．${rows[i][v]}`] = {
+                type: rows[i][keys.question_type],
+              };
+
+              // ==== Xử lý tiêu chí (criterias) ====
+              if (rows[i][keys.criterias].length > 0) {
+                for (let key = 0; key < rows[i][keys.criterias].length; key++) {
+                  let text = rows[i][keys.criterias][key];
+                  let match = text.match(linkRegex);
+
+                  if (match) {
+                    rows[i][keys.criterias][key] = {
+                      name: text.replace(match[0], ""),
+                    };
+                    let url = match[1];
+
+                    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url)) {
+                      rows[i][keys.criterias][key]["media"] = url; // ảnh ngoài
+                    } else if (url.includes("/d/")) {
+                      // link Google Drive
+                      let startIndex = url.indexOf("/d/");
+                      let endIndex = url.indexOf("/", startIndex + 3);
+                      if (endIndex === -1) endIndex = url.length;
+                      let link =
+                        "https://drive.google.com/file/d/" +
+                        url.substring(startIndex + 3, endIndex) +
+                        "/preview";
+                      rows[i][keys.criterias][key]["media"] = link;
+                    } else {
+                      rows[i][keys.criterias][key]["media"] = url; // fallback
+                    }
+                  } else {
+                    rows[i][keys.criterias][key] = { name: text, media: false };
+                  }
+                }
+
+                this.form[`${i + 1}．${rows[i][v]}`].criteria = true;
+                this.form[`${i + 1}．${rows[i][v]}`]["criterias"] = {};
+
+                for (let key = 0; key < rows[i][keys.criterias].length; key++) {
+                  this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
+                    `${rows[i][keys.criterias][key]["name"]}`
+                  ] = {};
+                  if (rows[i][keys.question_type] === "multiSelect") {
+                    this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
+                      `${rows[i][keys.criterias][key]["name"]}`
+                    ]["value"] = [];
+                  } else {
+                    this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
+                      `${rows[i][keys.criterias][key]["name"]}`
+                    ]["value"] = "";
+                  }
+                }
+              } else {
+                this.form[`${i + 1}．${rows[i][v]}`].criteria = false;
+                if (rows[i][keys.question_type] === "multiSelect") {
+                  this.form[`${i + 1}．${rows[i][v]}`]["value"] = [];
+                } else {
+                  this.form[`${i + 1}．${rows[i][v]}`]["value"] = "";
+                }
+              }
+
+              if (rows[i][keys.question_hasNote])
+                this.form[`${i + 1}．${rows[i][v]}`]["note"] = "";
+
+              // ==== Xử lý câu trả lời (answers) ====
+              if (rows[i][keys.question_answers].length > 0) {
+                for (
+                  let key = 0;
+                  key < rows[i][keys.question_answers].length;
+                  key++
+                ) {
+                  let text = rows[i][keys.question_answers][key];
+                  let match = text.match(linkRegex);
+
+                  if (match) {
+                    rows[i][keys.question_answers][key] = {
+                      name: text.replace(match[0], ""),
+                    };
+                    let url = match[1];
+
+                    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url)) {
+                      rows[i][keys.question_answers][key]["media"] = url;
+                    } else if (url.includes("/d/")) {
+                      let startIndex = url.indexOf("/d/");
+                      let endIndex = url.indexOf("/", startIndex + 3);
+                      if (endIndex === -1) endIndex = url.length;
+                      let link =
+                        "https://drive.google.com/file/d/" +
+                        url.substring(startIndex + 3, endIndex) +
+                        "/preview";
+                      rows[i][keys.question_answers][key]["media"] = link;
+                    } else {
+                      rows[i][keys.question_answers][key]["media"] = url;
+                    }
+                  } else {
+                    rows[i][keys.question_answers][key] = {
+                      name: text,
+                      media: false,
+                    };
+                  }
+                }
+              }
+            }
+          }
+          this.questions.push(obj);
+        }
+      },
+
+      startVote() {
+        // Validate
+        let check = true;
+        for (const [k, v] of Object.entries(this.validates)) {
+          if (this.user[k] == "" || !this.user[k]) {
+            this.validates[k] = false;
+            check = false;
+          } else {
+            this.validates[k] = true;
+            if (k == "email") {
+              let regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+              let match = regex.exec(this.user[k]);
+              if (!match) {
+                this.validates[k] = false;
+                check = false;
+              } else {
+                this.validates[k] = true;
+              }
+            }
+            if (k == "phone_number") {
+              let regex = /^\d{10,15}$/;
+              let match = regex.exec(this.user[k]);
+              if (!match) {
+                this.validates[k] = false;
+                check = false;
+              } else {
+                this.validates[k] = true;
+              }
+            }
+          }
+        }
+        if (!check) return;
+        $("#userInformation").modal("hide");
+        this.identified = true;
+        this.$nextTick(() => {
+          setTimeout(() => {
+            this.updateElementHeights();
+          }, 100); // Đợi 100ms trước khi gọi hàm
+        });
+        window.addEventListener("resize", () => {
+          setTimeout(() => {
+            this.updateElementHeights();
+          }, 100);
+        });
+      },
+      validate(submitData) {
+        let status = true;
+        for (let i = 0; i < this.questions.length; i++) {
+          if (this.questions[i].question_required) {
+            let questionKey = `${i + 1}．${this.questions[i].question}`;
+            if (submitData[questionKey].criteria) {
+              this.validates[questionKey] = true;
+              for (const [critName, critValue] of Object.entries(
+                submitData[questionKey].criterias
+              )) {
+                if (critValue.value === "" || critValue.value.length === 0) {
+                  this.validates[questionKey] = false;
+                  status = false;
+                  break;
+                }
+              }
+            } else {
+              if (
+                submitData[questionKey].value === "" ||
+                submitData[questionKey].value.length === 0
+              ) {
+                this.validates[questionKey] = false;
+                status = false;
+              } else this.validates[questionKey] = true;
+            }
+          }
+        }
+        return status;
+      },
+      validationEmail(value) {
+        const regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+        const match = regex.exec(value);
+        if (match) this.invalidEmail = false;
+        else this.invalidEmail = true;
+      },
+      initialDatepicker() {
+        if (this.$refs.datepicker) {
+          $(this.$refs.datepicker)
+            .datepicker({
+              format: "yyyy年mm月dd日",
+              autoclose: true,
+              todayHighlight: true,
+              forceParse: false,
+              language: "ja",
+            })
+            .on("changeDate", ({ target }) => {
+              let id = target.id;
+              let value = target.value;
+              this.form[id]["value"] = value;
+            });
+        }
+      },
+      getLocation() {
+        let scope = this;
+        // Check if the browser supports Geolocation
+        return new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              var latitude = position.coords.latitude;
+              var longitude = position.coords.longitude;
+
+              // Display the location
+              let setting_lat = !scope.settings.lat
+                ? 0.0
+                : parseFloat(scope.settings.lat);
+              let setting_long = !scope.settings.long
+                ? 0.0
+                : parseFloat(scope.settings.long);
+              if (!scope.settings.dimensionAllow) resolve(position);
+              var distance = scope.haversineDistance(
+                latitude,
+                longitude,
+                setting_lat,
+                setting_long
+              );
+              if (Number(distance) > Number(scope.settings.dimensionAllow)) {
+                reject("あなたの場所は許可されたエリア内にありません。");
+              }
+              resolve(position);
+            },
+            (error) => {
+              // Handle errors, such as user denying location access
+              console.log({ error });
+              reject(
+                "サービスを利用するには、デバイスの位置情報機能を有効にしてください。"
+              );
+            }
+          );
+        });
+      },
+      haversineDistance(lat1, lon1, lat2, lon2) {
+        // Convert latitude and longitude from degrees to radians
+        const toRadians = (angle) => (angle * Math.PI) / 180;
+        const R = 6371; // Radius of the Earth in kilometers
+
+        // Calculate differences between latitude and longitude
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+
+        // Haversine formula
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(toRadians(lat1)) *
+            Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        // Distance in kilometers
+        const distance = R * c * 1000;
+
+        return distance.toFixed(2);
+      },
+      getSegmentClass(index1) {
+        if (index1 > this.quesVisit) {
+          return "not-visited";
+        } else {
+          let currentQuestion = this.questions[index1];
+          let formNow = this.form[`${index1 + 1}．${currentQuestion.question}`];
+          if (formNow.criteria) {
+            //đa tiêu chí
+            let check = true;
+            for (const [critName, critValue] of Object.entries(
+              formNow.criterias
+            )) {
+              if (critValue.value === "" || critValue.value.length === 0) {
+                check = false;
+              } else {
+                check = true;
+              }
+            }
+            if (!check) return "unanswered";
+            if (check) return "answered";
+          } else {
+            //câu thường
+            if (formNow.value === "" || formNow.value.length === 0) {
+              return "unanswered";
+            } else {
+              return "answered";
+            }
+          }
+        }
+      },
+      isAnswered() {
+        let scope = this;
+        let storagesurveyID = localStorage.getItem(surveyID)
+          ? JSON.parse(localStorage.getItem(surveyID))
+          : null;
+        let user = localStorage.getItem("user")
+          ? JSON.parse(localStorage.getItem("user"))
+          : null;
+        if (!storagesurveyID && !user) return false;
+        let now = new Intl.DateTimeFormat("ja-JP", {
+          dateStyle: "long",
+        }).format(new Date());
+        if (storagesurveyID)
+          scope.questionHandler(
+            "この投票には既に回答済みです。\n再度回答を送信しますか？　"
+          );
+        return;
+      },
+      successHandler(msg) {
+        document.getElementById("loading").style.display = "";
+        Swal.fire({
+          title: msg,
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        setTimeout(() => {
+          let scope = this;
+          let form = scope.form;
+          for (let [k, v] of Object.entries(scope.user)) {
+            form[k] = { value: v };
+          }
+          sessionStorage.setItem(
+            "vote_data",
+            JSON.stringify({
+              question: scope.questions,
+              user: scope.user,
+              response: form,
+              vote: scope.vote,
+              surveyID: surveyID,
+            })
+          );
+
+          if (scope.vote.statistics === "表示") {
+            this.statistic(scope.vote.id, scope.vote.dateRun);
+          } else {
+            let pageObject = {
+              page: "thankyou",
+            };
+            let encodedPageParam = encodeURIComponent(
+              JSON.stringify(pageObject)
+            );
+            let url = `https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`;
+            window.open(url, "_self");
+          }
+        }, 1500);
+      },
+      statistic(surveyID, dateRun) {
+        sessionStorage.setItem(
+          "vote",
+          JSON.stringify({ surveyID: surveyID, dateRun: dateRun })
+        );
+        let pageObject = {
+          page: "statistic",
+          code: surveyID,
+          dateRun: dateRun,
+        };
+        let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
+        let url = `https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`;
+        window.open(url, "_self");
+      },
+      failureHandler(error) {
+        document.getElementById("loading").style.display = "none";
+
+        let errorMessage = "不明なエラーが発生しました"; // fallback message
+
+        if (error) {
+          if (typeof error === "string") {
+            errorMessage = error;
+          } else if (error.message) {
+            errorMessage = error.message;
+          } else if (typeof error === "object") {
+            const str = JSON.stringify(error);
+            errorMessage = str === "{}" ? errorMessage : str;
+          }
+        }
+
+        Swal.fire({
+          title: "エラーが発生しました",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonColor: "#01932e",
+          confirmButtonText: "閉じる",
+        }).then((result) => {});
+      },
+      questionHandler(msg) {
+        Swal.fire({
+          text: msg,
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#01932e",
+          cancelButtonColor: "#6A6A6A",
+          confirmButtonText: "はい",
+          cancelButtonText: "いいえ",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.disabledClick = false;
+          } else {
+            this.disabledClick = true;
+          }
+        });
+      },
+      previewForm() {
+        let scope = this;
+        let form = scope.form;
+        if (scope.invalidEmail) return;
+
+        for (let [k, v] of Object.entries(scope.user)) {
+          form[k] = { value: v };
+        }
+
+        let validateState = this.validate(form);
+        if (!validateState) return;
+
+        // sessionStorage.setItem('vote_data', JSON.stringify({ question: scope.questions, user: scope.user, response: form, vote: scope.vote, surveyID: surveyID }))
+        // let pageObject = { page: "previewForm"};
+        // let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
+        // let url = `https://myportal.sateraito.jp/gas?url=${scope.url_top}?page=${encodedPageParam}`;
+        // window.open(url, '_blank')
+        this.vote.displayType = "all";
+        this.isPreview = true;
+      },
+      goBack() {
+        this.isPreview = false;
+        this.isBacked = true;
+      },
+      saveResponse() {
+        let scope = this;
+        let form = scope.form;
+        // Validate min for all questions before submit
+        let minError = false;
+        let minErrorIndex = -1;
+        for (let i = 0; i < scope.questions.length; i++) {
+          let q = scope.questions[i];
+          let key = `${i + 1}．${q.question}`;
+          let formNow = scope.form[key];
+          let min = q.min || 0;
+          if (q.question_type === "multiSelect") {
+            if (
+              formNow &&
+              Array.isArray(formNow.value) &&
+              formNow.value.length < min
+            ) {
+              minError = true;
+              minErrorIndex = i;
+              break;
+            }
+            if (
+              formNow &&
+              formNow.criterias &&
+              Object.keys(formNow.criterias).length > 0
+            ) {
+              for (const [critName, critValue] of Object.entries(
+                formNow.criterias
+              )) {
+                if (
+                  Array.isArray(critValue.value) &&
+                  critValue.value.length < min
+                ) {
+                  minError = true;
+                  minErrorIndex = i;
+                  break;
+                }
+              }
+            }
+          }
+        }
+        if (minError) {
+          let q = scope.questions[minErrorIndex];
+          Swal.fire({
+            title: "エラー",
+            text: `最低(${q.min})個の選択肢を選んでください。`,
+            icon: "warning",
+            confirmButtonText: "OK",
+          });
+          return;
+        }
+        Swal.fire({
+          title: "送信しますか？",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#01932e",
+          cancelButtonColor: "#6A6A6A",
+          cancelButtonText: "いいえ",
+          confirmButtonText: "はい",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            let now = new Intl.DateTimeFormat("ja-JP", {
+              dateStyle: "long",
+              timeStyle: "medium",
+            }).format(new Date());
+            form["answer_created"] = { value: now, type: "date" };
+            for (let [k, v] of Object.entries(scope.user)) {
+              form[k] = { value: v };
+            }
+            document.getElementById("loading").style.display = "block";
+            google.script.run
+              .withSuccessHandler((res) => {
+                if (!res) {
+                  scope.failureHandler(res.msg);
+                } else {
+                  // scope.vote = res.data.vote;
+                  // save storage user information
+                  localStorage.setItem(
+                    "user",
+                    JSON.stringify({
+                      ...scope.user,
+                      answer_created: form["answer_created"].value,
+                    })
+                  );
+                  localStorage.setItem(
+                    surveyID,
+                    JSON.stringify({ surveyID: surveyID })
+                  );
+                  scope.disabledClick = true;
+                  scope.successHandler(res.msg);
+                }
+                document.getElementById("loading").style.display = "";
+              })
+              .saveResponse(form, surveyID);
+          }
+        });
+      },
+      getIPAddress() {
+        let scope = this;
+        let allowed_ip = scope.settings.allowed_ip;
+        if (!allowed_ip || allowed_ip === "") return true;
+        return new Promise((resolve, reject) => {
+          fetch("https://api.ipify.org?format=json")
+            .then((response) => response.json())
+            .then((data) => {
+              if (allowed_ip && !String(allowed_ip).includes(String(data.ip))) {
+                reject("IP not allowed.");
+                scope.disabledClick = true;
+                scope.failureHandler(
+                  "このIPからアクセスが拒否されます。管理者へ連絡してください。"
+                );
+              } else {
+                resolve(data.ip);
+              }
+            })
+            .catch((error) => reject(error));
+        });
+      },
+      prevQuestion() {
+        if (this.currentQuestionIndex > 0) {
+          this.currentQuestionIndex--;
+        }
+      },
+      nextQuestion() {
+        if (this.currentQuestionIndex < this.questions.length - 1) {
+          let currentQuestion = this.questions[this.currentQuestionIndex];
+          let key = `${this.currentQuestionIndex + 1}．${
+            currentQuestion.question
+          }`;
+          let formNow = this.form[key];
+
+          // reset validate mặc định
+          this.validates[key] = true;
+          let minError = false;
+
+          if (this.questions[this.currentQuestionIndex].question_required) {
+            if (
+              formNow &&
+              formNow.criterias &&
+              Object.keys(formNow.criterias).length > 0
+            ) {
+              // === ĐA TIÊU CHÍ ===
+              for (const [critName, critValue] of Object.entries(
+                formNow.criterias
+              )) {
+                let min = currentQuestion.min || 0;
+                let max = currentQuestion.max || 999;
+                if (
+                  critValue.value === "" ||
+                  critValue.value == null ||
+                  (Array.isArray(critValue.value) &&
+                    critValue.value.length === 0)
+                ) {
+                  this.validates[key] = false;
+                  minError = true;
+                  break;
+                }
+                // min/max check for multiSelect
+                if (currentQuestion.question_type === "multiSelect") {
+                  if (Array.isArray(critValue.value)) {
+                    if (critValue.value.length < min) {
+                      this.validates[key] = false;
+                      minError = true;
+                      break;
+                    }
+                    if (critValue.value.length > max) {
+                      this.validates[key] = false;
+                      break;
+                    }
+                  }
+                }
+              }
+            } else {
+              // === CÂU THƯỜNG ===
+              const v = formNow ? formNow.value : null;
+              let min = currentQuestion.min || 0;
+              let max = currentQuestion.max || 999;
+              if (
+                v === "" ||
+                v == null ||
+                (Array.isArray(v) && v.length === 0)
+              ) {
+                this.validates[key] = false;
+                minError = true;
+              }
+              // min/max check for multiSelect
+              if (
+                currentQuestion.question_type === "multiSelect" &&
+                Array.isArray(v)
+              ) {
+                if (v.length < min) {
+                  this.validates[key] = false;
+                  minError = true;
+                }
+                if (v.length > max) {
+                  this.validates[key] = false;
+                }
+              }
+            }
+          }
+
+          // Nếu validate pass → next
+          if (this.validates[key] === true) {
+            this.currentQuestionIndex++;
+            if (this.quesVisit < this.currentQuestionIndex) {
+              this.quesVisit = this.currentQuestionIndex;
+            }
+          } else if (minError) {
+            Swal.fire({
+              title: "エラー",
+              text: `最低(${currentQuestion.min})個の選択肢を選んでください。`,
+              icon: "warning",
+              confirmButtonText: "OK",
+            });
+          }
+        }
+      },
+      activateInput(index, idex, idx) {
+        let inputId = `Q${index + 1}-C${idex + 1}-${idx + 1}`;
+        let input = document.getElementById(inputId);
+        if (input.type === "radio") {
+          input.click();
+        } else if (input.type === "checkbox") {
+          // Nếu là checkbox, không làm gì cả, để nó chỉ có thể được kích hoạt qua hàm activateInput
+        }
+      },
+      showPassword() {
+        this.isShowPW = !this.isShowPW;
+      },
+      updateElementHeights() {
+        const spanElement = document.querySelector(
+          ".background-top-oneQuest span"
+        );
+        const pElement = document.querySelector(".background-top-oneQuest p");
+        const backgroundTopElement = document.querySelector(
+          ".background-top-oneQuest"
+        );
+        const formSlideElement = document.querySelector(".form-slide");
+        const backgroundBottomElement = document.querySelector(
+          ".background-bottom-oneQuest"
+        );
+
+        if (
+          spanElement &&
+          pElement &&
+          backgroundTopElement &&
+          formSlideElement &&
+          backgroundBottomElement
+        ) {
+          const spanHeight = spanElement.offsetHeight;
+          const pHeight = pElement.offsetHeight;
+          const totalHeight = spanHeight + pHeight + 20;
+          backgroundTopElement.style.height = totalHeight + 20 + "px";
+          formSlideElement.style.top = totalHeight + "px";
+          backgroundBottomElement.style.top = totalHeight + 20 + "px";
+        }
+      },
+    },
+  });
+  app.mount("#app");
+</script>
