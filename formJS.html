@@ -86,6 +86,7 @@
         // window.addEventListener('resize', this.updateElementHeights);
       }, 500);
       this.ensureFormStructure();
+      this.fullscreenTarget = null; // Reset fullscreen modal state on mount
     },
     computed: {},
     methods: {
@@ -1128,23 +1129,28 @@
       saveResponse() {
         let scope = this;
         let form = scope.form;
-        // Validate min for all questions before submit
-        let minError = false;
-        let minErrorIndex = -1;
+        // Validate min/max for all questions before submit
+        let hasError = false;
         for (let i = 0; i < scope.questions.length; i++) {
           let q = scope.questions[i];
           let key = `${i + 1}．${q.question}`;
           let formNow = scope.form[key];
           let min = q.min || 0;
+          let max = q.max || 999;
           if (q.question_type === "multiSelect") {
-            if (
-              formNow &&
-              Array.isArray(formNow.value) &&
-              formNow.value.length < min
-            ) {
-              minError = true;
-              minErrorIndex = i;
-              break;
+            if (formNow && Array.isArray(formNow.value)) {
+              if (formNow.value.length === 0) {
+                this.validates[key] = "empty";
+                hasError = true;
+              } else if (formNow.value.length < min) {
+                this.validates[key] = "min";
+                hasError = true;
+              } else if (formNow.value.length > max) {
+                this.validates[key] = "max";
+                hasError = true;
+              } else {
+                this.validates[key] = true;
+              }
             }
             if (
               formNow &&
@@ -1154,23 +1160,28 @@
               for (const [critName, critValue] of Object.entries(
                 formNow.criterias
               )) {
-                if (
-                  Array.isArray(critValue.value) &&
-                  critValue.value.length < min
-                ) {
-                  minError = true;
-                  minErrorIndex = i;
-                  break;
+                if (Array.isArray(critValue.value)) {
+                  if (critValue.value.length === 0) {
+                    this.validates[key] = "empty";
+                    hasError = true;
+                  } else if (critValue.value.length < min) {
+                    this.validates[key] = "min";
+                    hasError = true;
+                  } else if (critValue.value.length > max) {
+                    this.validates[key] = "max";
+                    hasError = true;
+                  } else {
+                    this.validates[key] = true;
+                  }
                 }
               }
             }
           }
         }
-        if (minError) {
-          let q = scope.questions[minErrorIndex];
+        if (hasError) {
           Swal.fire({
             title: "エラー",
-            text: `最低(${q.min})個の選択肢を選んでください。`,
+            text: `選択肢の数を確認してください。`,
             icon: "warning",
             confirmButtonText: "OK",
           });
@@ -1256,11 +1267,10 @@
             currentQuestion.question
           }`;
           let formNow = this.form[key];
-
+          let min = currentQuestion.min || 0;
+          let max = currentQuestion.max || 999;
           // reset validate mặc định
           this.validates[key] = true;
-          let minError = false;
-
           if (this.questions[this.currentQuestionIndex].question_required) {
             if (
               formNow &&
@@ -1271,75 +1281,46 @@
               for (const [critName, critValue] of Object.entries(
                 formNow.criterias
               )) {
-                let min = currentQuestion.min || 0;
-                let max = currentQuestion.max || 999;
-                if (
-                  critValue.value === "" ||
-                  critValue.value == null ||
-                  (Array.isArray(critValue.value) &&
-                    critValue.value.length === 0)
-                ) {
-                  this.validates[key] = false;
-                  minError = true;
-                  break;
-                }
-                // min/max check for multiSelect
-                if (currentQuestion.question_type === "multiSelect") {
-                  if (Array.isArray(critValue.value)) {
-                    if (critValue.value.length < min) {
-                      this.validates[key] = false;
-                      minError = true;
-                      break;
-                    }
-                    if (critValue.value.length > max) {
-                      this.validates[key] = false;
-                      break;
-                    }
+                if (Array.isArray(critValue.value)) {
+                  if (critValue.value.length === 0) {
+                    this.validates[key] = "empty";
+                  } else if (critValue.value.length < min) {
+                    this.validates[key] = "min";
+                  } else if (critValue.value.length > max) {
+                    this.validates[key] = "max";
+                  } else {
+                    this.validates[key] = true;
                   }
                 }
               }
             } else {
               // === CÂU THƯỜNG ===
               const v = formNow ? formNow.value : null;
-              let min = currentQuestion.min || 0;
-              let max = currentQuestion.max || 999;
-              if (
-                v === "" ||
-                v == null ||
-                (Array.isArray(v) && v.length === 0)
-              ) {
-                this.validates[key] = false;
-                minError = true;
-              }
-              // min/max check for multiSelect
-              if (
-                currentQuestion.question_type === "multiSelect" &&
-                Array.isArray(v)
-              ) {
-                if (v.length < min) {
-                  this.validates[key] = false;
-                  minError = true;
+              if (Array.isArray(v)) {
+                if (v.length === 0) {
+                  this.validates[key] = "empty";
+                } else if (v.length < min) {
+                  this.validates[key] = "min";
+                } else if (v.length > max) {
+                  this.validates[key] = "max";
+                } else {
+                  this.validates[key] = true;
                 }
-                if (v.length > max) {
-                  this.validates[key] = false;
+              } else {
+                if (v === "" || v == null) {
+                  this.validates[key] = "empty";
+                } else {
+                  this.validates[key] = true;
                 }
               }
             }
           }
-
           // Nếu validate pass → next
           if (this.validates[key] === true) {
             this.currentQuestionIndex++;
             if (this.quesVisit < this.currentQuestionIndex) {
               this.quesVisit = this.currentQuestionIndex;
             }
-          } else if (minError) {
-            Swal.fire({
-              title: "エラー",
-              text: `最低(${currentQuestion.min})個の選択肢を選んでください。`,
-              icon: "warning",
-              confirmButtonText: "OK",
-            });
           }
         }
       },
@@ -1382,6 +1363,10 @@
           formSlideElement.style.top = totalHeight + "px";
           backgroundBottomElement.style.top = totalHeight + 20 + "px";
         }
+      },
+      // Đóng modal fullscreen
+      closeFullscreen() {
+        this.fullscreenTarget = null;
       },
     },
   });
