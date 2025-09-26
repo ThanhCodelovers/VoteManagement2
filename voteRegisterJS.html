@@ -1548,23 +1548,35 @@
     },
     methods: {
       onVoteMethodChange(item) {
-        console.log('Vote method changing to:', item.voteMethod);
-  
+        console.log("Vote method changing to:", item.voteMethod);
+
         // Set threshold based on method, preserve current threshold for 特別多数決 if valid
         const currentThreshold = item.voteThreshold;
-        item.voteThreshold = this.getDefaultThreshold(item.voteMethod, currentThreshold);
-        
+        item.voteThreshold = this.getDefaultThreshold(
+          item.voteMethod,
+          currentThreshold
+        );
+
         // Force Vue reactivity
         this.$forceUpdate();
-        
+
         // Mark as changed
         this.dataForm.isQuestChange = true;
         this.changeContent = true;
-        
-        console.log('Vote method changed to:', item.voteMethod, 'with threshold:', item.voteThreshold);
+
+        console.log(
+          "Vote method changed to:",
+          item.voteMethod,
+          "with threshold:",
+          item.voteThreshold
+        );
       },
       isImage(url) {
-        return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
+        // Nhận diện cả link file ảnh và data:image base64
+        return (
+          /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url) ||
+          /^data:image\//i.test(url)
+        );
       },
       onTypeChange(item) {
         if (item.typeQuestion === "複数選択") {
@@ -1630,6 +1642,45 @@
       },
       handleClick(event) {
         event.target.blur();
+
+        // Kiểm tra tất cả URL ảnh của tiêu chí và đáp án
+        const urlPattern =
+          /^(https?:\/\/.*\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$)|(^data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=]+$)/i;
+        let invalidUrl = null;
+        // Kiểm tra tiêu chí (criteria)
+        for (const q of this.dataForm.questions) {
+          if (q.criteria && Array.isArray(q.criteria)) {
+            for (const cri of q.criteria) {
+              if (
+                cri.media &&
+                cri.media.trim() &&
+                !urlPattern.test(cri.media.trim())
+              ) {
+                invalidUrl = cri.media;
+                break;
+              }
+            }
+          }
+          // Kiểm tra đáp án (answers)
+          if (q.answers && Array.isArray(q.answers)) {
+            for (const ans of q.answers) {
+              if (
+                ans.media &&
+                ans.media.trim() &&
+                !urlPattern.test(ans.media.trim())
+              ) {
+                invalidUrl = ans.media;
+                break;
+              }
+            }
+          }
+        }
+        if (invalidUrl) {
+          window.alert(
+            "画像URLの形式が正しくありません。正しい画像URLを入力してください。"
+          );
+          return;
+        }
 
         if (this.isEditing >= 0) {
           this.updateQuestion();
@@ -1697,7 +1748,7 @@
 
         document.getElementById("loading-edit").style.display = "block";
         this.isAnswered2(surveyID);
-        
+
         return new Promise((resolve, reject) => {
           google.script.run
             .withSuccessHandler((res) => {
@@ -1709,85 +1760,104 @@
                 this.isRegister = false;
                 let data = res.data;
                 this.dataForm = data;
-          
-          // Ensure questions array exists
-          if (!Array.isArray(this.dataForm.questions)) {
-            this.dataForm.questions = [];
-          }
 
-          // **QUAN TRỌNG: Đảm bảo mỗi question có voteMethod và voteThreshold**
-          this.dataForm.questions.forEach((q, index) => {
-            // Ensure voteMethod exists
-            if (!q.voteMethod) {
-              q.voteMethod = "単純多数決";
-              console.warn(`Question ${index} missing voteMethod, set to default`);
-            }
-            
-            // Ensure voteThreshold exists and is valid for the voteMethod
-            if (!q.voteThreshold) {
-              q.voteThreshold = this.getDefaultThreshold(q.voteMethod);
-              console.warn(`Question ${index} missing voteThreshold, set to ${q.voteThreshold}`);
-            } else {
-              // Validate existing threshold matches method rules
-              const validThreshold = this.getDefaultThreshold(q.voteMethod, q.voteThreshold);
-              if (validThreshold !== q.voteThreshold) {
-                console.warn(`Question ${index} invalid threshold ${q.voteThreshold} for method ${q.voteMethod}, correcting to ${validThreshold}`);
-                q.voteThreshold = validThreshold;
+                // Ensure questions array exists
+                if (!Array.isArray(this.dataForm.questions)) {
+                  this.dataForm.questions = [];
+                }
+
+                // **QUAN TRỌNG: Đảm bảo mỗi question có voteMethod và voteThreshold**
+                this.dataForm.questions.forEach((q, index) => {
+                  // Ensure voteMethod exists
+                  if (!q.voteMethod) {
+                    q.voteMethod = "単純多数決";
+                    console.warn(
+                      `Question ${index} missing voteMethod, set to default`
+                    );
+                  }
+
+                  // Ensure voteThreshold exists and is valid for the voteMethod
+                  if (!q.voteThreshold) {
+                    q.voteThreshold = this.getDefaultThreshold(q.voteMethod);
+                    console.warn(
+                      `Question ${index} missing voteThreshold, set to ${q.voteThreshold}`
+                    );
+                  } else {
+                    // Validate existing threshold matches method rules
+                    const validThreshold = this.getDefaultThreshold(
+                      q.voteMethod,
+                      q.voteThreshold
+                    );
+                    if (validThreshold !== q.voteThreshold) {
+                      console.warn(
+                        `Question ${index} invalid threshold ${q.voteThreshold} for method ${q.voteMethod}, correcting to ${validThreshold}`
+                      );
+                      q.voteThreshold = validThreshold;
+                    }
+                  }
+
+                  // Ensure answers array exists and has proper structure
+                  if (!Array.isArray(q.answers)) q.answers = [];
+                  q.answers = q.answers.map((ans) => {
+                    if (ans && ans.title && !ans.name) ans.name = ans.title;
+                    return ans;
+                  });
+
+                  // Ensure criterias array exists and has proper structure
+                  if (!Array.isArray(q.criterias)) q.criterias = [];
+                  q.criterias = q.criterias.map((cr) => {
+                    if (cr && cr.title && !cr.name) cr.name = cr.title;
+                    return cr;
+                  });
+
+                  console.log(`Question ${index} loaded:`, {
+                    voteMethod: q.voteMethod,
+                    voteThreshold: q.voteThreshold,
+                  });
+                });
+
+                // Convert boolean fields
+                this.dataForm.statistics =
+                  this.dataForm.statistics == "表示" ? true : false;
+                this.dataForm.usePassCode =
+                  this.dataForm.usePassCode == "はい" ? true : false;
+                this.dataForm.informationRequired =
+                  this.dataForm.informationRequired == "あり" ? true : false;
+
+                // Set description in Quill editor
+                if (this.quill) {
+                  this.quill.root.innerHTML = this.dataForm.description || "";
+                }
+
+                // Handle edit permissions based on status
+                if (
+                  this.dataForm.status == "公開中" ||
+                  this.dataForm.status == "終了済"
+                ) {
+                  this.allowChangeVote = false;
+                  if (this.quill) {
+                    this.quill.disable();
+                  }
+                }
+
+                document.getElementById("loading-edit").style.display = "";
+
+                console.log(
+                  "Vote data loaded successfully with",
+                  this.dataForm.questions.length,
+                  "questions"
+                );
               }
-            }
-            
-            // Ensure answers array exists and has proper structure
-            if (!Array.isArray(q.answers)) q.answers = [];
-            q.answers = q.answers.map((ans) => {
-              if (ans && ans.title && !ans.name) ans.name = ans.title;
-              return ans;
-            });
-
-            // Ensure criterias array exists and has proper structure  
-            if (!Array.isArray(q.criterias)) q.criterias = [];
-            q.criterias = q.criterias.map((cr) => {
-              if (cr && cr.title && !cr.name) cr.name = cr.title;
-              return cr;
-            });
-            
-            console.log(`Question ${index} loaded:`, {
-              voteMethod: q.voteMethod,
-              voteThreshold: q.voteThreshold
-            });
-          });
-
-          // Convert boolean fields
-          this.dataForm.statistics = this.dataForm.statistics == "表示" ? true : false;
-          this.dataForm.usePassCode = this.dataForm.usePassCode == "はい" ? true : false;
-          this.dataForm.informationRequired = this.dataForm.informationRequired == "あり" ? true : false;
-          
-          // Set description in Quill editor
-          if (this.quill) {
-            this.quill.root.innerHTML = this.dataForm.description || "";
-          }
-          
-          // Handle edit permissions based on status
-          if (this.dataForm.status == "公開中" || this.dataForm.status == "終了済") {
-            this.allowChangeVote = false;
-            if (this.quill) {
-              this.quill.disable();
-            }
-          }
-          
-          document.getElementById("loading-edit").style.display = "";
-          
-          console.log('Vote data loaded successfully with', this.dataForm.questions.length, 'questions');
-        }
-      })
-      .withFailureHandler((error) => {
-        console.error('Load vote data failed:', error);
-        this.failureHandler(error);
-        this.isRegister = true;
-        document.getElementById("loading-edit").style.display = "";
-        resolve({ questions: [] });
-      })
-      .getDataQuestionsVote(surveyID);
-      });
+            })
+            .withFailureHandler((error) => {
+              console.error("Load vote data failed:", error);
+              this.failureHandler(error);
+              this.isRegister = true;
+              document.getElementById("loading-edit").style.display = "";
+              resolve({ questions: [] });
+            })
+            .getDataQuestionsVote(surveyID);
+        });
       },
       newQuestion() {
         if (!this.allowChangeQuest) return;
@@ -1805,9 +1875,9 @@
           voteMethod: "単純多数決",
           voteThreshold: "50.1%",
         };
-        
+
         this.dataForm.questions.push(newQuestion);
-        
+
         this.$nextTick(() => {
           const element = this.$refs.questionsContainer;
           if (element) {
@@ -1877,28 +1947,33 @@
         if (element) {
           this.lastClickedPosition = element.scrollTop;
         }
-        
+
         this.isEditing = index;
-        
+
         // Deep clone question data
-        const questionData = JSON.parse(JSON.stringify(this.dataForm.questions[index]));
-        
+        const questionData = JSON.parse(
+          JSON.stringify(this.dataForm.questions[index])
+        );
+
         // Đảm bảo có voteMethod và voteThreshold
         if (!questionData.voteMethod) {
           questionData.voteMethod = "単純多数決";
         }
         if (!questionData.voteThreshold) {
-          questionData.voteThreshold = this.getDefaultThreshold(questionData.voteMethod, questionData.voteThreshold);
+          questionData.voteThreshold = this.getDefaultThreshold(
+            questionData.voteMethod,
+            questionData.voteThreshold
+          );
         }
-        
+
         // Set vào form preview
         this.formSetUpPreview = {
-          questions: [questionData]
+          questions: [questionData],
         };
-        
-        console.log('Edit question loaded with:', {
+
+        console.log("Edit question loaded with:", {
           voteMethod: questionData.voteMethod,
-          voteThreshold: questionData.voteThreshold
+          voteThreshold: questionData.voteThreshold,
         });
       },
       getDefaultThreshold(voteMethod, currentThreshold = null) {
@@ -1910,7 +1985,10 @@
           case "特別多数決":
             // Nếu đã có threshold và là giá trị hợp lệ cho 特別多数決, giữ nguyên
             const validSpecialValues = ["60%", "70%", "80%", "90%"];
-            if (currentThreshold && validSpecialValues.includes(currentThreshold)) {
+            if (
+              currentThreshold &&
+              validSpecialValues.includes(currentThreshold)
+            ) {
               return currentThreshold;
             }
             // Nếu không có hoặc không hợp lệ, set default là 60%
@@ -1934,11 +2012,11 @@
 
       cancelEditQuestion() {
         this.isEditing = -1;
-        this.resetQuestion(); 
+        this.resetQuestion();
       },
       updateQuestion() {
         if (!this.validationQuestion()) return;
-  
+
         // Scroll back to position
         const element = this.$refs.questionsContainer;
         if (element && this.lastClickedPosition !== null) {
@@ -1947,34 +2025,38 @@
             behavior: "smooth",
           });
         }
-        
+
         // Deep clone the preview data
-        const updatedQuestion = JSON.parse(JSON.stringify(this.formSetUpPreview.questions[0]));
-        
+        const updatedQuestion = JSON.parse(
+          JSON.stringify(this.formSetUpPreview.questions[0])
+        );
+
         // Ensure voteMethod and voteThreshold exist
         if (!updatedQuestion.voteMethod) {
           updatedQuestion.voteMethod = "単純多数決";
           updatedQuestion.voteThreshold = "50.1%";
         }
         if (!updatedQuestion.voteThreshold) {
-          updatedQuestion.voteThreshold = this.getDefaultThreshold(updatedQuestion.voteMethod);
+          updatedQuestion.voteThreshold = this.getDefaultThreshold(
+            updatedQuestion.voteMethod
+          );
         }
-        
+
         // Update the main data
         this.dataForm.questions[this.isEditing] = updatedQuestion;
-        
-        console.log('Question updated with vote method:', {
+
+        console.log("Question updated with vote method:", {
           voteMethod: updatedQuestion.voteMethod,
-          voteThreshold: updatedQuestion.voteThreshold
+          voteThreshold: updatedQuestion.voteThreshold,
         });
-        
+
         // Reset editing state
         this.isEditing = -1;
         this.resetQuestion();
       },
       createQuestion() {
         if (!this.validationQuestion()) return;
-  
+
         const Toast = Swal.mixin({
           toast: true,
           position: "top-end",
@@ -1986,27 +2068,31 @@
             toast.onmouseleave = Swal.resumeTimer;
           },
         });
-        
+
         // Deep clone and ensure vote method exists
-        const newQuestion = JSON.parse(JSON.stringify(this.formSetUpPreview.questions[0]));
-        
+        const newQuestion = JSON.parse(
+          JSON.stringify(this.formSetUpPreview.questions[0])
+        );
+
         if (!newQuestion.voteMethod) {
           newQuestion.voteMethod = "単純多数決";
           newQuestion.voteThreshold = "50.1%";
         }
         if (!newQuestion.voteThreshold) {
-          newQuestion.voteThreshold = this.getDefaultThreshold(newQuestion.voteMethod);
+          newQuestion.voteThreshold = this.getDefaultThreshold(
+            newQuestion.voteMethod
+          );
         }
-        
+
         this.dataForm.questions.push(newQuestion);
-        
-        console.log('New question created with vote method:', {
+
+        console.log("New question created with vote method:", {
           voteMethod: newQuestion.voteMethod,
-          voteThreshold: newQuestion.voteThreshold
+          voteThreshold: newQuestion.voteThreshold,
         });
-        
+
         this.resetQuestion();
-        
+
         Toast.fire({
           icon: "success",
           title: "新しい質問がプレビューリストに追加されました。",
@@ -2014,24 +2100,24 @@
       },
       resetQuestion() {
         this.formSetUpPreview = {
-        questions: [
-          {
-            question: "",
-            answers: [],
-            criterias: [],
-            participants: [],
-            typeSubject: "なし",
-            typeQuestion: "1 つだけ選択",
-            subject: null,
-            questionRequire: true,
-            voteMethod: "単純多数決",
-            voteThreshold: "50.1%",
-          },
-        ],
-  };
-  
-  // Reset touched state
-  this.hasTouchedVoteInput = false;
+          questions: [
+            {
+              question: "",
+              answers: [],
+              criterias: [],
+              participants: [],
+              typeSubject: "なし",
+              typeQuestion: "1 つだけ選択",
+              subject: null,
+              questionRequire: true,
+              voteMethod: "単純多数決",
+              voteThreshold: "50.1%",
+            },
+          ],
+        };
+
+        // Reset touched state
+        this.hasTouchedVoteInput = false;
       },
       moveUp(index) {
         if (index > 0) {
@@ -2053,7 +2139,7 @@
       },
       validationQuestion() {
         let isValid = true;
-  
+
         this.formSetUpPreview.questions.forEach((item, index) => {
           // Validate question text
           if (!item.question || item.question.trim() === "") {
@@ -2062,22 +2148,26 @@
           } else {
             item.error = false;
           }
-          
+
           // **Validate voteMethod exists**
           if (!item.voteMethod) {
-            console.error('Question missing voteMethod');
+            console.error("Question missing voteMethod");
             item.voteMethod = "単純多数決";
             item.voteThreshold = "50.1%";
           }
-          
+
           // **Validate voteThreshold exists**
           if (!item.voteThreshold) {
-            console.error('Question missing voteThreshold');
+            console.error("Question missing voteThreshold");
             item.voteThreshold = this.getDefaultThreshold(item.voteMethod);
           }
-          
+
           // Validate answers for choice questions
-          if (item.answers.length == 0 && item.typeQuestion != "点数" && item.typeQuestion != "入力") {
+          if (
+            item.answers.length == 0 &&
+            item.typeQuestion != "点数" &&
+            item.typeQuestion != "入力"
+          ) {
             isValid = false;
             item.notAnswers = true;
           } else {
@@ -2093,7 +2183,7 @@
               });
             }
           }
-          
+
           // Validate criterias for score questions
           if (item.criterias.length == 0 && item.typeQuestion == "点数") {
             isValid = false;
@@ -2111,12 +2201,12 @@
               });
             }
           }
-          
+
           // Special handling for text input questions
           if (item.typeQuestion == "入力") {
             item.notAnswers = false;
             item.notCriterias = false;
-            
+
             if (item.answers.length > 0) {
               item.answers.forEach((ans) => {
                 if (!ans.title || ans.title.trim() === "") {
@@ -2127,7 +2217,7 @@
                 }
               });
             }
-            
+
             if (item.criterias.length > 0) {
               item.criterias.forEach((crit) => {
                 if (!crit.title || crit.title.trim() === "") {
@@ -2140,7 +2230,7 @@
             }
           }
         });
-        
+
         return isValid;
       },
       createVote() {

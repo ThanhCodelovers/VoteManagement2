@@ -204,7 +204,11 @@
       },
       isImage(url) {
         if (!url) return false;
-        return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(String(url));
+        // Nhận diện cả link file ảnh và data:image base64
+        return (
+          /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(String(url)) ||
+          /^data:image\//i.test(String(url))
+        );
       },
       isCriteriaEmpty(ans) {
         return ans == null || ans.criteria === "" || ans.criteria == null;
