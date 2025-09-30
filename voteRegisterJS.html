@@ -1640,45 +1640,75 @@
         };
         return map[name] || null;
       },
-      handleClick(event) {
+      handleClick(event, idx = null) {
         event.target.blur();
 
-        // Kiểm tra tất cả URL ảnh của tiêu chí và đáp án
+        // Kiểm tra URL ảnh chỉ trên câu hỏi đang thao tác
         const urlPattern =
           /^(https?:\/\/.*\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$)|(^data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=]+$)/i;
         let invalidUrl = null;
-        // Kiểm tra tiêu chí (criteria)
-        for (const q of this.dataForm.questions) {
-          if (q.criteria && Array.isArray(q.criteria)) {
-            for (const cri of q.criteria) {
-              if (
-                cri.media &&
-                cri.media.trim() &&
-                !urlPattern.test(cri.media.trim())
-              ) {
-                invalidUrl = cri.media;
+        let questionToCheck = null;
+        if (typeof idx === "number" && idx >= 0) {
+          // Ưu tiên index truyền vào (edit đúng câu hỏi)
+          questionToCheck = this.formSetUpPreview.questions[idx];
+        } else if (this.isEditing >= 0) {
+          // Edit: chỉ kiểm tra câu hỏi đang sửa ở formSetUpPreview
+          questionToCheck = this.formSetUpPreview.questions[this.isEditing];
+        } else {
+          // Tạo mới: chỉ kiểm tra câu hỏi đang nhập (thường là cuối cùng)
+          const len = this.formSetUpPreview.questions.length;
+          if (len > 0)
+            questionToCheck = this.formSetUpPreview.questions[len - 1];
+        }
+        if (questionToCheck) {
+          // Kiểm tra tiêu chí (criteria)
+          if (
+            questionToCheck.criteria &&
+            Array.isArray(questionToCheck.criteria)
+          ) {
+            for (const cri of questionToCheck.criteria) {
+              const val = cri.media && cri.media.trim();
+              if (val && !urlPattern.test(val)) {
+                invalidUrl = val;
                 break;
               }
             }
           }
           // Kiểm tra đáp án (answers)
-          if (q.answers && Array.isArray(q.answers)) {
-            for (const ans of q.answers) {
-              if (
-                ans.media &&
-                ans.media.trim() &&
-                !urlPattern.test(ans.media.trim())
-              ) {
-                invalidUrl = ans.media;
+          if (
+            !invalidUrl &&
+            questionToCheck.answers &&
+            Array.isArray(questionToCheck.answers)
+          ) {
+            for (const ans of questionToCheck.answers) {
+              const val = ans.media && ans.media.trim();
+              if (val && !urlPattern.test(val)) {
+                invalidUrl = val;
                 break;
               }
             }
           }
         }
         if (invalidUrl) {
-          window.alert(
-            "画像URLの形式が正しくありません。正しい画像URLを入力してください。"
-          );
+          if (window.Swal) {
+            Swal.fire({
+              icon: "question",
+              title: "",
+              text: "画像URLの形式が正しくありません。正しい画像URLを入力してください。",
+              confirmButtonText: "はい",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              customClass: {
+                confirmButton: "swal2-confirm btn btn-primary",
+                popup: "swal2-popup",
+                icon: "swal2-icon-question",
+              },
+            });
+          } else {
+            window.alert(
+              "画像URLの形式が正しくありません。正しい画像URLを入力してください。"
+            );
+          }
           return;
         }
 
