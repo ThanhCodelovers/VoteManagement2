@@ -1,3 +1,34 @@
+<style>
+  .btn.btn-success {
+    background-color: #01932e;
+    border-color: #01932e;
+    transition: all 0.3s ease;
+    -webkit-transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn.btn-success:hover {
+    background-color: #157347 !important;
+    border-color: #157347 !important;
+  }
+  .btn.btn-success:active {
+    background-color: #157347 !important;
+    border-color: #157347 !important;
+  }
+  .btn.btn-success.touched {
+    background-color: #157347 !important;
+    border-color: #157347 !important;
+  }
+  @media (hover: none) {
+    .btn.btn-success:hover {
+      background-color: #01932e;
+      border-color: #01932e;
+    }
+    /* Đảm bảo transition hoạt động trên mobile */
+    .btn.btn-success {
+      will-change: background-color, border-color;
+    }
+  }
+</style>
 <template id="content-pageCreateNew_context">
   <div
     id="content-pageCreateNew_context__quizInfo"
@@ -499,6 +530,7 @@
               <input
                 type="text"
                 class="form-control sp-text-width"
+                style="z-index: 3"
                 v-model="cri.title"
                 :disabled="!allowChangeQuest || !allowChangeVote"
                 :placeholder="'※テキストを入力してください（最大150文字）。'"
@@ -508,6 +540,7 @@
               <input
                 type="text"
                 class="form-control sp-text-width-1"
+                style="z-index: 3"
                 v-model="cri.media"
                 :disabled="!allowChangeQuest || !allowChangeVote"
                 :placeholder="'※URLを入力してください。'"
@@ -562,6 +595,7 @@
               <input
                 type="text"
                 class="form-control"
+                style="z-index: 3"
                 v-model="ans.title"
                 :disabled="!allowChangeQuest || !allowChangeVote"
                 :placeholder="'※テキストを入力してください。'"
@@ -570,6 +604,7 @@
               <input
                 type="text"
                 class="form-control"
+                style="z-index: 3"
                 v-model="ans.media"
                 :disabled="!allowChangeQuest || !allowChangeVote"
                 :placeholder="'※URLを入力してください。'"
@@ -631,7 +666,7 @@
             :disabled="!allowChangeQuest"
             v-if="allowChangeVote && allowChangeQuest && isEditing < 0"
             @click="resetQuestion"
-            style="margin-left: 10px"
+            style="margin-left: 10px; height: 38px; min-width: 80px"
           >
             リセット
           </button>
@@ -640,16 +675,20 @@
             class="btn btn-reset px-2"
             v-else-if="allowChangeVote && allowChangeQuest && isEditing >= 0"
             @click="cancelEditQuestion"
-            style="margin-left: 10px"
+            style="margin-left: 10px; height: 38px; min-width: 80px"
           >
             キャンセル
           </button>
           <button
             type="button"
             class="btn btn-success"
+            :class="{'touched': isTouched}"
             :disabled="!allowChangeQuest|| isVoteNumberInvalid"
             v-if="allowChangeVote && allowChangeQuest"
             @click="handleClick($event)"
+            @touchstart="handleTouchStart"
+            @touchend="handleTouchEnd"
+            style="height: 38px"
           >
             保存
           </button>
@@ -749,20 +788,14 @@
                     >
                       <div class="">
                         <div
-                          class="form-group d-flex col-12 form-check-inline one-line-label"
+                          class="form-group d-flex col-12 form-check-inline one-line-label align-items-center"
                         >
-                          <label
-                            for="checkbox-Q1-1"
-                            class="form-check-criteria mb-2"
+                          <label for="checkbox-Q1-1" class="form-check-criteria"
                             >{{ crit.title }}</label
                           >
                           <span
                             class="vote-method-label"
-                            style="
-                              margin-left: 8px;
-                              margin-bottom: 8px;
-                              color: blue;
-                            "
+                            style="margin-left: 8px; color: blue"
                           >
                             可決条件: {{ item.voteThreshold }}
                           </span>
@@ -819,17 +852,15 @@
                       </div>
                     </div>
                     <div class="col-sm-12 col-md-4 col-lg-3 mb-2" v-else>
-                      <div class="form-group d-flex col-12 form-check-inline">
+                      <div
+                        class="form-group d-flex col-12 form-check-inline align-items-center"
+                      >
                         <label class="form-check-criteria"
                           >{{ crit.title }}</label
                         >
                         <span
                           class="vote-method-label"
-                          style="
-                            margin-left: 8px;
-                            margin-bottom: 8px;
-                            color: blue;
-                          "
+                          style="margin-left: 8px; color: blue"
                         >
                           可決条件: {{ item.voteThreshold }}
                         </span>
@@ -1330,6 +1361,8 @@
         fullscreenTarget: null,
         isSP: false,
         hasTouchedVoteInput: false,
+        isTouched: false,
+        saveTimeout: null,
         dataForm: {
           questions: [],
           isVoteChange: false,
@@ -1640,8 +1673,15 @@
         };
         return map[name] || null;
       },
+      handleTouchStart() {
+        this.isTouched = true;
+      },
+      handleTouchEnd() {
+        // Không reset ngay lập tức để tránh conflict với handleClick
+      },
       handleClick(event, idx = null) {
         event.target.blur();
+        // Không set isTouched ở đây nữa
 
         // Kiểm tra URL ảnh chỉ trên câu hỏi đang thao tác
         const urlPattern =
@@ -2123,9 +2163,21 @@
 
         this.resetQuestion();
 
+        this.isTouched = true; // Set touched state when question is added successfully
+
         Toast.fire({
           icon: "success",
           title: "新しい質問がプレビューリストに追加されました。",
+          timer: 2000, // Set specific timer
+          timerProgressBar: true, // Show progress bar
+        }).then(() => {
+          // Try both approaches
+          this.isTouched = false;
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.isTouched = false;
+            }, 100);
+          });
         });
       },
       resetQuestion() {

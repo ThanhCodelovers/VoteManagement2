@@ -679,7 +679,7 @@
 
                                 <!-- fullscreen modal -->
                                 <div
-                                  v-if="fullscreenTarget && fullscreenTarget.url && fullscreenTarget.url !== ''"
+                                  v-if="fullscreenTarget"
                                   class="fullscreen-overlay"
                                 >
                                   <div class="media-container">
@@ -697,7 +697,7 @@
 
                                     <button
                                       class="close-btn"
-                                      @click="closeFullscreen()"
+                                      @click="fullscreenTarget = null"
                                     >
                                       ✕
                                     </button>
@@ -748,7 +748,7 @@
                                     v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
                                     :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
                                     :value="ans.name"
-                                    :disabled="isPreview || (form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value'].length >= (item.max || 999) && form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value'].indexOf(ans.name) === -1)"
+                                    :disabled="isPreview"
                                   />
                                   <span
                                     class="color-square"
@@ -919,7 +919,7 @@
 
                                 <!-- fullscreen modal -->
                                 <div
-                                  v-if="fullscreenTarget && fullscreenTarget.url && fullscreenTarget.url !== ''"
+                                  v-if="fullscreenTarget"
                                   class="fullscreen-overlay"
                                 >
                                   <div class="media-container">
@@ -937,7 +937,7 @@
 
                                     <button
                                       class="close-btn"
-                                      @click="closeFullscreen()"
+                                      @click="fullscreenTarget = null"
                                     >
                                       ✕
                                     </button>
@@ -987,7 +987,7 @@
                                     v-model="form[`${index + 1}．${item.question}`]['value']"
                                     :id="`checkbox-Q${index + 1}-${idx + 1}`"
                                     :value="ans.name"
-                                    :disabled="isPreview || (form[`${index + 1}．${item.question}`]['value'].length >= (item.max || 999) && form[`${index + 1}．${item.question}`]['value'].indexOf(ans.name) === -1)"
+                                    :disabled="isPreview"
                                   />
                                   <span
                                     class="color-square"
@@ -1034,17 +1034,9 @@
                   <!-- validation -->
                   <span
                     class="text-danger"
-                    v-if="validates[`${index + 1}．${item.question}`] && validates[`${index + 1}．${item.question}`] !== true"
+                    v-if="validates[`${index + 1}．${item.question}`] == false"
                   >
-                    <template v-if="validates[`${index + 1}．${item.question}`] === 'empty'">
-                      ※このフィールドを記入してください。
-                    </template>
-                    <template v-else-if="validates[`${index + 1}．${item.question}`] === 'min'">
-                      ※最低({{item.min}})個の選択肢を選んでください。
-                    </template>
-                    <template v-else-if="validates[`${index + 1}．${item.question}`] === 'max'">
-                      ※最大({{item.max}})個まで選択できます。
-                    </template>
+                    ※このフィールドを記入してください。
                   </span>
 
                   <span
@@ -1371,7 +1363,7 @@
 
                                         <!-- fullscreen modal -->
                                         <div
-                                          v-if="fullscreenTarget && fullscreenTarget.url && fullscreenTarget.url !== ''"
+                                          v-if="fullscreenTarget"
                                           class="fullscreen-overlay"
                                         >
                                           <div class="media-container">
@@ -1389,7 +1381,7 @@
 
                                             <button
                                               class="close-btn"
-                                              @click="closeFullscreen()"
+                                              @click="fullscreenTarget = null"
                                             >
                                               ✕
                                             </button>
@@ -1452,41 +1444,11 @@
                                             "
                                           ></span>
                                           <label
-                                            :for="`checkbox-Q${index + 1}-${idx + 1}`"
-                                            class="form-check-label mx-2"
+                                            class="mx-2 form-check-label mx-2"
                                             style="word-break: break-all"
+                                            :for="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
+                                            >{{ ans.name }}</label
                                           >
-                                            {{ ans.name }}
-                                          </label>
-                                        </div>
-
-                                        <!-- Progress bar + số phiếu -->
-                                        <div
-                                          class="d-flex align-items-center mt-1"
-                                        >
-                                          <div
-                                            class="progress flex-grow-1 me-2"
-                                            style="height: 12px"
-                                          >
-                                            <div
-                                              class="progress-bar"
-                                              role="progressbar"
-                                              :style="{
-                                                width: getPercentageNoCriteria(getResultAnswer(ans.name), results[currentQuestionIndex]) + '%',
-                                                backgroundColor: getColor(item, idx)
-                                              }"
-                                            ></div>
-                                          </div>
-
-                                          <small class="text-nowrap">
-                                            {{ getResultAnswer(ans.name)?.total
-                                            || 0 }}/{{
-                                            getTotalAnswers(results[currentQuestionIndex])
-                                            }}票 ({{
-                                            getPercentageNoCriteria(getResultAnswer(ans.name),
-                                            results[currentQuestionIndex]).toFixed(1)
-                                            }}%)
-                                          </small>
                                         </div>
                                       </div>
                                     </div>
@@ -1591,6 +1553,8 @@
                                       <label>{{ crit.name }}</label>
                                     </div>
                                     <textarea
+                                      name=""
+                                      id=""
                                       class="form-control form-control-textarea my-2"
                                       v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
                                       :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
@@ -1648,7 +1612,7 @@
 
                                         <!-- fullscreen modal -->
                                         <div
-                                          v-if="fullscreenTarget && fullscreenTarget.url && fullscreenTarget.url !== ''"
+                                          v-if="fullscreenTarget"
                                           class="fullscreen-overlay"
                                         >
                                           <div class="media-container">
@@ -1663,10 +1627,9 @@
                                               class="preview-iframe-full"
                                               frameborder="0"
                                             ></iframe>
-
                                             <button
                                               class="close-btn"
-                                              @click="closeFullscreen()"
+                                              @click="fullscreenTarget = null"
                                             >
                                               ✕
                                             </button>
@@ -1730,12 +1693,6 @@
                                             "
                                           ></span>
                                           <label
-                                            :for="`checkbox-Q${index + 1}-${idx + 1}`"
-                                            class="form-check-label mx-2"
-                                            style="word-break: break-all"
-                                          >
-                                            {{ ans.name }}
-                                          </label>
                                             :for="`checkbox-Q${index + 1}-${idx + 1}`"
                                             class="form-check-label mx-2"
                                             style="word-break: break-all"
@@ -1770,274 +1727,6 @@
                                             getPercentageNoCriteria(getResultAnswer(ans.name),
                                             results[currentQuestionIndex]).toFixed(1)
                                             }}%)
-                                          </small>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <!-- input type score -->
-                            <div
-                              class="form-group col-12 form-check form-check1"
-                              v-if="item.question_type === 'score'"
-                            >
-                              <div class="row">
-                                <div
-                                  class="col-sm-12 col-md-4 col-lg-3 mb-2"
-                                  v-for="(crit, idex) in item.criterias"
-                                >
-                                  <div class="">
-                                    <div
-                                      v-if="crit.media"
-                                      class="media-wrapper"
-                                    >
-                                      <!-- Nếu là ảnh -->
-                                      <template v-if="isImage(crit.media)">
-                                        <img
-                                          :src="convertDriveLink(crit.media)"
-                                          class="preview-img"
-                                          alt="preview"
-                                        />
-                                        <button
-                                          class="zoom-btn"
-                                          @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
-                                        >
-                                          ⛶
-                                        </button>
-                                      </template>
-
-                                      <!-- Nếu không phải ảnh -->
-                                      <template v-else>
-                                        <iframe
-                                          :src="convertDriveLink(crit.media)"
-                                          class="iframe-vote1"
-                                        ></iframe>
-                                      </template>
-                                    </div>
-                                    <div
-                                      class="form-check-criteria d-flex col-12 form-check-inline"
-                                    >
-                                      <label>{{ crit.name }}</label>
-                                    </div>
-                                    <input
-                                      type="number"
-                                      class="form-control form-control-number my-2"
-                                      v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
-                                      :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <!-- input type text -->
-                            <div
-                              class="form-group col-12 form-check form-check1"
-                              v-if="item.question_type === 'input'"
-                            >
-                              <div class="row">
-                                <div
-                                  class="col-sm-12 col-md-4 col-lg-3 mb-2"
-                                  v-for="(crit, idex) in item.criterias"
-                                >
-                                  <div class="">
-                                    <div
-                                      v-if="crit.media"
-                                      class="media-wrapper"
-                                    >
-                                      <!-- Nếu là ảnh -->
-                                      <template v-if="isImage(crit.media)">
-                                        <img
-                                          :src="convertDriveLink(crit.media)"
-                                          class="preview-img"
-                                          alt="preview"
-                                        />
-                                        <button
-                                          class="zoom-btn"
-                                          @click="fullscreenTarget = { type: 'crit', index: idx, url: convertDriveLink(crit.media) }"
-                                        >
-                                          ⛶
-                                        </button>
-                                      </template>
-
-                                      <!-- Nếu không phải ảnh -->
-                                      <template v-else>
-                                        <iframe
-                                          :src="convertDriveLink(crit.media)"
-                                          class="iframe-vote1"
-                                        ></iframe>
-                                      </template>
-                                    </div>
-                                    <div
-                                      class="form-check-criteria d-flex col-12 form-check-inline"
-                                    >
-                                      <label>{{ crit.name }}</label>
-                                    </div>
-                                    <textarea
-                                      class="form-control form-control-textarea my-2"
-                                      v-model="form[`${index + 1}．${item.question}`]['criterias'][`${crit.name}`]['value']"
-                                      :id="`Q${index + 1}-C${idex + 1}-${idx + 1}`"
-                                    ></textarea>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- TH câu vote không phải đa tiêu chí -->
-                          <div class="row" v-else>
-                            <div
-                              class="form-group col-12 form-check form-check1"
-                            >
-                              <div
-                                class="row mg_18"
-                                v-if="item.question_type === 'oneSelect' || item.question_type === 'multiSelect'"
-                              >
-                                <div class="form-group col-12">
-                                  <div class="row mag-right0">
-                                    <div
-                                      class="col-sm-12 col-md-4 col-lg-3"
-                                      v-for="(ans, idx) in Object.values(item.question_answers)"
-                                      :key="idx"
-                                    >
-                                      <div class="mb-2">
-                                        <div
-                                          v-if="ans.media"
-                                          class="media-wrapper"
-                                        >
-                                          <!-- Nếu là ảnh -->
-                                          <template v-if="isImage(ans.media)">
-                                            <img
-                                              :src="convertDriveLink(ans.media)"
-                                              class="preview-img"
-                                              alt="preview"
-                                            />
-                                            <button
-                                              class="zoom-btn"
-                                              @click="fullscreenTarget = { type: 'ans', index: idx, url: convertDriveLink(ans.media) }"
-                                            >
-                                              ⛶
-                                            </button>
-                                          </template>
-
-                                          <!-- Nếu không phải ảnh -->
-                                          <template v-else>
-                                            <iframe
-                                              :src="convertDriveLink(ans.media)"
-                                              class="iframe-vote1"
-                                            ></iframe>
-                                          </template>
-                                        </div>
-
-                                        <!-- fullscreen modal -->
-                                        <div
-                                          v-if="fullscreenTarget && fullscreenTarget.url && fullscreenTarget.url !== ''"
-                                          class="fullscreen-overlay"
-                                        >
-                                          <div class="media-container">
-                                            <img
-                                              v-if="isImage(fullscreenTarget.url)"
-                                              :src="fullscreenTarget.url"
-                                              alt="preview"
-                                            />
-                                            <iframe
-                                              v-else
-                                              :src="fullscreenTarget.url"
-                                              class="preview-iframe-full"
-                                              frameborder="0"
-                                            ></iframe>
-
-                                            <button
-                                              class="close-btn"
-                                              @click="closeFullscreen()"
-                                            >
-                                              ✕
-                                            </button>
-                                          </div>
-                                        </div>
-
-                                        <!-- input type oneSelect -->
-                                        <div
-                                          class="form-group d-flex col-12 align-items-baseline"
-                                          style="gap: 5px"
-                                          v-if="item.question_type === 'oneSelect'"
-                                        >
-                                          <input
-                                            type="radio"
-                                            style="transform: translateY(1.5px)"
-                                            v-model="form[`${index + 1}．${item.question}`]['value']"
-                                            :id="`radio-Q${index + 1}-${idx + 1}`"
-                                            :value="ans.name"
-                                          />
-                                          <span
-                                            class="color-square"
-                                            :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
-                                            style="
-                                              width: 10px;
-                                              height: 10px;
-                                              display: inline-block;
-                                              margin-right: 1px;
-                                              flex-shrink: 0;
-                                            "
-                                          ></span>
-                                          <label
-                                            :for="`radio-Q${index + 1}-${idx + 1}`"
-                                            class="form-check-label mx-2"
-                                            style="word-break: break-all"
-                                          >
-                                            {{ ans.name }}
-                                          </label>
-                                        </div>
-
-                                        <!-- input type multiSelect -->
-                                        <div
-                                          class="form-group d-flex1 col-12 form-check-inline"
-                                          v-if="item.question_type === 'multiSelect'"
-                                        >
-                                          <input
-                                            type="checkbox"
-                                            style="transform: translateY(1.5px)"
-                                            v-model="form[`${index + 1}．${item.question}`]['value']"
-                                            :id="`checkbox-Q${index + 1}-${idx + 1}`"
-                                            :value="ans.name"
-                                          />
-                                          <span
-                                            class="color-square"
-                                            :style="{ backgroundColor: colors[item.colors[idx]] || '#ffffff' }"
-                                            style="
-                                              width: 10px;
-                                              height: 10px;
-                                              display: inline-block;
-                                              margin-right: 1px;
-                                              flex-shrink: 0;
-                                            "
-                                          ></span>
-                                                <label
-                                            :for="`checkbox-Q${index + 1}-${idx + 1}`"
-                                            class="form-check-label mx-2"
-                                            style="word-break: break-all"
-                                          >
-                                            {{ ans.name }}
-                                          </label>
-                                        </div>
-
-                                        <!-- Progress bar + số phiếu -->
-                                        <div class="d-flex align-items-center mt-1">
-                                          <div class="progress flex-grow-1 me-2" style="height: 12px;">
-                                            <div
-                                              class="progress-bar"
-                                              role="progressbar"
-                                              :style="{
-                                                width: getPercentageNoCriteria(getResultAnswer(ans.name), results[currentQuestionIndex]) + '%',
-                                                backgroundColor: getColor(item, idx)
-                                              }"
-                                            ></div>
-                                          </div>
-
-                                          <small class="text-nowrap">
-                                            {{ getResultAnswer(ans.name)?.total || 0 }}/{{ getTotalAnswers(results[currentQuestionIndex]) }}票
-                                            ({{ getPercentageNoCriteria(getResultAnswer(ans.name), results[currentQuestionIndex]).toFixed(1) }}%)
                                           </small>
                                         </div>
                                       </div>
@@ -2047,7 +1736,10 @@
                               </div>
 
                               <!-- input type text -->
-                              <div class="row" v-if="item.question_type === 'input'">
+                              <div
+                                class="row"
+                                v-if="item.question_type === 'input'"
+                              >
                                 <div class="col-sm-12 col-md-6 col-lg-6 mb-2">
                                   <div class="">
                                     <textarea
@@ -2066,17 +1758,9 @@
                           <!-- validation -->
                           <span
                             class="text-danger"
-                            v-if="validates[`${index + 1}．${item.question}`] && validates[`${index + 1}．${item.question}`] !== true"
+                            v-if="validates[`${index + 1}．${item.question}`] == false"
                           >
-                            <template v-if="validates[`${index + 1}．${item.question}`] === 'empty'">
-                              ※このフィールドを記入してください。
-                            </template>
-                            <template v-else-if="validates[`${index + 1}．${item.question}`] === 'min'">
-                              ※最低({{item.min}})個の選択肢を選んでください。
-                            </template>
-                            <template v-else-if="validates[`${index + 1}．${item.question}`] === 'max'">
-                              ※最大({{item.max}})個まで選択できます。
-                            </template>
+                            ※このフィールドを記入してください。
                           </span>
 
                           <span
@@ -2228,5 +1912,4 @@
     setInterval(adjustHeight, 1000);
     window.addEventListener("resize", adjustHeight);
   </script>
-</html>                                         
-                                           
+</html>

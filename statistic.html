@@ -4,1077 +4,2199 @@
 ?>
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title></title>
+    <?!= include('eChartJS') ?>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700&family=Questrial&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- CommonJS Lib -->
+    <?!= include('jquery-3.3.1.slim.min.js') ?>
+    <?!= include('popper.min.js') ?>
+    <?!= include('bootstrap.bundle.min.js') ?>
+    <?!= include('bootstrap-datepicker.min.js') ?>
+    <?!= include('bootstrap-datepicker.ja.min.js') ?>
+    <?!= include('sweetalert2.min.js') ?>
+    <!-- StyleCSS Lib -->
+    <?!= include('bootstrap.min.css') ?>
+    <?!= include('bootstrap-datepicker.min.css') ?>
+    <!-- <?!= include('all.min.css') ?> -->
+    <?!= include('sweetalert2.min.css') ?>
+    <script>
+      const surveyID = "<?= voteCode ?>";
+      const dateRun = "<?= dateRun ?>";
+    </script>
+    <script>
+      var sessionDataLogin = localStorage.getItem("login");
+      var login = JSON.parse(sessionDataLogin);
+      var sessionDataUser = localStorage.getItem("user");
+      var user = JSON.parse(sessionDataUser);
+    </script>
+    <?!= include('stylesCss2') ?>
+    <style>
+      /* ================== General ================== */
+      .modal-description {
+        word-break: break-word;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <title></title>
-  <?!= include('eChartJS') ?>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700&family=Questrial&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <!-- CommonJS Lib -->
-  <?!= include('jquery-3.3.1.slim.min.js') ?>
-  <?!= include('popper.min.js') ?>
-  <?!= include('bootstrap.bundle.min.js') ?>
-  <?!= include('bootstrap-datepicker.min.js') ?>
-  <?!= include('bootstrap-datepicker.ja.min.js') ?>
-  <?!= include('sweetalert2.min.js') ?>
-  <!-- StyleCSS Lib -->
-  <?!= include('bootstrap.min.css') ?>
-  <?!= include('bootstrap-datepicker.min.css') ?>
-  <!-- <?!= include('all.min.css') ?> -->
-  <?!= include('sweetalert2.min.css') ?>
-  <script>
-    const surveyID = '<?= voteCode ?>';
-    const dateRun = '<?= dateRun ?>';
-  </script>
-  <script>
-    var sessionDataLogin = localStorage.getItem('login');
-    var login = JSON.parse(sessionDataLogin);
-    var sessionDataUser = localStorage.getItem('user');
-    var user = JSON.parse(sessionDataUser);
-  </script>
-  <?!= include('stylesCss2') ?>
-  <style>
-    /* ================== General ================== */
-.modal-description {
-  word-break: break-word;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-}
+      .description-preview {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.5em;
+        max-height: 4.5em; /* 3 dòng */
+        color: #616367;
+        word-break: break-word;
+      }
 
-.description-preview {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.5em;
-  max-height: 4.5em; /* 3 dòng */
-  color: #616367;
-  word-break: break-word;
-}
+      .more-link {
+        color: #007bff;
+        cursor: pointer;
+        display: inline-block;
+        margin-top: 4px;
+      }
 
-.more-link {
-  color: #007bff;
-  cursor: pointer;
-  display: inline-block;
-  margin-top: 4px;
-}
+      tbody {
+        border-top: 0 !important;
+      }
 
-tbody {
-  border-top: 0 !important;
-}
+      .vertical-line {
+        display: inline-block;
+        height: 16px;
+        border-left: 4px solid black;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
 
-.vertical-line {
-  display: inline-block;
-  height: 16px;
-  border-left: 4px solid black;
-  margin-right: 5px;
-  vertical-align: middle;
-}
+      /* ================== Question Card ================== */
+      .question-card {
+        max-width: 95%;
+        margin: 0 auto 12px auto;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px 14px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
 
-/* ================== Question Card ================== */
-.question-card {
-  max-width: 95%;
-  margin: 0 auto 12px auto;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  background: #fff;
-  padding: 12px 14px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
+      /* Default question (no criteria) */
+      .question-card.default {
+        border: 1px solid #ddd;
+        background: #fff;
+      }
 
-.question-card:hover {
-  border-color: #0b803f;
-  box-shadow: 0 6px 16px rgba(11, 128, 63, 0.1);
-  transform: translateY(-2px);
-}
+      .question-card.default:hover {
+        border-color: #ccc;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
 
-.question-card.selected {
-  border: 2px solid #0b803f;
-  background: #f2fff5;
-  box-shadow: 0 8px 20px rgba(11, 128, 63, 0.1);
-}
+      .question-card.default.selected {
+        border: 1px solid #999;
+        background: #f8f9fa;
+      }
 
-/* ================== Card Header ================== */
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 8px;
-}
+      /* Multi-criteria question */
+      .question-card.multi-criteria {
+        border: 1px solid #01932e;
+        background: #fff;
+      }
 
-.header-left {
-  display: flex;
-  gap: 6px;
-  font-weight: 600;
-  color: #333;
-}
+      .question-card.multi-criteria:hover {
+        border-color: #01932e;
+        background: #f0fff4;
+        box-shadow: 0 4px 12px rgba(1, 147, 46, 0.15);
+        transform: translateY(-1px);
+      }
 
-.question-index {
-  font-weight: 600;
-  color: #1f2937;
-}
+      .question-card.multi-criteria.selected {
+        border: 2px solid #01932e;
+        background: #f0fff4;
+        box-shadow: 0 6px 16px rgba(1, 147, 46, 0.2);
+      }
 
-.question-title {
-  font-size: 14px;
-  color: #1f2937;
-}
+      /* ================== Card Header ================== */
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
 
-.method-badge {
-  font-size: 12px;
-  color: #ff9800;
-  font-weight: 600;
-  margin-bottom: 6px;
-  background: #fff;
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 152, 0, 0.15);
-  white-space: nowrap;
-}
+      .header-left {
+        display: flex;
+        gap: 6px;
+        font-weight: 600;
+        color: #333;
+      }
 
-/* ================== Result ================== */
-.result-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 6px;
-  margin-top: 6px;
-}
+      .question-index {
+        font-weight: 600;
+        color: #1f2937;
+      }
 
-.result-row.success {
-  color: #0b803f;
-  background: #f0fff3;
-}
+      .question-title {
+        font-size: 14px;
+        color: #1f2937;
+      }
 
-.result-row.error {
-  color: #d23b3b;
-  background: #fff6f6;
-}
+      /* Default method badge */
+      .method-badge {
+        font-size: 12px;
+        color: #ff9800;
+        font-weight: 600;
+        margin-bottom: 6px;
+        background: #fff;
+        padding: 4px 6px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 152, 0, 0.15);
+        white-space: nowrap;
+      }
 
-.result-row.center {
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-  padding: 10px 6px;
-}
+      /* Multi-criteria method badge */
+      .question-card.multi-criteria .method-badge {
+        color: #01932e;
+        border: 1px solid rgba(1, 147, 46, 0.2);
+        background: rgba(1, 147, 46, 0.05);
+      }
 
-.result-icon {
-  font-size: 16px;
-}
+      /* ================== Result ================== */
+      .result-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        border-radius: 6px;
+        margin-top: 6px;
+      }
 
-.result-row.center .result-icon {
-  font-size: 20px;
-  margin-bottom: 4px;
-}
+      .result-row.success {
+        color: #01932e;
+        background: #f0fff4;
+      }
 
-.answer-text {
-  font-weight: 600;
-  color: #0b3b2b;
-}
+      .result-row.error {
+        color: #d23b3b;
+        background: #fff6f6;
+      }
 
-.result-row.center .answer-text {
-  margin-bottom: 2px;
-  max-width: 100%;
-}
+      .result-row.center {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 4px;
+        padding: 10px 6px;
+      }
 
-.vote-stats {
-  font-size: 12px;
-  color: #555;
-}
+      .result-icon {
+        font-size: 16px;
+      }
 
-.result-row.center .vote-stats {
-  font-size: 13px;
-  color: #6b7280;
-}
+      .result-row.center .result-icon {
+        font-size: 20px;
+        margin-bottom: 4px;
+      }
 
-/* ================== Criteria ================== */
-.criteria-list {
-  margin-top: 6px;
-}
+      .answer-text {
+        font-weight: 600;
+        color: #01932e;
+      }
 
-.criteria-block {
-  padding: 6px 0;
-  border-top: 1px solid #f1f3f4;
-}
+      .result-row.center .answer-text {
+        margin-bottom: 2px;
+        max-width: 100%;
+      }
 
-.criteria-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 6px;
-}
+      .vote-stats {
+        font-size: 12px;
+        color: #555;
+      }
 
-/* ================== Utility ================== */
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
-  vertical-align: middle;
-  max-width: 100%;
-}
+      .result-row.center .vote-stats {
+        font-size: 13px;
+        color: #6b7280;
+      }
 
-.loading {
-  color: #9ca3af;
-  font-size: 13px;
-  padding: 6px 0;
-}
+      /* ================== Criteria ================== */
+      .criteria-list {
+        margin-top: 6px;
+      }
 
-ul.question-list {
-  list-style: none;      /* bỏ dấu chấm tròn mặc định */
-  padding-left: 0;       /* bỏ khoảng cách thụt vào bên trái */
-  margin: 0;             /* nếu cần bỏ khoảng cách mặc định */
-}
+      .criteria-block {
+        padding: 6px 0;
+        border-top: 1px solid #f1f3f4;
+      }
 
-/* ================== Responsive ================== */
-@media screen and (max-width: 1000px) {
-  .list-group {
-    flex-direction: row;
-    overflow: auto;
-    max-width: 100%;
-    max-height: none;
-    display: inherit;
-    font-size: 9pt;
-  }
+      .criteria-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 6px;
+      }
 
-  .project-list {
-    max-height: 100vh;
-  }
+      /* ================== Utility ================== */
+      .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        vertical-align: middle;
+        max-width: 100%;
+      }
 
-  #content-total__dataSummay {
-    grid-template-columns: unset;
-    grid-template-rows: auto 3fr;
-    column-gap: unset;
-    row-gap: 5px;
-  }
-}
+      .loading {
+        color: #9ca3af;
+        font-size: 13px;
+        padding: 6px 0;
+      }
 
-@media screen and (max-width: 640px) {
-  .dropdown-phase .dropdown-input {
-    grid-template-columns: 1fr 1fr;
-  }
+      ul.question-list {
+        list-style: none; /* bỏ dấu chấm tròn mặc định */
+        padding-left: 0; /* bỏ khoảng cách thụt vào bên trái */
+        margin: 0; /* nếu cần bỏ khoảng cách mặc định */
+      }
 
-  .content-total__dataSummary-chart {
-    height: 400px;
-    overflow: hidden;
-  }
-}
+      /* ================== Responsive ================== */
+      @media screen and (max-width: 1000px) {
+        .list-group {
+          flex-direction: row;
+          overflow: auto;
+          max-width: 100%;
+          max-height: none;
+          display: inherit;
+          font-size: 9pt;
+        }
 
-/* ================== LANDSCAPE MOBILE FIX - COMPLETE VERSION ================== */
-/* Thay thế hoàn toàn đoạn CSS cũ bằng đoạn này */
+        .project-list {
+          max-height: 100vh;
+        }
 
-@media screen and (max-width: 926px) and (orientation: landscape) {
-  /* Giữ nguyên background cho body */
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  
-  #app {
-    background: #f8f9fa !important;
-  }
-  
-  /* Container chính */
-  .container-fuild.px-3 {
-    padding: 4px 6px !important;
-    background: #f8f9fa !important;
-    margin: 0 !important;
-  }
-  
-  /* GIỮ NGUYÊN MÀU HEADER - không thay đổi background */
-  .container-fuild.d-none.d-md-flex,
-  .d-flex.d-md-none {
-    padding: 3px 6px !important;
-    margin-bottom: 4px !important;
-    /* Không override background color của header */
-  }
-  
-  /* Statistics header */
-  .statistic-information {
-    margin-bottom: 6px !important;
-    padding: 6px !important;
-    background: white !important;
-    border-radius: 6px !important;
-  }
-  
-  .statistic-header {
-    flex-direction: row !important;
-    gap: 6px !important;
-    align-items: flex-start !important;
-  }
-  
-  .statistic-header-right {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 3px !important;
-    flex-shrink: 0 !important;
-    min-width: 180px !important;
-  }
-  
-  .statistic-card {
-    padding: 3px 2px !important;
-    font-size: 8px !important;
-    min-width: 55px !important;
-    text-align: center !important;
-    background: #f8f9fa !important;
-  }
-  
-  .statistic-card .value {
-    font-size: 8px !important;
-    margin-bottom: 1px !important;
-  }
-  
-  .statistic-card .number {
-    font-size: 11px !important;
-    padding-top: 1px !important;
-  }
-  
-  .statistic-header-left {
-    flex: 1 !important;
-    min-width: 0 !important;
-  }
-  
-  .statistic-header-left p {
-    font-size: 11px !important;
-    margin-bottom: 3px !important;
-    line-height: 1.2 !important;
-  }
-  
-  .description-preview {
-    font-size: 9px !important;
-    line-height: 1.2 !important;
-    -webkit-line-clamp: 2 !important;
-  }
-  
-  /* Main layout */
-  #content {
-    background: #f8f9fa !important;
-  }
-  
-  #content-total__dataSummay {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 6px !important;
-    align-items: flex-start !important;
-    background: #f8f9fa !important;
-  }
-  
-  /* Question list */
-  .project-list {
-    width: 260px !important;
-    flex-shrink: 0 !important;
-    background: white !important;
-    border-radius: 6px !important;
-    padding: 6px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
-  }
-  
-  .project-list .col-12 {
-    margin-bottom: 4px !important;
-  }
-  
-  .project-total__byPhase-label {
-    margin: 0 0 4px 0 !important;
-    font-size: 10px !important;
-  }
-  
-  .question-list {
-    max-height: 240px !important;
-    overflow-y: auto !important;
-    margin: 0 -3px 0 0 !important;
-    padding-right: 3px !important;
-  }
-  
-  /* Question card - GIỮ NGUYÊN MÀU ACTIVE */
-  .question-card {
-    margin-bottom: 4px !important;
-    padding: 4px 6px !important;
-    border-radius: 4px !important;
-    background: white !important;
-    /* Giữ nguyên các style active từ CSS gốc */
-  }
-  
-  .question-card:hover {
-    border-color: #0b803f !important;
-    box-shadow: 0 6px 16px rgba(11, 128, 63, 0.1) !important;
-    transform: translateY(-2px) !important;
-  }
-  
-  .question-card.selected {
-    border: 2px solid #0b803f !important;
-    background: #f2fff5 !important;
-    box-shadow: 0 8px 20px rgba(11, 128, 63, 0.1) !important;
-  }
-  
-  .card-header {
-    margin-bottom: 3px !important;
-  }
-  
-  .header-left {
-    gap: 3px !important;
-  }
-  
-  .question-index {
-    font-size: 9px !important;
-    flex-shrink: 0 !important;
-  }
-  
-  .question-title {
-    font-size: 9px !important;
-    line-height: 1.2 !important;
-    word-break: break-word !important;
-    white-space: normal !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-  }
-  
-  .method-badge {
-    font-size: 7px !important;
-    padding: 1px 3px !important;
-    margin-bottom: 3px !important;
-  }
-  
-  .result-row {
-    padding: 3px !important;
-    margin-top: 3px !important;
-    gap: 3px !important;
-  }
-  
-  .result-icon {
-    font-size: 9px !important;
-  }
-  
-  .answer-text {
-    font-size: 8px !important;
-    line-height: 1.2 !important;
-    word-break: break-word !important;
-  }
-  
-  .vote-stats {
-    font-size: 7px !important;
-  }
-  
-  /* Results area */
-  .project-total {
-    flex: 1 !important;
-    background: white !important;
-    border-radius: 6px !important;
-    padding: 6px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
-    min-width: 0 !important;
-    max-height: 250px !important;
-    overflow-y: auto !important;
-    overflow-x: auto !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  .project-total .row {
-    margin: 0 !important;
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  .project-total .col-12 {
-    padding: 0 !important;
-    margin-bottom: 6px !important;
-  }
-  
-  .project-total .col-12:last-child {
-    margin-bottom: 0 !important;
-  }
-  
-  /* Chart area */
-  .content-total__dataSummary-chart {
-    height: 120px !important;
-    width: 100% !important;
-    min-width: 300px !important;
-    margin-bottom: 6px !important;
-    background: #f8f9fa !important;
-    border-radius: 4px !important;
-    overflow: auto !important;
-    border: 1px solid #e9ecef !important;
-  }
-  
-  /* Table section */
-  .project-total .col-12:last-child > div {
-    overflow: auto !important;
-    max-height: none !important;
-  }
-  
-  .table {
-    font-size: 8px !important;
-    margin-bottom: 0 !important;
-    min-width: 300px !important;
-    white-space: nowrap !important;
-  }
-  
-  .table th,
-  .table td {
-    padding: 2px 3px !important;
-    vertical-align: middle !important;
-    white-space: nowrap !important;
-    min-width: 40px !important;
-  }
-  
-  .table th:first-child,
-  .table td:first-child {
-    width: 25px !important;
-    min-width: 25px !important;
-  }
-  
-  .question-key {
-    font-size: 7px !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-  }
-  
-  /* CRITERIA - FIX FONT SIZE */
-  .criteria-card {
-    margin-bottom: 4px !important;
-  }
-  
-  .criteria-header {
-    padding: 4px 6px !important;
-    font-size: 8px !important; /* Giảm từ 9px xuống 8px */
-  }
-  
-  .criteria-body {
-    padding: 4px !important;
-    max-height: 100px !important;
-    overflow-y: auto !important;
-  }
-  
-  .criteria-name {
-    font-size: 7px !important; /* Giảm font size cho criteria name */
-    margin-bottom: 3px !important;
-    font-weight: 600 !important;
-    color: #333 !important;
-  }
-  
-  .criteria-block {
-    padding: 3px 0 !important; /* Giảm padding */
-    border-top: 1px solid #f1f3f4 !important;
-  }
-  
-  .result-row.small {
-    font-size: 7px !important; /* Font size nhỏ cho result row trong criteria */
-  }
-  
-  .result-row.small .answer-text {
-    font-size: 7px !important;
-  }
-  
-  .result-row.small .vote-stats {
-    font-size: 6px !important;
-  }
-  
-  .result-row.small .result-icon {
-    font-size: 8px !important;
-  }
-  
-  .response-box {
-    padding: 3px 4px !important;
-    margin-bottom: 3px !important;
-    font-size: 7px !important; /* Giảm font size cho response box */
-    background: #f8f9fa !important;
-    border-radius: 2px !important;
-  }
-  
-  /* Pagination */
-  .pagination {
-    margin: 4px 0 0 0 !important;
-    justify-content: center !important;
-  }
-  
-  .page-link {
-    padding: 2px 4px !important;
-    font-size: 8px !important;
-  }
-  
-  /* Custom scrollbar */
-  .question-list::-webkit-scrollbar,
-  .project-total::-webkit-scrollbar,
-  .content-total__dataSummary-chart::-webkit-scrollbar,
-  .project-total .col-12:last-child > div::-webkit-scrollbar,
-  .criteria-body::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-  
-  .question-list::-webkit-scrollbar-track,
-  .project-total::-webkit-scrollbar-track,
-  .content-total__dataSummary-chart::-webkit-scrollbar-track,
-  .project-total .col-12:last-child > div::-webkit-scrollbar-track,
-  .criteria-body::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
-  }
-  
-  .question-list::-webkit-scrollbar-thumb,
-  .project-total::-webkit-scrollbar-thumb,
-  .content-total__dataSummary-chart::-webkit-scrollbar-thumb,
-  .project-total .col-12:last-child > div::-webkit-scrollbar-thumb,
-  .criteria-body::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
-  }
-  
-  .question-list::-webkit-scrollbar-corner,
-  .project-total::-webkit-scrollbar-corner,
-  .content-total__dataSummary-chart::-webkit-scrollbar-corner,
-  .project-total .col-12:last-child > div::-webkit-scrollbar-corner {
-    background: #f1f1f1;
-  }
-  
-  /* States */
-  .not-statistic {
-    font-size: 9px !important;
-    padding: 8px !important;
-  }
-  
-  .loading {
-    font-size: 8px !important;
-    padding: 3px 0 !important;
-  }
-  
-  .error-text {
-    font-size: 8px !important;
-  }
-  
-  /* Chỉ remove background cho một số element cụ thể, không phải tất cả */
-  #content-total__dataSummay .container,
-  #content-total__dataSummay .row:not(.statistic-header) {
-    background: transparent !important;
-  }
-  
-  /* Modal styles */
-  .modal-content {
-    border-radius: 6px !important;
-  }
-  
-  .modal-body {
-    padding: 8px !important;
-  }
-  
-  .modal-description {
-    font-size: 9px !important;
-    line-height: 1.3 !important;
-  }
-}
+        #content-total__dataSummay {
+          grid-template-columns: unset;
+          grid-template-rows: auto 3fr;
+          column-gap: unset;
+          row-gap: 5px;
+        }
+      }
 
-/* Màn hình landscape cực nhỏ */
-@media screen and (max-width: 667px) and (orientation: landscape) {
-  .project-list {
-    width: 220px !important;
-  }
-  
-  .statistic-card {
-    min-width: 45px !important;
-    font-size: 7px !important;
-  }
-  
-  .statistic-card .number {
-    font-size: 10px !important;
-  }
-  
-  .content-total__dataSummary-chart {
-    height: 100px !important;
-    min-width: 250px !important;
-  }
-  
-  .project-total {
-    max-height: 200px !important;
-  }
-  
-  .question-list {
-    max-height: 180px !important;
-  }
-  
-  .criteria-header {
-    font-size: 7px !important;
-  }
-  
-  .criteria-name {
-    font-size: 6px !important;
-  }
-  
-  .response-box {
-    font-size: 6px !important;
-  }
-}
-  </style>
-</head>
+      @media screen and (max-width: 640px) {
+        .dropdown-phase .dropdown-input {
+          grid-template-columns: 1fr 1fr;
+        }
 
-<body>
-  <div id="app">
-    <!-- Header -->
-    <div class="container-fuild d-none d-md-flex mb-3 position-relative"
-      style="color: #fff; background: #01932e; width: 100%; font-weight: 700;">
-      <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;">
-        <img
-          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
-          alt="" width="28px" height="28px" style="margin-right: 5px;">
-        <span class="title-addon" style="font-size: 24px; color: white;">汎用投票アプリ</span>
-      </span>
-      <div class="d-flex flex-column text-end ms-auto m-0 p-2 px-3" id="email-user"
-        style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;"
-        v-if="userEmail && userEmail != '' && userEmail != 'false' ">
-        <span style="font-weight: 510; font-size: 14px; color: white;" v-if="userName != ''">{{ userName }}</span>
-        <span style="font-weight: 400; font-size: 12px; color: whitesmoke;" v-if="userEmail != '' && userName != ''">{{
-          userEmail }}</span>
-        <span style="font-weight: 510; font-size: 14px;" v-if="userName == '' && userEmail != ''">{{ userEmail
-          }}</span>
-      </div>
-    </div>
-    <div class="d-flex d-md-none mb-3 align-items-center" style="color: #fff; background: #01932e; font-weight: 700;">
-      <span class="navbar-brand m-0 p-2 px-3" style="display: flex; align-items: center;">
-        <img
-          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
-          alt="" width="28px" height="28px" style="margin-right: 5px;">
-        <span class="title-addon" style="font-size: 20px; color: white;">汎用投票アプリ</span>
-      </span>
-      <div class="d-flex flex-column text-end ms-auto m-0 p-2 px-3" style="position: relative;"
-        v-if="userEmail && userEmail != '' && userEmail != 'false' ">
-        <div id="user-avatar"
-          style="width: 30px; height: 30px; background-color: #87CEEB; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 400; cursor: pointer;"
-          v-if="userEmail != ''" @click="toggleUserInfo">
-          {{ getInitial() }}
+        .content-total__dataSummary-chart {
+          height: 400px;
+          overflow: hidden;
+        }
+      }
+
+      /* ================== MOBILE PORTRAIT FIX ================== */
+      @media screen and (max-width: 768px) and (orientation: portrait) {
+        /* Main container layout */
+        #content-total__dataSummay {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 12px !important;
+          height: auto !important;
+          min-height: calc(100vh - 220px) !important;
+          overflow: visible !important;
+        }
+
+        /* Question list section với background đẹp */
+        .project-list {
+          order: 1 !important;
+          width: 100% !important;
+          flex: 0 0 auto !important;
+          max-height: 45vh !important;
+          overflow: hidden !important;
+          background: linear-gradient(
+            135deg,
+            #f8f9fa 0%,
+            #e9ecef 100%
+          ) !important;
+          border-radius: 16px !important;
+          padding: 16px !important;
+          margin-bottom: 0 !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+          border: 1px solid rgba(1, 147, 46, 0.1) !important;
+        }
+
+        .project-list .project-total__byPhase-label {
+          font-size: 16px !important;
+          font-weight: 600 !important;
+          color: #2d3748 !important;
+          margin-bottom: 12px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+
+        .project-list .vertical-line {
+          height: 20px !important;
+          border-left: 4px solid #01932e !important;
+          margin-right: 8px !important;
+        }
+
+        /* Question list với scroll đẹp */
+        .question-list {
+          max-height: calc(45vh - 80px) !important;
+          overflow-y: auto !important;
+          padding-right: 8px !important;
+          margin-right: -8px !important;
+        }
+
+        /* Custom scrollbar đẹp cho question list */
+        .question-list::-webkit-scrollbar {
+          width: 6px !important;
+        }
+
+        .question-list::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.05) !important;
+          border-radius: 3px !important;
+        }
+
+        .question-list::-webkit-scrollbar-thumb {
+          background: linear-gradient(
+            135deg,
+            #01932e 0%,
+            #0a7b2a 100%
+          ) !important;
+          border-radius: 3px !important;
+        }
+
+        .question-list::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(
+            135deg,
+            #0a7b2a 0%,
+            #01932e 100%
+          ) !important;
+        }
+
+        /* Chart and result section */
+        .project-total {
+          order: 2 !important;
+          width: 100% !important;
+          flex: 1 1 auto !important;
+          margin-top: 0 !important;
+          overflow: visible !important;
+          background: white !important;
+          border-radius: 16px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          min-height: 400px !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
+        /* Results container layout */
+        .project-total .row {
+          flex: 1 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 16px !important;
+        }
+
+        .project-total .col-12 {
+          flex: 1 !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
+        /* Đảm bảo content bên trong project-total hiển thị đầy đủ */
+        .project-total .row {
+          height: auto !important;
+          overflow: visible !important;
+        }
+
+        .project-total .col-12 {
+          overflow: visible !important;
+          max-height: none !important;
+        }
+
+        /* Hiển thị chart và table content */
+        .project-total .content-total__dataSummary-chart {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+
+        /* Đảm bảo criteria cards hiển thị */
+        .criteria-card {
+          display: block !important;
+          margin-bottom: 12px !important;
+        }
+
+        .criteria-body {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+
+        /* Table responsive trên mobile */
+        .table {
+          font-size: 11px !important;
+          overflow-x: auto !important;
+        }
+
+        .table-responsive {
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+
+        /* Question card mobile styling với design đẹp */
+        .question-card {
+          padding: 14px 16px !important;
+          margin-bottom: 12px !important;
+          font-size: 13px !important;
+          border-radius: 12px !important;
+          background: white !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          border: 1px solid rgba(0, 0, 0, 0.08) !important;
+          position: relative !important;
+        }
+
+        .question-card::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: transparent;
+          border-radius: 12px 12px 0 0;
+          transition: all 0.3s ease;
+        }
+
+        .question-card.multi-criteria::before {
+          background: linear-gradient(90deg, #01932e 0%, #0a7b2a 100%);
+        }
+
+        .question-card:hover {
+          transform: translateY(-3px) !important;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+          border-color: rgba(1, 147, 46, 0.2) !important;
+        }
+
+        .question-card.selected {
+          border: 2px solid #01932e !important;
+          background: linear-gradient(
+            135deg,
+            rgba(1, 147, 46, 0.03) 0%,
+            rgba(1, 147, 46, 0.08) 100%
+          ) !important;
+          box-shadow: 0 8px 30px rgba(1, 147, 46, 0.25) !important;
+          transform: translateY(-2px) !important;
+        }
+
+        .question-card.selected::before {
+          height: 4px;
+          background: linear-gradient(90deg, #01932e 0%, #0a7b2a 100%);
+        }
+
+        /* Typography improvements */
+        .question-title {
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          font-weight: 500 !important;
+          color: #2d3748 !important;
+          margin-bottom: 8px !important;
+        }
+
+        .question-index {
+          font-weight: 700 !important;
+          color: #01932e !important;
+          white-space: nowrap !important;
+          font-size: 14px !important;
+        }
+
+        .method-badge {
+          font-size: 11px !important;
+          padding: 6px 10px !important;
+          margin-bottom: 8px !important;
+          border-radius: 20px !important;
+          font-weight: 500 !important;
+          background: linear-gradient(
+            135deg,
+            rgba(255, 152, 0, 0.1) 0%,
+            rgba(255, 152, 0, 0.05) 100%
+          ) !important;
+          border: 1px solid rgba(255, 152, 0, 0.2) !important;
+        }
+
+        .question-card.multi-criteria .method-badge {
+          background: linear-gradient(
+            135deg,
+            rgba(1, 147, 46, 0.1) 0%,
+            rgba(1, 147, 46, 0.05) 100%
+          ) !important;
+          border: 1px solid rgba(1, 147, 46, 0.2) !important;
+          color: #01932e !important;
+        }
+
+        .result-row {
+          gap: 8px !important;
+          padding: 8px 12px !important;
+          font-size: 12px !important;
+          border-radius: 8px !important;
+          margin-top: 8px !important;
+        }
+
+        .result-row.success {
+          background: linear-gradient(
+            135deg,
+            rgba(1, 147, 46, 0.1) 0%,
+            rgba(1, 147, 46, 0.05) 100%
+          ) !important;
+          border: 1px solid rgba(1, 147, 46, 0.2) !important;
+        }
+
+        .result-row.error {
+          background: linear-gradient(
+            135deg,
+            rgba(210, 59, 59, 0.1) 0%,
+            rgba(210, 59, 59, 0.05) 100%
+          ) !important;
+          border: 1px solid rgba(210, 59, 59, 0.2) !important;
+        }
+
+        .result-icon {
+          font-size: 14px !important;
+          flex-shrink: 0 !important;
+        }
+
+        .answer-text {
+          font-weight: 600 !important;
+          line-height: 1.3 !important;
+          word-break: break-word !important;
+        }
+
+        .vote-stats {
+          font-size: 11px !important;
+          opacity: 0.8 !important;
+          white-space: nowrap !important;
+        }
+
+        /* Voting Results Section (投票結果) */
+        .voting-results-section {
+          flex: 0 0 auto !important;
+          margin-bottom: 20px !important;
+        }
+
+        /* Chart area improvements */
+        .content-total__dataSummary-chart {
+          height: 220px !important;
+          width: 100% !important;
+          min-width: 100% !important;
+          margin-bottom: 20px !important;
+          background: linear-gradient(
+            135deg,
+            #f8f9fa 0%,
+            #e9ecef 100%
+          ) !important;
+          border-radius: 12px !important;
+          overflow: visible !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          padding: 16px !important;
+          display: block !important;
+          visibility: visible !important;
+          position: relative !important;
+        }
+
+        /* Summary Results Section (集計結果) */
+        .summary-results-section {
+          flex: 1 1 auto !important;
+          min-height: 200px !important;
+          overflow: visible !important;
+        }
+
+        /* Canvas trong chart - 投票結果 */
+        .content-total__dataSummary-chart canvas {
+          max-width: 100% !important;
+          max-height: 180px !important;
+          width: auto !important;
+          height: auto !important;
+          display: block !important;
+          margin: 0 auto !important;
+        }
+
+        /* Chart legend */
+        .chart-legend {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          justify-content: center !important;
+          gap: 8px !important;
+          margin-top: 12px !important;
+          font-size: 11px !important;
+        }
+
+        .legend-item {
+          display: flex !important;
+          align-items: center !important;
+          gap: 4px !important;
+        }
+
+        .legend-color {
+          width: 12px !important;
+          height: 12px !important;
+          border-radius: 2px !important;
+        }
+
+        /* Input response area cho text questions */
+        .criteria-card.card {
+          background: white !important;
+          border: 1px solid rgba(0, 0, 0, 0.1) !important;
+          border-radius: 12px !important;
+          margin-bottom: 16px !important;
+          overflow: visible !important;
+        }
+
+        .criteria-header.card-header {
+          background: #f8f9fa !important;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+          padding: 12px 16px !important;
+          font-weight: 600 !important;
+          border-radius: 12px 12px 0 0 !important;
+        }
+
+        .criteria-body.card-body {
+          padding: 16px !important;
+          max-height: 400px !important;
+          overflow-y: auto !important;
+        }
+
+        .response-box {
+          background: #f8f9fa !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          border-radius: 8px !important;
+          padding: 12px !important;
+          margin-bottom: 12px !important;
+          font-size: 12px !important;
+          line-height: 1.4 !important;
+        }
+
+        .project-total__byPhase-label {
+          font-size: 16px !important;
+          font-weight: 600 !important;
+          color: #2d3748 !important;
+          margin-bottom: 16px !important;
+          display: flex !important;
+          align-items: center !important;
+          padding: 8px 0 !important;
+          border-bottom: 2px solid rgba(1, 147, 46, 0.1) !important;
+        }
+
+        /* Separator giữa các sections */
+        .results-separator {
+          height: 1px !important;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(1, 147, 46, 0.2) 50%,
+            transparent 100%
+          ) !important;
+          margin: 20px 0 !important;
+        }
+
+        .project-total .vertical-line {
+          height: 20px !important;
+          border-left: 4px solid #01932e !important;
+          margin-right: 8px !important;
+        }
+
+        /* Table improvements cho mobile */
+        .table-responsive {
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          border-radius: 8px !important;
+          border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .table {
+          font-size: 11px !important;
+          margin-bottom: 0 !important;
+          background: white !important;
+        }
+
+        .table th,
+        .table td {
+          padding: 8px 6px !important;
+          vertical-align: middle !important;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .table thead th {
+          background: #f8f9fa !important;
+          font-weight: 600 !important;
+          position: sticky !important;
+          top: 0 !important;
+          z-index: 2 !important;
+        }
+
+        /* Pagination improvements */
+        .pagination {
+          font-size: 12px !important;
+          justify-content: center !important;
+        }
+
+        .page-link {
+          padding: 6px 10px !important;
+          margin: 0 2px !important;
+          border-radius: 6px !important;
+        }
+
+        .page-item.active .page-link {
+          background-color: #01932e !important;
+          border-color: #01932e !important;
+        }
+
+        /* Not statistic message */
+        .not-statistic {
+          padding: 20px !important;
+          text-align: center !important;
+          color: #6c757d !important;
+          font-style: italic !important;
+        }
+      }
+
+      /* ================== LANDSCAPE MOBILE FIX - COMPLETE VERSION ================== */
+      /* Thay thế hoàn toàn đoạn CSS cũ bằng đoạn này */
+
+      @media screen and (max-width: 926px) and (orientation: landscape) {
+        /* Giữ nguyên background cho body */
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        #app {
+          background: #f8f9fa !important;
+        }
+
+        /* Container chính */
+        .container-fuild.px-3 {
+          padding: 4px 6px !important;
+          background: #f8f9fa !important;
+          margin: 0 !important;
+        }
+
+        /* GIỮ NGUYÊN MÀU HEADER - không thay đổi background */
+        .container-fuild.d-none.d-md-flex,
+        .d-flex.d-md-none {
+          padding: 3px 6px !important;
+          margin-bottom: 4px !important;
+          /* Không override background color của header */
+        }
+
+        /* Statistics header */
+        .statistic-information {
+          margin-bottom: 6px !important;
+          padding: 6px !important;
+          background: white !important;
+          border-radius: 6px !important;
+        }
+
+        .statistic-header {
+          flex-direction: row !important;
+          gap: 6px !important;
+          align-items: flex-start !important;
+        }
+
+        .statistic-header-right {
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 3px !important;
+          flex-shrink: 0 !important;
+          min-width: 180px !important;
+        }
+
+        .statistic-card {
+          padding: 3px 2px !important;
+          font-size: 8px !important;
+          min-width: 55px !important;
+          text-align: center !important;
+          background: #f8f9fa !important;
+        }
+
+        .statistic-card .value {
+          font-size: 8px !important;
+          margin-bottom: 1px !important;
+        }
+
+        .statistic-card .number {
+          font-size: 11px !important;
+          padding-top: 1px !important;
+        }
+
+        .statistic-header-left {
+          flex: 1 !important;
+          min-width: 0 !important;
+        }
+
+        .statistic-header-left p {
+          font-size: 11px !important;
+          margin-bottom: 3px !important;
+          line-height: 1.2 !important;
+        }
+
+        .description-preview {
+          font-size: 9px !important;
+          line-height: 1.2 !important;
+          -webkit-line-clamp: 2 !important;
+        }
+
+        /* Main layout */
+        #content {
+          background: #f8f9fa !important;
+        }
+
+        #content-total__dataSummay {
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 6px !important;
+          align-items: flex-start !important;
+          background: #f8f9fa !important;
+        }
+
+        /* Question list */
+        .project-list {
+          width: 260px !important;
+          flex-shrink: 0 !important;
+          background: white !important;
+          border-radius: 6px !important;
+          padding: 6px !important;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .project-list .col-12 {
+          margin-bottom: 4px !important;
+        }
+
+        .project-total__byPhase-label {
+          margin: 0 0 4px 0 !important;
+          font-size: 10px !important;
+        }
+
+        .question-list {
+          max-height: 240px !important;
+          overflow-y: auto !important;
+          margin: 0 -3px 0 0 !important;
+          padding-right: 3px !important;
+        }
+
+        /* Question card - GIỮ NGUYÊN MÀU ACTIVE */
+        .question-card {
+          margin-bottom: 4px !important;
+          padding: 4px 6px !important;
+          border-radius: 4px !important;
+          background: white !important;
+          /* Giữ nguyên các style active từ CSS gốc */
+        }
+
+        .question-card:hover {
+          border-color: #0b803f !important;
+          box-shadow: 0 6px 16px rgba(11, 128, 63, 0.1) !important;
+          transform: translateY(-2px) !important;
+        }
+
+        .question-card.selected {
+          border: 2px solid #0b803f !important;
+          background: #f2fff5 !important;
+          box-shadow: 0 8px 20px rgba(11, 128, 63, 0.1) !important;
+        }
+
+        .card-header {
+          margin-bottom: 3px !important;
+        }
+
+        .header-left {
+          gap: 3px !important;
+        }
+
+        .question-index {
+          font-size: 9px !important;
+          flex-shrink: 0 !important;
+        }
+
+        .question-title {
+          font-size: 9px !important;
+          line-height: 1.2 !important;
+          word-break: break-word !important;
+          white-space: normal !important;
+          display: -webkit-box !important;
+          -webkit-line-clamp: 2 !important;
+          -webkit-box-orient: vertical !important;
+          overflow: hidden !important;
+        }
+
+        .method-badge {
+          font-size: 7px !important;
+          padding: 1px 3px !important;
+          margin-bottom: 3px !important;
+        }
+
+        .result-row {
+          padding: 3px !important;
+          margin-top: 3px !important;
+          gap: 3px !important;
+        }
+
+        .result-icon {
+          font-size: 9px !important;
+        }
+
+        .answer-text {
+          font-size: 8px !important;
+          line-height: 1.2 !important;
+          word-break: break-word !important;
+        }
+
+        .vote-stats {
+          font-size: 7px !important;
+        }
+
+        /* Results area - Mobile responsive tách biệt */
+        .project-total {
+          flex: 1 !important;
+          background: white !important;
+          border-radius: 8px !important;
+          padding: 8px !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+          min-width: 0 !important;
+          max-height: none !important;
+          overflow: visible !important;
+          display: flex !important;
+          flex-direction: column !important;
+          margin-bottom: 20px !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          min-height: 550px !important;
+        }
+
+        .project-total .row {
+          margin: 0 !important;
+          flex: 1 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 12px !important;
+          height: 100% !important;
+        }
+
+        .project-total .col-12 {
+          padding: 0 !important;
+          margin-bottom: 0 !important;
+        }
+
+        /* 投票結果 section - Chart area */
+        .project-total .col-12:first-child {
+          flex: 0 0 auto !important;
+          background: #f8f9fa !important;
+          border-radius: 8px !important;
+          padding: 8px !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          min-height: 360px !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
+        /* 集計結果 section - Table area */
+        .project-total .col-12:last-child {
+          flex: 1 1 auto !important;
+          background: white !important;
+          border-radius: 8px !important;
+          padding: 8px !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          max-height: 300px !important;
+          overflow-y: auto !important;
+          position: relative !important;
+        }
+
+        /* Visual separator giữa 投票結果 và 集計結果 */
+        .project-total .col-12:first-child::after {
+          content: "" !important;
+          position: absolute !important;
+          bottom: -8px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          width: 60px !important;
+          height: 2px !important;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            #01932e 50%,
+            transparent 100%
+          ) !important;
+          border-radius: 1px !important;
+        }
+
+        /* Spacing adjustment cho mobile layout */
+        .main-content-wrapper {
+          padding-bottom: 20px !important;
+        }
+
+        /* Criteria cards và input responses */
+        .criteria-card.card {
+          background: white !important;
+          border: 1px solid rgba(0, 0, 0, 0.08) !important;
+          border-radius: 8px !important;
+          margin-bottom: 12px !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+          overflow: hidden !important;
+        }
+
+        .criteria-card .card-header {
+          background: #f8f9fa !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          padding: 8px 12px !important;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .criteria-card .card-body {
+          padding: 8px 12px !important;
+          max-height: 150px !important;
+          overflow-y: auto !important;
+        }
+
+        .criteria-card .card-body p {
+          font-size: 10px !important;
+          line-height: 1.3 !important;
+          margin-bottom: 4px !important;
+          color: #495057 !important;
+        }
+
+        .project-total__byPhase-label {
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          color: #2d3748 !important;
+          margin-bottom: 8px !important;
+          padding: 6px 0 !important;
+          border-bottom: 2px solid rgba(1, 147, 46, 0.1) !important;
+          display: flex !important;
+          align-items: center !important;
+          flex-shrink: 0 !important;
+        }
+
+        /* Icon trong label */
+        .project-total__byPhase-label i {
+          margin-right: 8px !important;
+          color: #01932e !important;
+        }
+
+        /* Chart area improvements - 投票結果 */
+        .content-total__dataSummary-chart {
+          height: 320px !important;
+          width: 100% !important;
+          min-width: 100% !important;
+          margin-bottom: 0 !important;
+          background: white !important;
+          border-radius: 8px !important;
+          overflow: visible !important;
+          border: 1px solid rgba(0, 0, 0, 0.08) !important;
+          padding: 12px !important;
+          position: relative !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 12px !important;
+        }
+
+        /* Chart responsive - Layout ngang */
+        .content-total__dataSummary-chart canvas {
+          max-width: none !important;
+          max-height: 280px !important;
+          width: auto !important;
+          height: auto !important;
+          display: block !important;
+        }
+
+        /* Bar chart area - Bên trái */
+        .content-total__dataSummary-chart canvas[data-chart-type="bar"],
+        .content-total__dataSummary-chart canvas:first-of-type {
+          flex: 0 0 45% !important;
+          max-width: 45% !important;
+          max-height: 280px !important;
+        }
+
+        /* Pie chart area - Bên phải, lớn hơn */
+        .content-total__dataSummary-chart canvas[data-chart-type="pie"],
+        .content-total__dataSummary-chart canvas:last-of-type {
+          flex: 0 0 50% !important;
+          max-width: 50% !important;
+          max-height: 300px !important;
+          min-width: 200px !important;
+          min-height: 200px !important;
+        }
+
+        /* Chart loading state */
+        .content-total__dataSummary-chart.loading {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          color: #666 !important;
+          font-size: 12px !important;
+        }
+
+        /* Chart wrapper để đảm bảo chart hiển thị tối ưu */
+        .content-total__dataSummary-chart > * {
+          flex: 1 !important;
+          max-width: 100% !important;
+        }
+
+        /* Đảm bảo chart legend và labels hiển thị đẹp */
+        .content-total__dataSummary-chart .chartjs-tooltip {
+          font-size: 11px !important;
+          background: rgba(0, 0, 0, 0.8) !important;
+          border-radius: 4px !important;
+          padding: 8px !important;
+        }
+
+        /* Chart container có thể co giãn */
+        .content-total__dataSummary-chart > div {
+          position: relative !important;
+          height: 100% !important;
+          width: 100% !important;
+        }
+
+        /* Cải thiện font size cho chart labels */
+        .content-total__dataSummary-chart .chart-labels,
+        .content-total__dataSummary-chart .chartjs-render-monitor {
+          font-size: 12px !important;
+          font-weight: 500 !important;
+        }
+
+        /* Legend cho pie chart */
+        .content-total__dataSummary-chart .chart-legend {
+          position: absolute !important;
+          right: -10px !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+          font-size: 11px !important;
+          font-weight: 500 !important;
+          max-width: 120px !important;
+        }
+
+        /* Chart text readability */
+        .content-total__dataSummary-chart text {
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          fill: #2d3748 !important;
+        }
+
+        /* Đảm bảo pie chart có kích thước tối thiểu */
+        .content-total__dataSummary-chart canvas[width][height] {
+          min-width: 180px !important;
+          min-height: 180px !important;
+        }
+
+        /* Trường hợp chỉ có một chart: chiếm toàn bộ chiều ngang */
+        .content-total__dataSummary-chart:has(canvas:only-child) {
+          flex-direction: row !important;
+          justify-content: center !important;
+          align-items: center !important;
+        }
+
+        .content-total__dataSummary-chart canvas:only-child {
+          flex: 1 1 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          min-height: 220px !important;
+          max-height: 300px !important;
+          margin: 0 auto !important;
+          display: block !important;
+        }
+
+        /* Responsive cho chart rất nhỏ */
+        @media screen and (max-width: 480px) {
+          .content-total__dataSummary-chart {
+            flex-direction: column !important;
+            height: 320px !important;
+            gap: 8px !important;
+          }
+          .content-total__dataSummary-chart canvas {
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
+            min-width: 120px !important;
+            min-height: 120px !important;
+          }
+        }
+
+        /* Table section - 集計結果 */
+        .project-total .col-12:last-child > div {
+          overflow: visible !important;
+          max-height: none !important;
+        }
+
+        /* Table responsive container */
+        .table-responsive {
+          max-height: 280px !important;
+          overflow-y: auto !important;
+          overflow-x: auto !important;
+          border-radius: 6px !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          background: white !important;
+        }
+
+        .table {
+          font-size: 9px !important;
+          margin-bottom: 0 !important;
+          min-width: 280px !important;
+          white-space: nowrap !important;
+          background: white !important;
+        }
+
+        .table th {
+          background: #f8f9fa !important;
+          color: #495057 !important;
+          font-weight: 600 !important;
+          border-bottom: 2px solid #dee2e6 !important;
+          position: sticky !important;
+          top: 0 !important;
+          z-index: 10 !important;
+        }
+
+        .table th,
+        .table td {
+          padding: 4px 6px !important;
+          vertical-align: middle !important;
+          white-space: nowrap !important;
+          min-width: 40px !important;
+        }
+
+        .table th:first-child,
+        .table td:first-child {
+          width: 25px !important;
+          min-width: 25px !important;
+        }
+
+        .question-key {
+          font-size: 7px !important;
+          max-width: none !important;
+          white-space: nowrap !important;
+        }
+
+        /* CRITERIA - FIX FONT SIZE */
+        .criteria-card {
+          margin-bottom: 4px !important;
+        }
+
+        .criteria-header {
+          padding: 4px 6px !important;
+          font-size: 8px !important; /* Giảm từ 9px xuống 8px */
+        }
+
+        .criteria-body {
+          padding: 4px !important;
+          max-height: 100px !important;
+          overflow-y: auto !important;
+        }
+
+        .criteria-name {
+          font-size: 7px !important; /* Giảm font size cho criteria name */
+          margin-bottom: 3px !important;
+          font-weight: 600 !important;
+          color: #333 !important;
+        }
+
+        .criteria-block {
+          padding: 3px 0 !important; /* Giảm padding */
+          border-top: 1px solid #f1f3f4 !important;
+        }
+
+        .result-row.small {
+          font-size: 7px !important; /* Font size nhỏ cho result row trong criteria */
+        }
+
+        .result-row.small .answer-text {
+          font-size: 7px !important;
+        }
+
+        .result-row.small .vote-stats {
+          font-size: 6px !important;
+        }
+
+        .result-row.small .result-icon {
+          font-size: 8px !important;
+        }
+
+        .response-box {
+          padding: 3px 4px !important;
+          margin-bottom: 3px !important;
+          font-size: 7px !important; /* Giảm font size cho response box */
+          background: #f8f9fa !important;
+          border-radius: 2px !important;
+        }
+
+        /* Pagination */
+        .pagination {
+          margin: 4px 0 0 0 !important;
+          justify-content: center !important;
+        }
+
+        .page-link {
+          padding: 2px 4px !important;
+          font-size: 8px !important;
+        }
+
+        /* Custom scrollbar */
+        .question-list::-webkit-scrollbar,
+        .project-total::-webkit-scrollbar,
+        .content-total__dataSummary-chart::-webkit-scrollbar,
+        .project-total .col-12:last-child > div::-webkit-scrollbar,
+        .criteria-body::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+
+        .question-list::-webkit-scrollbar-track,
+        .project-total::-webkit-scrollbar-track,
+        .content-total__dataSummary-chart::-webkit-scrollbar-track,
+        .project-total .col-12:last-child > div::-webkit-scrollbar-track,
+        .criteria-body::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 2px;
+        }
+
+        .question-list::-webkit-scrollbar-thumb,
+        .project-total::-webkit-scrollbar-thumb,
+        .content-total__dataSummary-chart::-webkit-scrollbar-thumb,
+        .project-total .col-12:last-child > div::-webkit-scrollbar-thumb,
+        .criteria-body::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 2px;
+        }
+
+        .question-list::-webkit-scrollbar-corner,
+        .project-total::-webkit-scrollbar-corner,
+        .content-total__dataSummary-chart::-webkit-scrollbar-corner,
+        .project-total .col-12:last-child > div::-webkit-scrollbar-corner {
+          background: #f1f1f1;
+        }
+
+        /* States */
+        .not-statistic {
+          font-size: 9px !important;
+          padding: 8px !important;
+        }
+
+        .loading {
+          font-size: 8px !important;
+          padding: 3px 0 !important;
+        }
+
+        .error-text {
+          font-size: 8px !important;
+        }
+
+        /* Chỉ remove background cho một số element cụ thể, không phải tất cả */
+        #content-total__dataSummay .container,
+        #content-total__dataSummay .row:not(.statistic-header) {
+          background: transparent !important;
+        }
+
+        /* Modal styles */
+        .modal-content {
+          border-radius: 6px !important;
+        }
+
+        .modal-body {
+          padding: 8px !important;
+        }
+
+        .modal-description {
+          font-size: 9px !important;
+          line-height: 1.3 !important;
+        }
+      }
+
+      /* Màn hình landscape cực nhỏ */
+      @media screen and (max-width: 667px) and (orientation: landscape) {
+        .project-list {
+          width: 220px !important;
+        }
+
+        .statistic-card {
+          min-width: 45px !important;
+          font-size: 7px !important;
+        }
+
+        .statistic-card .number {
+          font-size: 10px !important;
+        }
+
+        .content-total__dataSummary-chart {
+          height: 100px !important;
+          min-width: 250px !important;
+        }
+
+        .project-total {
+          max-height: 200px !important;
+        }
+
+        /* Question list với scroll riêng */
+        .question-list {
+          max-height: calc(45vh - 80px) !important;
+          overflow-y: auto;
+          padding-right: 4px;
+          margin-right: -4px;
+        }
+
+        /* Custom scrollbar for question list */
+        .question-list::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .question-list::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 2px;
+        }
+
+        .question-list::-webkit-scrollbar-thumb {
+          background: rgba(1, 147, 46, 0.3);
+          border-radius: 2px;
+        }
+
+        .question-list::-webkit-scrollbar-thumb:hover {
+          background: rgba(1, 147, 46, 0.5);
+        }
+
+        .criteria-header {
+          font-size: 7px !important;
+        }
+
+        .criteria-name {
+          font-size: 6px !important;
+        }
+
+        .response-box {
+          font-size: 6px !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <!-- Header -->
+      <div
+        class="container-fuild d-none d-md-flex mb-3 position-relative"
+        style="color: #fff; background: #01932e; width: 100%; font-weight: 700"
+      >
+        <span
+          class="navbar-brand m-0 p-2 px-3"
+          style="display: flex; align-items: center"
+        >
+          <img
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+            alt=""
+            width="28px"
+            height="28px"
+            style="margin-right: 5px"
+          />
+          <span class="title-addon" style="font-size: 24px; color: white"
+            >汎用投票アプリ</span
+          >
+        </span>
+        <div
+          class="d-flex flex-column text-end ms-auto m-0 p-2 px-3"
+          id="email-user"
+          style="
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+          "
+          v-if="userEmail && userEmail != '' && userEmail != 'false' "
+        >
+          <span
+            style="font-weight: 510; font-size: 14px; color: white"
+            v-if="userName != ''"
+            >{{ userName }}</span
+          >
+          <span
+            style="font-weight: 400; font-size: 12px; color: whitesmoke"
+            v-if="userEmail != '' && userName != ''"
+            >{{ userEmail }}</span
+          >
+          <span
+            style="font-weight: 510; font-size: 14px"
+            v-if="userName == '' && userEmail != ''"
+            >{{ userEmail }}</span
+          >
         </div>
-        <div id="user-info"
-          style="position: absolute; top: 100%; right: 0; background-color: #fff; border: 1px solid #ccc; padding: 10px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);"
-          v-show="showUserInfo">
-          <span id="user-name" style="font-weight: 510; font-size: 14px; color: #555;" v-if="userName != ''">{{ userName
-            }}</span><br v-if="userName != ''">
-          <span id="user-email" style="font-weight: 400; font-size: 12px; color: #555;" v-if="userEmail != ''">{{
-            userEmail }}</span>
-        </div>
       </div>
-    </div>
-    <!--End Header -->
-
-    <div class="container-fuild px-3">
-      <div class="modal" id="loading" data-backdrop="static" style="z-index: 2000;">
-        <div class="modal-dialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-          <div id="circle">
-            <div class="loader"></div>
+      <div
+        class="d-flex d-md-none mb-3 align-items-center"
+        style="color: #fff; background: #01932e; font-weight: 700"
+      >
+        <span
+          class="navbar-brand m-0 p-2 px-3"
+          style="display: flex; align-items: center"
+        >
+          <img
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAllBMVEUkTC8lkDgDdxBUo2FAnlQRgh88mk0dkDhlqG49oFZBp2IkkjgrmEY9oFZ5rXz///8glkUAhSECgRQomUoGjzMakz+u1bVGnFcymk0BeAJ9t4aWyKFwsXwBiSsdjDbI4syHvZEsk0Ksz7Ck0q88m1AUhyu93MLp9exRoF8TjDP0+/aRwZigzKix2r3P6NU6k0fX7N1YrGw3I0KCAAAAD3RSTlMBP07Vui3LFPyS5at6WelHaVvTAAAB+ElEQVQokV2S2XKrMBBEscEYEjvaVySE2Fcv//9zEb6uSnL79dSM1D0dRW+dD3nyEZRcTufor86XWK/c9b3jhYmvf/AhWXhjPMIYtbrh+vP0w45fvB4xmu6ZESXCWV2nxx/mNFZl5R7D7fFYvcKLi9/08OUyhFo3gzUTWT0PGuPKpa/N56TXlnYDAIWaGMJ6Bgajos53eF0am3UFAA9BCYRS1aDpnhPXhzAY89GP9gHAYCyEBE6+ImIsdZOEF3WNKUNhK7jdLSNElh2DkFKenaO80Ei06gZ2aiZbeunpJAQuqmuUcIlagcwOweAq2U1EEtFis+bRh6P7Ely/KJiHWnaMUli2PI0+ejaOBPqyAG8NT0XIKEj/hhBCptptfmOtdrilUewoC2sYkROSy/CPWgSnNnhJGoGEgB4SKUvr+Wu6KsXrQ5eiClYsYtIHj6xbd7h1LVpDRCfDEbVPR0sZ4iHsvjveEPV7CFHcZPdpC6nDl+zuSZe+KvbkjxWf/BPMRskQHu22AKm4b+awn+WTF0hlYF46Za2qAmsxatbL69in1FVYtf18W4zuwdDfQxX6z3fJjrErOoWePJTErSNS97r/qdgxrVcTmoXLDiPrNa9/1++U67VespYxYYqm+Lr8KW7oe1Y1vO+btcryU/S/ztc8SdMk/1X3bxsYPNVsI+XRAAAAAElFTkSuQmCC"
+            alt=""
+            width="28px"
+            height="28px"
+            style="margin-right: 5px"
+          />
+          <span class="title-addon" style="font-size: 20px; color: white"
+            >汎用投票アプリ</span
+          >
+        </span>
+        <div
+          class="d-flex flex-column text-end ms-auto m-0 p-2 px-3"
+          style="position: relative"
+          v-if="userEmail && userEmail != '' && userEmail != 'false' "
+        >
+          <div
+            id="user-avatar"
+            style="
+              width: 30px;
+              height: 30px;
+              background-color: #87ceeb;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 18px;
+              font-weight: 400;
+              cursor: pointer;
+            "
+            v-if="userEmail != ''"
+            @click="toggleUserInfo"
+          >
+            {{ getInitial() }}
+          </div>
+          <div
+            id="user-info"
+            style="
+              position: absolute;
+              top: 100%;
+              right: 0;
+              background-color: #fff;
+              border: 1px solid #ccc;
+              padding: 10px;
+              border-radius: 5px;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            "
+            v-show="showUserInfo"
+          >
+            <span
+              id="user-name"
+              style="font-weight: 510; font-size: 14px; color: #555"
+              v-if="userName != ''"
+              >{{ userName }}</span
+            ><br v-if="userName != ''" />
+            <span
+              id="user-email"
+              style="font-weight: 400; font-size: 12px; color: #555"
+              v-if="userEmail != ''"
+              >{{ userEmail }}</span
+            >
           </div>
         </div>
       </div>
-      <div id="notQuestions" class="container d-none">
-        <section id="content-form" class="row mb-3 g-3">
-          <div class="col-12 row g-2 mx-0">
-            <div class="col-12 px-3 text-center">
-              <h4 class="text-danger">現在、この投票には表示できる内容がありません</h4>
-            </div>
-          </div>
-        </section>
-      </div>
-      <div id="content" class="container-fuild d-none">
-        <div class="statistic-information mb-2">
-          <div class="g-2 mx-0 statistic-header">
-            <div class="statistic-header-right">
-              <div class="statistic-card" style="width: 40%;">
-                <span><i class="far fa-clock"></i></span>
-                <span class="value">実施期間</span><br>
-                <span>{{ dateRun ? dateRun.substring(5) : '' }}</span><br>
-                <span>{{ dateEnd ? dateEnd.substring(5) : '' }}</span>
-              </div>
-              <div class="statistic-card" style="width: 25%;">
-                <span><i class="far fa-question-circle"></i></span>
-                <span class="value">問数</span><br>
-                <div class="number" style="padding-top: 4px;">{{ vote.numberQuestion }}</div>
-              </div>
-              <div class="statistic-card" style="width: 28%;">
-                <span><i class="far fa-user"></i></span>
-                <span class="value">参加者数</span><br>
-                <div class="number" style="padding-top: 4px;">{{ vote.numberVoted }}</div>
-              </div>
-            </div>
-            <div class="statistic-header-left">
-              <p style="font-size: 16px; color: #333333; margin-top: 5px; margin-bottom: 3px;">{{ title }}</p>
-              <div class="show-rich-text">
-                <div class="description-preview" ref="descPreview">{{ descriptionText }}</div>
-                <span class="more-link" v-if="isOverflowed" @click="openDescriptionModal">... 続き</span>
-              </div>
-              <!-- <p style="color: #555; font-size: 14px;">{{ dateRun }} 〜 <span
-                  style="white-space: nowrap;">{{ dateEnd }}</span></p> -->
+      <!--End Header -->
+
+      <div class="container-fuild px-3">
+        <div
+          class="modal"
+          id="loading"
+          data-backdrop="static"
+          style="z-index: 2000"
+        >
+          <div
+            class="modal-dialog"
+            style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            "
+          >
+            <div id="circle">
+              <div class="loader"></div>
             </div>
           </div>
         </div>
-
-        <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true" ref="descriptionModal">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">説明全文</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
-        </div>
-        <div class="modal-body">
-           <div class="modal-description">
-            {{ descriptionText }}
-           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-        <div id="content-total" role="tabpanel" aria-labelledby="tab-total" class="tab-pane fade mt-2 active show">
-          <section id="content-total__dataSummay" class="row">
-            <div class="project-list" style="width: 100%;">
-            <div class="col-12">
-              <p class="project-total__byPhase-label mt-1 mb-2" for="project-total__byPhase-data"
-                style="font-size: 14px;"><span class="vertical-line"></span> 質問一覧（{{ vote.numberQuestion }}） </p>
-            </div>
-            <ul class="question-list">
-  <li class="question-card"
-      v-for="(item, index) in questions"
-      :key="index"
-      :class="{
-        selected: index === questionIndex,
-        'has-criteria': results && results[index] && results[index].criteria
-      }"
-      @click="selectQuestion(item, index)">
-
-    <!-- HEADER: chỉ còn câu hỏi -->
-    <div class="card-header">
-      <div class="header-left">
-        <span class="question-index">問{{ index + 1 }}：</span>
-        <span class="question-title truncate" :title="item.question">{{ item.question }}</span>
-      </div>
-    </div>
-
-    <!-- BODY -->
-    <div class="card-body">
-      <!-- method-badge xuống body -->
-      <div class="method-badge">
-        {{ item.voteMethod || '単純多数決' }} ｜ {{ item.voteThreshold || '60%' }}
-      </div>
-
-      <!-- NORMAL QUESTION -->
-      <template v-if="results && results[index] && !results[index].criteria">
-        <div v-if="hasAnswerMeetingThreshold(index)" class="result-row success">
-          <i class="fas fa-check-circle result-icon"></i>
-          <span class="answer-text truncate" :title="getWinningAnswer(index)">
-            {{ getWinningAnswer(index) }}
-          </span>
-          <span class="vote-stats">
-            {{ getWinningVoteCount(index) }}/{{ getTotalVotes(index) }}票 ({{ getWinningPercentage(index) }}%)
-          </span>
-        </div>
-
-        <div v-else class="result-row error">
-          <i class="fas fa-times-circle result-icon"></i>
-          <span class="error-text">可決条件を満たす選択肢はありません</span>
-        </div>
-      </template>
-
-      <!-- MULTI CRITERIA -->
-      <template v-if="results && results[index] && results[index].criteria">
-        <div class="criteria-list">
-          <div class="criteria-block"
-               v-for="(criteriaName, cIndex) in getCriteriaNames(index)"
-               :key="cIndex">
-            <div class="criteria-name truncate" :title="criteriaName">{{ criteriaName }}</div>
-
-            <div v-if="hasAnswerMeetingThresholdForCriteria(index, criteriaName)" class="result-row success small">
-              <i class="fas fa-check-circle result-icon"></i>
-              <span class="answer-text truncate" :title="getWinningAnswerForCriteria(index, criteriaName)">
-                {{ getWinningAnswerForCriteria(index, criteriaName) }}
-              </span>
-              <small class="vote-stats">
-                {{ getWinningVoteCountForCriteria(index, criteriaName) }}/{{ getTotalVotesForCriteria(index, criteriaName) }}票
-                ({{ getWinningPercentageForCriteria(index, criteriaName) }}%)
-              </small>
-            </div>
-
-            <div v-else class="result-row error small">
-              <i class="fas fa-times-circle result-icon"></i>
-              <span class="error-text">可決条件を満たす選択肢はありません</span>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- Loading -->
-      <div v-else-if="!results" class="loading">結果を読み込み中...</div>
-    </div>
-  </li>
-</ul>
-            </div>
-            <div class="project-total" style="overflow: hidden; ">
-              <div class="row">
-                <div class="col-12">
-                  <p class="project-total__byPhase-label mt-2 mb-2" for="project-total__byPhase-data"
-                    style="font-size: 14px; "><span class="vertical-line"></span>投票結果</p>
-                  <p class="text-danger not-statistic" style="font-size: 14px; text-align: center;" v-if="notStatistic">
-                    投票データがありません。</p>
-                  <div class="content-total__dataSummary-chart" v-show="!notStatistic && typeQuestion != 'input'"></div>
-                  <div class="" style="max-height: 68vh; overflow-y: auto; overflow-x: hidden;"
-                    v-if="!notStatistic && typeQuestion == 'input'">
-                    <div class="criteria-card card" v-if="criteria"
-                      v-for="(answers, key) in results[questionIndex].question_answers[0].criteria" :key="key">
-                      <div class="criteria-header card-header" data-bs-toggle="collapse" @click="toggleCollapse(key)"
-                        :href="'#criteria-' + key.replace(/\s+/g, '-')" role="button" aria-expanded="isExpanded(key)"
-                        :aria-controls="'criteria-' + key.replace(/\s+/g, '-')" :class="{'open': isExpanded(key)}">
-                        <span>{{ key }}</span>
-                        <i class="toggle-icon fas" :class="isExpanded(key) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                      </div>
-                      <div :id="'criteria-' + key.replace(/\s+/g, '-')" class="collapse criteria-body card-body">
-                        <div class="response-box" v-for="(answer, index) in paginatedAnswers(key)" :key="index">
-                          <p v-for="(line, lineIndex) in formatAnswer(answer)" :key="lineIndex">{{ line }}</p>
-                        </div>
-                        <div class="row px-3 float-right mb-2">
-                          <nav aria-label="Page navigation" class="d-flex px-0">
-                            <ul class="pagination" style="margin-left: auto;">
-                              <li class="page-item" :class="{ disabled: currentPage[key] === 1 }">
-                                <a class="page-link" href="#" @click.prevent="prevPage(key)" aria-label="Previous">
-                                  <span aria-hidden="true">«</span>
-                                </a>
-                              </li>
-                              <li class="page-item" v-for="page in totalPages(key)" :key="page"
-                                :class="{ active: currentPage[key] === page }">
-                                <a class="page-link" href="#" @click.prevent="goToPage(key, page)">{{ page }}</a>
-                              </li>
-                              <li class="page-item" :class="{ disabled: currentPage[key] === totalPages(key) }">
-                                <a class="page-link" href="#" @click.prevent="nextPage(key)" aria-label="Next">
-                                  <span aria-hidden="true">»</span>
-                                </a>
-                              </li>
-                            </ul>
-                          </nav>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="criteria-card card" v-if="!criteria">
-                      <div class="criteria-body card-body">
-                        <div class="response-box" v-for="(answer, index) in paginatedAnswersNoCriteria()" :key="index">
-                          <p v-for="(line, lineIndex) in formatAnswer(answer)" :key="lineIndex">{{ line }}</p>
-                        </div>
-                        <div class="row px-3 float-right mb-2">
-                          <nav aria-label="Page navigation" class="d-flex px-0">
-                            <ul class="pagination" style="margin-left: auto;">
-                              <li class="page-item" :class="{ disabled: currentPageNoCriteria === 1 }">
-                                <a class="page-link" href="#" @click.prevent="prevPageNoCriteria()"
-                                  aria-label="Previous">
-                                  <span aria-hidden="true">«</span>
-                                </a>
-                              </li>
-                              <li class="page-item" v-for="page in totalPagesNoCriteria()" :key="page"
-                                :class="{ active: currentPageNoCriteria === page }">
-                                <a class="page-link" href="#" @click.prevent="goToPageNoCriteria(page)">{{ page }}</a>
-                              </li>
-                              <li class="page-item"
-                                :class="{ disabled: currentPageNoCriteria === totalPagesNoCriteria() }">
-                                <a class="page-link" href="#" @click.prevent="nextPageNoCriteria()" aria-label="Next">
-                                  <span aria-hidden="true">»</span>
-                                </a>
-                              </li>
-                            </ul>
-                          </nav>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12" v-show="!notStatistic && typeQuestion != 'input'">
-                  <p class="project-total__byPhase-label mt-1 mb-2" for="project-total__byPhase-data"
-                    style="font-size: 14px; ">
-                    <span class="vertical-line"></span>集計結果
-                  </p>
-                  
-                  <div class="" v-for="(item, index) in results" :key="index" v-show="index == questionIndex"
-                    style="overflow-y: auto;">
-                    <table class="table table-hover overflow-auto" v-if="item.criteria == false">
-                      <thead v-if="item.typeQuestion == 'score'">
-                        <tr>
-                          <th scope="col" style="width: 40px;">#</th>
-                          <th class="text-nowrap text-end" style="width: 30px;">合計点</th>
-                        </tr>
-                      </thead>
-                      <thead v-else>
-                      <tr>
-                      <th scope="col" style="width: 40px;">#</th>
-                      <th class="text-nowrap text-end" style="width: 30px;"
-                          v-for="(ans, idx) in item.question_answers">
-                        {{ ans['name'] }}
-                      </th>
-                    </tr>
-                      </thead>
-                      <tbody v-if="item.typeQuestion == 'score'">
-                        <tr>
-                          <td class="">1</td>
-                          <td class="text-end text-end">{{ item.question_answers[0]['total'] }}</td>
-                        </tr>
-                      </tbody>
-                      <tbody v-else>
-                        <tr>
-                          <td class="">1</td>
-                          <td class="text-end text-end" v-for="(ans, idx) in item.question_answers">{{ ans['total'] }}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <table class="table table-hover overflow-auto" v-if="item.criteria == true">
-                      <thead v-if="item.typeQuestion == 'score'">
-                        <tr>
-                          <th scope="col" style="width: 40px;">#</th>
-                          <th scope="col" style="width: 100px;"></th>
-                          <th class="text-nowrap text-end" style="width: 100px;">合計点</th>
-                        </tr>
-                      </thead>
-                      <thead v-else>
-                        <tr>
-                          <th scope="col" style="width: 40px;">#</th>
-                          <th scope="col" style="width: 100px;"></th>
-                          <th class="text-nowrap text-end" style="width: 100px;"
-                            v-for="(ans, idx) in item.question_answers">{{ ans['name'] }}</th>
-                        </tr>
-                      </thead>
-                      <tbody v-if="item.typeQuestion == 'score'">
-                        <tr v-for="(value, key, index) in item.question_answers[0]['criteria']" :key="key">
-                          <td class="">{{ index + 1 }}</td>
-                          <td class="question-key" style="text-align: center; white-space: nowrap;">{{ key }}</td>
-                          <td class="text-end" v-for="(ans, idx) in item.question_answers">{{ value }}</td>
-                        </tr>
-                      </tbody>
-                      <tbody v-else>
-                        <tr v-for="(criteriaKey, index) in getCriteriaKeys(item)" :key="criteriaKey">
-                          <td>{{ index + 1 }}</td>
-                          <td class="question-key" style="white-space: nowrap;">{{ criteriaKey }}</td>
-                          <td class="text-end" v-for="(ans, idx) in getAnswerList(item)">
-                            {{ ans.criteria[criteriaKey] || 0 }}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+        <div id="notQuestions" class="container d-none">
+          <section id="content-form" class="row mb-3 g-3">
+            <div class="col-12 row g-2 mx-0">
+              <div class="col-12 px-3 text-center">
+                <h4 class="text-danger">
+                  現在、この投票には表示できる内容がありません
+                </h4>
               </div>
             </div>
           </section>
         </div>
-      </div>
-      <div id="error-msg" class="container">
-        <div class="content-msg m-3 h2 text-center p-1 text-danger d-none"></div>
+        <div id="content" class="container-fuild d-none">
+          <div class="statistic-information mb-2">
+            <div class="g-2 mx-0 statistic-header">
+              <div class="statistic-header-right">
+                <div class="statistic-card" style="width: 40%">
+                  <span><i class="far fa-clock"></i></span>
+                  <span class="value">実施期間</span><br />
+                  <span>{{ dateRun ? dateRun.substring(5) : '' }}</span><br />
+                  <span>{{ dateEnd ? dateEnd.substring(5) : '' }}</span>
+                </div>
+                <div class="statistic-card" style="width: 25%">
+                  <span><i class="far fa-question-circle"></i></span>
+                  <span class="value">問数</span><br />
+                  <div class="number" style="padding-top: 4px">
+                    {{ vote.numberQuestion }}
+                  </div>
+                </div>
+                <div class="statistic-card" style="width: 28%">
+                  <span><i class="far fa-user"></i></span>
+                  <span class="value">参加者数</span><br />
+                  <div class="number" style="padding-top: 4px">
+                    {{ vote.numberVoted }}
+                  </div>
+                </div>
+              </div>
+              <div class="statistic-header-left">
+                <p
+                  style="
+                    font-size: 16px;
+                    color: #333333;
+                    margin-top: 5px;
+                    margin-bottom: 3px;
+                  "
+                >
+                  {{ title }}
+                </p>
+                <div class="show-rich-text">
+                  <div class="description-preview" ref="descPreview">
+                    {{ descriptionText }}
+                  </div>
+                  <span
+                    class="more-link"
+                    v-if="isOverflowed"
+                    @click="openDescriptionModal"
+                    >... 続き</span
+                  >
+                </div>
+                <!-- <p style="color: #555; font-size: 14px;">{{ dateRun }} 〜 <span
+                  style="white-space: nowrap;">{{ dateEnd }}</span></p> -->
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="modal fade"
+            id="descriptionModal"
+            tabindex="-1"
+            aria-labelledby="descriptionModalLabel"
+            aria-hidden="true"
+            ref="descriptionModal"
+          >
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">説明全文</h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="閉じる"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <div class="modal-description">{{ descriptionText }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            id="content-total"
+            role="tabpanel"
+            aria-labelledby="tab-total"
+            class="tab-pane fade mt-2 active show"
+          >
+            <section id="content-total__dataSummay" class="row">
+              <div class="project-list" style="width: 100%">
+                <div class="col-12">
+                  <p
+                    class="project-total__byPhase-label mt-1 mb-2"
+                    for="project-total__byPhase-data"
+                    style="font-size: 16px"
+                  >
+                    <span class="vertical-line"></span> 質問一覧（{{
+                    vote.numberQuestion }}）
+                  </p>
+                </div>
+                <ul class="question-list">
+                  <li
+                    class="question-card"
+                    v-for="(item, index) in questions"
+                    :key="index"
+                    :class="{
+        selected: index === questionIndex,
+        'multi-criteria': results && results[index] && results[index].criteria,
+        'default': !results || !results[index] || !results[index].criteria
+      }"
+                    @click="selectQuestion(item, index)"
+                  >
+                    <!-- HEADER: chỉ còn câu hỏi -->
+                    <div class="card-header">
+                      <div class="header-left">
+                        <span class="question-index">問{{ index + 1 }}：</span>
+                        <span
+                          class="question-title truncate"
+                          :title="item.question"
+                          >{{ item.question }}</span
+                        >
+                      </div>
+                    </div>
+
+                    <!-- BODY -->
+                    <div class="card-body">
+                      <!-- method-badge xuống body -->
+                      <div class="method-badge">
+                        {{ item.voteMethod || '単純多数決' }} ｜ {{
+                        item.voteThreshold || '60%' }}
+                      </div>
+
+                      <!-- NORMAL QUESTION -->
+                      <template
+                        v-if="results && results[index] && !results[index].criteria"
+                      >
+                        <div
+                          v-if="hasAnswerMeetingThreshold(index)"
+                          class="result-row success"
+                        >
+                          <i class="fas fa-check-circle result-icon"></i>
+                          <span
+                            class="answer-text truncate"
+                            :title="getWinningAnswer(index)"
+                          >
+                            {{ getWinningAnswer(index) }}
+                          </span>
+                          <span class="vote-stats">
+                            {{ getWinningVoteCount(index) }}/{{
+                            getTotalVotes(index) }}票 ({{
+                            getWinningPercentage(index) }}%)
+                          </span>
+                        </div>
+
+                        <div v-else class="result-row error">
+                          <i class="fas fa-times-circle result-icon"></i>
+                          <span class="error-text"
+                            >可決条件を満たす選択肢はありません</span
+                          >
+                        </div>
+                      </template>
+
+                      <!-- MULTI CRITERIA -->
+                      <template
+                        v-if="results && results[index] && results[index].criteria"
+                      >
+                        <div class="criteria-list">
+                          <div
+                            class="criteria-block"
+                            v-for="(criteriaName, cIndex) in getCriteriaNames(index)"
+                            :key="cIndex"
+                          >
+                            <div
+                              class="criteria-name truncate"
+                              :title="criteriaName"
+                            >
+                              {{ criteriaName }}
+                            </div>
+
+                            <div
+                              v-if="hasAnswerMeetingThresholdForCriteria(index, criteriaName)"
+                              class="result-row success small"
+                            >
+                              <i class="fas fa-check-circle result-icon"></i>
+                              <span
+                                class="answer-text truncate"
+                                :title="getWinningAnswerForCriteria(index, criteriaName)"
+                              >
+                                {{ getWinningAnswerForCriteria(index,
+                                criteriaName) }}
+                              </span>
+                              <small class="vote-stats">
+                                {{ getWinningVoteCountForCriteria(index,
+                                criteriaName) }}/{{
+                                getTotalVotesForCriteria(index, criteriaName)
+                                }}票 ({{ getWinningPercentageForCriteria(index,
+                                criteriaName) }}%)
+                              </small>
+                            </div>
+
+                            <div v-else class="result-row error small">
+                              <i class="fas fa-times-circle result-icon"></i>
+                              <span class="error-text"
+                                >可決条件を満たす選択肢はありません</span
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+
+                      <!-- Loading -->
+                      <div v-else-if="!results" class="loading">
+                        結果を読み込み中...
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="project-total" style="overflow: hidden">
+                <div class="row">
+                  <div class="col-12">
+                    <p
+                      class="project-total__byPhase-label mt-2 mb-2"
+                      for="project-total__byPhase-data"
+                      style="font-size: 16px"
+                    >
+                      <span class="vertical-line"></span>投票結果
+                    </p>
+                    <p
+                      class="text-danger not-statistic"
+                      style="font-size: 14px; text-align: center"
+                      v-if="notStatistic"
+                    >
+                      投票データがありません。
+                    </p>
+                    <div
+                      class="content-total__dataSummary-chart"
+                      v-show="!notStatistic && typeQuestion != 'input'"
+                    ></div>
+                    <div
+                      class=""
+                      style="
+                        max-height: 68vh;
+                        overflow-y: auto;
+                        overflow-x: hidden;
+                      "
+                      v-if="!notStatistic && typeQuestion == 'input'"
+                    >
+                      <div
+                        class="criteria-card card"
+                        v-if="criteria"
+                        v-for="(answers, key) in results[questionIndex].question_answers[0].criteria"
+                        :key="key"
+                      >
+                        <div
+                          class="criteria-header card-header"
+                          data-bs-toggle="collapse"
+                          @click="toggleCollapse(key)"
+                          :href="'#criteria-' + key.replace(/\s+/g, '-')"
+                          role="button"
+                          aria-expanded="isExpanded(key)"
+                          :aria-controls="'criteria-' + key.replace(/\s+/g, '-')"
+                          :class="{'open': isExpanded(key)}"
+                        >
+                          <span>{{ key }}</span>
+                          <i
+                            class="toggle-icon fas"
+                            :class="isExpanded(key) ? 'fa-chevron-up' : 'fa-chevron-down'"
+                          ></i>
+                        </div>
+                        <div
+                          :id="'criteria-' + key.replace(/\s+/g, '-')"
+                          class="collapse criteria-body card-body"
+                        >
+                          <div
+                            class="response-box"
+                            v-for="(answer, index) in paginatedAnswers(key)"
+                            :key="index"
+                          >
+                            <p
+                              v-for="(line, lineIndex) in formatAnswer(answer)"
+                              :key="lineIndex"
+                            >
+                              {{ line }}
+                            </p>
+                          </div>
+                          <div class="row px-3 float-right mb-2">
+                            <nav
+                              aria-label="Page navigation"
+                              class="d-flex px-0"
+                            >
+                              <ul class="pagination" style="margin-left: auto">
+                                <li
+                                  class="page-item"
+                                  :class="{ disabled: currentPage[key] === 1 }"
+                                >
+                                  <a
+                                    class="page-link"
+                                    href="#"
+                                    @click.prevent="prevPage(key)"
+                                    aria-label="Previous"
+                                  >
+                                    <span aria-hidden="true">«</span>
+                                  </a>
+                                </li>
+                                <li
+                                  class="page-item"
+                                  v-for="page in totalPages(key)"
+                                  :key="page"
+                                  :class="{ active: currentPage[key] === page }"
+                                >
+                                  <a
+                                    class="page-link"
+                                    href="#"
+                                    @click.prevent="goToPage(key, page)"
+                                    >{{ page }}</a
+                                  >
+                                </li>
+                                <li
+                                  class="page-item"
+                                  :class="{ disabled: currentPage[key] === totalPages(key) }"
+                                >
+                                  <a
+                                    class="page-link"
+                                    href="#"
+                                    @click.prevent="nextPage(key)"
+                                    aria-label="Next"
+                                  >
+                                    <span aria-hidden="true">»</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </nav>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="criteria-card card" v-if="!criteria">
+                        <div class="criteria-body card-body">
+                          <div
+                            class="response-box"
+                            v-for="(answer, index) in paginatedAnswersNoCriteria()"
+                            :key="index"
+                          >
+                            <p
+                              v-for="(line, lineIndex) in formatAnswer(answer)"
+                              :key="lineIndex"
+                            >
+                              {{ line }}
+                            </p>
+                          </div>
+                          <div class="row px-3 float-right mb-2">
+                            <nav
+                              aria-label="Page navigation"
+                              class="d-flex px-0"
+                            >
+                              <ul class="pagination" style="margin-left: auto">
+                                <li
+                                  class="page-item"
+                                  :class="{ disabled: currentPageNoCriteria === 1 }"
+                                >
+                                  <a
+                                    class="page-link"
+                                    href="#"
+                                    @click.prevent="prevPageNoCriteria()"
+                                    aria-label="Previous"
+                                  >
+                                    <span aria-hidden="true">«</span>
+                                  </a>
+                                </li>
+                                <li
+                                  class="page-item"
+                                  v-for="page in totalPagesNoCriteria()"
+                                  :key="page"
+                                  :class="{ active: currentPageNoCriteria === page }"
+                                >
+                                  <a
+                                    class="page-link"
+                                    href="#"
+                                    @click.prevent="goToPageNoCriteria(page)"
+                                    >{{ page }}</a
+                                  >
+                                </li>
+                                <li
+                                  class="page-item"
+                                  :class="{ disabled: currentPageNoCriteria === totalPagesNoCriteria() }"
+                                >
+                                  <a
+                                    class="page-link"
+                                    href="#"
+                                    @click.prevent="nextPageNoCriteria()"
+                                    aria-label="Next"
+                                  >
+                                    <span aria-hidden="true">»</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </nav>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="col-12"
+                    v-show="!notStatistic && typeQuestion != 'input'"
+                  >
+                    <p
+                      class="project-total__byPhase-label mt-1 mb-2"
+                      for="project-total__byPhase-data"
+                      style="font-size: 16px"
+                    >
+                      <span class="vertical-line"></span>集計結果
+                    </p>
+
+                    <div
+                      class=""
+                      v-for="(item, index) in results"
+                      :key="index"
+                      v-show="index == questionIndex"
+                      style="overflow-y: auto"
+                    >
+                      <table
+                        class="table table-hover overflow-auto"
+                        v-if="item.criteria == false"
+                      >
+                        <thead v-if="item.typeQuestion == 'score'">
+                          <tr>
+                            <th scope="col" style="width: 40px">#</th>
+                            <th
+                              class="text-nowrap text-end"
+                              style="width: 30px"
+                            >
+                              合計点
+                            </th>
+                          </tr>
+                        </thead>
+                        <thead v-else>
+                          <tr>
+                            <th scope="col" style="width: 40px">#</th>
+                            <th
+                              class="text-nowrap text-end"
+                              style="width: 30px"
+                              v-for="(ans, idx) in item.question_answers"
+                            >
+                              {{ ans['name'] }}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody v-if="item.typeQuestion == 'score'">
+                          <tr>
+                            <td class="">1</td>
+                            <td class="text-end text-end">
+                              {{ item.question_answers[0]['total'] }}
+                            </td>
+                          </tr>
+                        </tbody>
+                        <tbody v-else>
+                          <tr>
+                            <td class="">1</td>
+                            <td
+                              class="text-end text-end"
+                              v-for="(ans, idx) in item.question_answers"
+                            >
+                              {{ ans['total'] }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <table
+                        class="table table-hover overflow-auto"
+                        v-if="item.criteria == true"
+                      >
+                        <thead v-if="item.typeQuestion == 'score'">
+                          <tr>
+                            <th scope="col" style="width: 40px">#</th>
+                            <th scope="col" style="width: 100px"></th>
+                            <th
+                              class="text-nowrap text-end"
+                              style="width: 100px"
+                            >
+                              合計点
+                            </th>
+                          </tr>
+                        </thead>
+                        <thead v-else>
+                          <tr>
+                            <th scope="col" style="width: 40px">#</th>
+                            <th scope="col" style="width: 100px"></th>
+                            <th
+                              class="text-nowrap text-end"
+                              style="width: 100px"
+                              v-for="(ans, idx) in item.question_answers"
+                            >
+                              {{ ans['name'] }}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody v-if="item.typeQuestion == 'score'">
+                          <tr
+                            v-for="(value, key, index) in item.question_answers[0]['criteria']"
+                            :key="key"
+                          >
+                            <td class="">{{ index + 1 }}</td>
+                            <td
+                              class="question-key"
+                              style="text-align: center; white-space: nowrap"
+                            >
+                              {{ key }}
+                            </td>
+                            <td
+                              class="text-end"
+                              v-for="(ans, idx) in item.question_answers"
+                            >
+                              {{ value }}
+                            </td>
+                          </tr>
+                        </tbody>
+                        <tbody v-else>
+                          <tr
+                            v-for="(criteriaKey, index) in getCriteriaKeys(item)"
+                            :key="criteriaKey"
+                          >
+                            <td>{{ index + 1 }}</td>
+                            <td
+                              class="question-key"
+                              style="white-space: nowrap"
+                            >
+                              {{ criteriaKey }}
+                            </td>
+                            <td
+                              class="text-end"
+                              v-for="(ans, idx) in getAnswerList(item)"
+                            >
+                              {{ ans.criteria[criteriaKey] || 0 }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div id="error-msg" class="container">
+          <div
+            class="content-msg m-3 h2 text-center p-1 text-danger d-none"
+          ></div>
+        </div>
       </div>
     </div>
-  </div>
-  <?!= include('VueJS') ?>
-  <?!= include('statisticJS') ?>
-</body>
-
+    <?!= include('VueJS') ?>
+    <?!= include('statisticJS') ?>
+  </body>
 </html>
