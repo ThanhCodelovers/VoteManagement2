@@ -773,6 +773,14 @@
                   </span>
                 </div>
               </div>
+              <!-- Unified vote method label (after title, like form.html) -->
+              <div
+                class="vote-method-label"
+                style="margin-left: 26px; color: blue"
+                v-if="item.voteThreshold"
+              >
+                可決条件: {{ item.voteThreshold }}
+              </div>
 
               <!-- TH câu vote đa tiêu chí -->
               <div class="row" v-if="item.criterias.length > 0">
@@ -793,12 +801,7 @@
                           <label for="checkbox-Q1-1" class="form-check-criteria"
                             >{{ crit.title }}</label
                           >
-                          <span
-                            class="vote-method-label"
-                            style="margin-left: 8px; color: blue"
-                          >
-                            可決条件: {{ item.voteThreshold }}
-                          </span>
+                          <!-- vote-method-label removed here (now rendered once below question title) -->
                         </div>
 
                         <div v-if="crit.media" class="media-wrapper">
@@ -858,12 +861,7 @@
                         <label class="form-check-criteria"
                           >{{ crit.title }}</label
                         >
-                        <span
-                          class="vote-method-label"
-                          style="margin-left: 8px; color: blue"
-                        >
-                          可決条件: {{ item.voteThreshold }}
-                        </span>
+                        <!-- vote-method-label removed (displayed globally for question) -->
                       </div>
                     </div>
                   </div>
