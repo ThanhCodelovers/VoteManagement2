@@ -317,14 +317,19 @@
                 parentElement.innerHTML = '';
                 elChart = document.getElementById(`eChart_total_${id}`);
                 // console.log("here:", id, elChart);
-                if (!elChart) {
-                    elChart = document.createElement('div');
-                    elChart.id = `eChart_total_${id}`;
-                    // đảm bảo chart có chiều cao mặc định; width để 100% để ECharts đọc đúng
-                    elChart.style.width = '100%';
-                    elChart.style.height = '350px';
-                    parentElement.appendChild(elChart);
-                }
+                                if (!elChart) {
+                                        elChart = document.createElement('div');
+                                        elChart.id = `eChart_total_${id}`;
+                                        elChart.style.width = '100%';
+                                        elChart.style.height = '350px';
+                                        parentElement.appendChild(elChart);
+                                }
+                                /* Responsive height tweak for small portrait phones */
+                                if (window.matchMedia('(max-width:640px) and (orientation:portrait)').matches) {
+                                    // tăng chiều cao để bar + donut không quá sát và đủ lớn
+                                    const base = data.length > 6 ? 460 : data.length > 3 ? 430 : 400;
+                                    elChart.style.height = base + 'px';
+                                }
 
                 // Nếu có instance cũ trên element này, dispose trước
                 const prev = echarts.getInstanceByDom(elChart);
@@ -387,43 +392,24 @@
                         ]
                     },
                     media: [
-                        {
-                            query: {
-                                maxWidth: 430
-                            },
-                            option: {
-                                grid: [
-                                    {
-                                        left: '10%',
-                                        right: '10%',
-                                        bottom: '50%',
-                                        top: '18%',
-                                        containLabel: true
-                                    },
-                                    {
-                                        left: '10%',
-                                        right: '10%',
-                                        bottom: '0%',
-                                        top: '65%',
-                                        containLabel: true
-                                    }
-                                ],
-                                series: [
-                                    {
-                                        id: 'lineChart',
-                                        xAxisIndex: 0,
-                                        yAxisIndex: 0
-                                    },
-                                    {
-                                        id: 'pieChart',
-                                        radius: ['30%', '50%'],
-                                        center: ['50%', '75%'],
-                                        xAxisIndex: 1,
-                                        yAxisIndex: 1
-                                    }
-                                ]
-                            }
-                        },
+                                                {
+                                                    /* Very small screens (portrait phones) - stack vertically, enlarge pie */
+                                                    query: { maxWidth: 430 },
+                                                    option: {
+                                                        grid: [
+                                                            {
+                                                                left: '8%', right: '8%', top: '10%', bottom: '55%', containLabel: true
+                                                            },
+                                                            {
+                                                                left: '8%', right: '8%', top: '50%', bottom: '4%', containLabel: true
+                                                            }
+                                                        ],
+                                                        series: [
+                                                            { id: 'lineChart', xAxisIndex: 0, yAxisIndex: 0 },
+                                                            { id: 'pieChart', radius: ['42%', '68%'], center: ['50%', '78%'], xAxisIndex: 1, yAxisIndex: 1 }
+                                                        ]
+                                                    }
+                                                },
                         {
                             query: {
                                 minWidth: 431,
