@@ -3,362 +3,455 @@
 ?>
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>QR code</title>
+    <!-- CommonJS Lib -->
+    <?!= include('jquery-3.3.1.slim.min.js') ?>
+    <?!= include('popper.min.js') ?>
+    <?!= include('bootstrap.bundle.min.js') ?>
+    <?!= include('bootstrap-datepicker.min.js') ?>
+    <?!= include('bootstrap-datepicker.ja.min.js') ?>
+    <?!= include('sweetalert2.min.js') ?>
 
-<head>
-  <meta charset="UTF-8">
-  <title> QR code</title>
-  <!-- CommonJS Lib -->
-  <?!= include('jquery-3.3.1.slim.min.js') ?>
-  <?!= include('popper.min.js') ?>
-  <?!= include('bootstrap.bundle.min.js') ?>
-  <?!= include('bootstrap-datepicker.min.js') ?>
-  <?!= include('bootstrap-datepicker.ja.min.js') ?>
-  <?!= include('sweetalert2.min.js') ?>
+    <?!= include('VueJS') ?>
+    <?!= include('QRCodeJS.min') ?>
 
-  <?!= include('VueJS') ?>
-  <?!= include('QRCodeJS.min') ?>
+    <!-- StyleCSS Lib -->
+    <?!= include('bootstrap.min.css') ?>
+    <?!= include('bootstrap-datepicker.min.css') ?>
+    <!-- <?!= include('all.min.css') ?> -->
+    <?!= include('sweetalert2.min.css') ?>
+    <?!= include('stylesCss') ?>
+    <script>
+      const voteID = "<?= voteCode ?>";
+    </script>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: white; /* nền trắng toàn màn hình */
+        overflow: hidden; /* không cho body scroll */
+      }
 
-  <!-- StyleCSS Lib -->
-  <?!= include('bootstrap.min.css') ?>
-  <?!= include('bootstrap-datepicker.min.css') ?>
-  <!-- <?!= include('all.min.css') ?> -->
-  <?!= include('sweetalert2.min.css') ?>
-  <?!= include('stylesCss') ?>
-  <script>
-    const voteID = '<?= voteCode ?>';
-  </script>
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: white;   /* nền trắng toàn màn hình */
-      overflow: hidden;    /* không cho body scroll */
-    }
+      .scroll-wrapper {
+        height: 100vh; /* chiếm toàn màn hình */
+        background: white; /* viền trắng luôn giữ */
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+      }
 
-    .scroll-wrapper {
-      height: 100vh;       /* chiếm toàn màn hình */
-      background: white;   /* viền trắng luôn giữ */
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-    }
+      #content {
+        flex: 1;
+        overflow-y: auto; /* chỉ phần content cuộn */
+        -webkit-overflow-scrolling: touch; /* mượt trên iOS */
+        padding: 20px 0; /* tạo khoảng trắng trên dưới */
+        box-sizing: border-box;
+      }
 
-    #content {
-      flex: 1;
-      overflow-y: auto;    /* chỉ phần content cuộn */
-      -webkit-overflow-scrolling: touch; /* mượt trên iOS */
-      padding: 20px 0;     /* tạo khoảng trắng trên dưới */
-      box-sizing: border-box;
-    }
+      #qr-code {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: pixelated;
+        image-rendering: optimizeSpeed;
+        /* width: 100%; */
+        max-width: 400px;
+        height: auto;
+        margin: auto;
+      }
 
-    #qr-code {
-      image-rendering: -webkit-optimize-contrast;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: pixelated;
-      image-rendering: optimizeSpeed;
-      /* width: 100%; */
-      max-width: 400px;
-      height: auto;
-      margin: auto;
-    }
+      @media screen and (max-width: 768px) {
+        #class-name {
+          font-size: 2rem !important;
+        }
 
-    @media screen and (max-width: 768px) {
+        #otp-code {
+          font-size: 1.5rem !important;
+        }
+
+        #qrcode canvas {
+          width: 80% !important;
+          height: auto !important;
+          max-width: 300px;
+        }
+      }
+
+      @media screen and (min-width: 768px) and (max-width: 1695px) {
+        .time-survey {
+          margin-left: 70px;
+        }
+      }
+
       #class-name {
-        font-size: 2rem !important;
+        font-size: 3rem;
+        text-align: center;
+      }
+
+      #class_name span {
+        font-weight: 600;
       }
 
       #otp-code {
-        font-size: 1.5rem !important;
+        font-weight: 600;
+        font-size: 3rem;
       }
 
-      #qrcode canvas {
-        width: 80% !important;
-        height: auto !important;
-        max-width: 300px;
-      }
-    }
-
-    @media screen and (min-width: 768px) and (max-width: 1695px) {
-      .time-survey{
-        margin-left: 70px;
-      }
-    } 
-
-    #class-name {
-      font-size: 3rem;
-      text-align: center;
-    }
-
-    #class_name span {
-      font-weight: 600;
-    }
-
-    #otp-code {
-      font-weight: 600;
-      font-size: 3rem;
-    }
-
-    #infoClass {
-      top: 52px;
-      left: 25px;
-      border-radius: 3px;
-    }
-
-    .img_qr {
-      height: calc(100vh - 220px);
-      width: calc(100vh - 220px);
-    }
-
-    .qr_code_message {
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: gray;
-      font-size: 2rem;
-      border-radius: 3px;
-      color: #fff;
-    }
-
-    @media screen and (min-width: 600px) {
       #infoClass {
-        left: 150px;
-      }
-
-      .carousel-item img {
-        width: 30% !important;
-      }
-    }
-
-    @media screen and (min-width: 1200px) {
-      #infoClass {
-        left: 150px;
-      }
-
-      .carousel-inner {
-        height: 85%;
-      }
-
-      .carousel-item img {
-        width: 75% !important;
-      }
-    }
-
-    /* ---------------- SP Portrait Enhancements ---------------- */
-    @media (max-width: 600px) and (orientation: portrait) {
-      html, body {
-        overflow: auto; /* Cho phép cuộn toàn trang trên SP dọc */
-        -webkit-overflow-scrolling: touch;
-      }
-      #content {
-        height: auto;
-        min-height: 100vh;
-        overflow-y: visible; /* để body xử lý cuộn chính */
-        padding-bottom: 40px; /* tránh nút dính sát mép dưới */
-      }
-      /* Bỏ position absolute để phần tử tính đúng chiều cao và cuộn được */
-      #content .carousel {
-        position: static !important;
-        top: auto !important;
-        left: auto !important;
-        right: auto !important;
-      }
-      /* Thu nhỏ QR CODE hơn nữa trên SP dọc */
-      #qrcode canvas {
-        width: 200px !important;
-        height: 200px !important;
-      }
-      /* Khối rich text nếu dài thì cuộn riêng bên trong */
-      .show-rich-text {
-        max-height: 160px; /* chiều cao giới hạn để còn thấy nút */
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        border: 1px solid #e5e5e5;
-        border-radius: 4px;
-        background: #fff;
-        padding: 8px 10px !important; /* override inline padding */
-        margin-top: 6px;
-        margin-bottom: 10px;
-      }
-      .show-rich-text::-webkit-scrollbar {
-        width: 6px;
-      }
-      .show-rich-text::-webkit-scrollbar-thumb {
-        background: #c7c7c7;
+        top: 52px;
+        left: 25px;
         border-radius: 3px;
       }
-      .show-rich-text::-webkit-scrollbar-track {
-        background: #f3f3f3;
+
+      .img_qr {
+        height: calc(100vh - 220px);
+        width: calc(100vh - 220px);
       }
-      /* Giảm font một chút để vừa màn hình */
-      #otp-code { font-size: 1.3rem !important; }
-      .content-slideForm_identifyUser-quizInfo___group-firstLine { font-size: 0.9rem; }
-      .content-slideForm_identifyUser-quizInfo___group i { font-size: 0.95rem; }
-      /* Khoảng cách tổng thể */
-      .content-slideForm__question_qr { margin-top: 4px; }
-    }
-  </style>
-</head>
 
-<body>
-  <div id="app">
+      .qr_code_message {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: gray;
+        font-size: 2rem;
+        border-radius: 3px;
+        color: #fff;
+      }
 
-    <div class="sticky-top-bar"></div>
-    <div class="sticky-bottom-bar"></div>
-    
-    <div class="modal" id="loading" data-backdrop="static" style="z-index: 2000;">
-      <div class="modal-dialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-        <div id="circle">
-          <div class="loader"></div>
+      @media screen and (min-width: 600px) {
+        #infoClass {
+          left: 150px;
+        }
+
+        .carousel-item img {
+          width: 30% !important;
+        }
+      }
+
+      @media screen and (min-width: 1200px) {
+        #infoClass {
+          left: 150px;
+        }
+
+        .carousel-inner {
+          height: 85%;
+        }
+
+        .carousel-item img {
+          width: 75% !important;
+        }
+      }
+
+      /* ---------------- SP Portrait Enhancements ---------------- */
+      @media (max-width: 600px) and (orientation: portrait) {
+        html,
+        body {
+          overflow: auto; /* Cho phép cuộn toàn trang trên SP dọc */
+          -webkit-overflow-scrolling: touch;
+        }
+        #content {
+          height: auto;
+          min-height: 100vh;
+          overflow-y: visible; /* để body xử lý cuộn chính */
+          padding-bottom: 40px; /* tránh nút dính sát mép dưới */
+        }
+        /* Bỏ position absolute để phần tử tính đúng chiều cao và cuộn được */
+        #content .carousel {
+          position: static !important;
+          top: auto !important;
+          left: auto !important;
+          right: auto !important;
+          margin-top: 12px !important; /* tách khỏi thanh xanh trên */
+        }
+        /* Thu nhỏ QR CODE hơn nữa trên SP dọc */
+        #qrcode canvas {
+          width: 250px !important;  /* tăng kích thước để phần mô tả xuống dưới fold */
+          height: 250px !important;
+        }
+        /* Khối rich text nếu dài thì cuộn riêng bên trong */
+        .show-rich-text {
+          max-height: 160px; /* chiều cao giới hạn để còn thấy nút */
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          border: 1px solid #e5e5e5;
+          border-radius: 4px;
+          background: #fff;
+          padding: 8px 10px !important; /* override inline padding */
+          margin-top: 6px;
+          margin-bottom: 10px;
+        }
+        .show-rich-text::-webkit-scrollbar {
+          width: 6px;
+        }
+        .show-rich-text::-webkit-scrollbar-thumb {
+          background: #c7c7c7;
+          border-radius: 3px;
+        }
+        .show-rich-text::-webkit-scrollbar-track {
+          background: #f3f3f3;
+        }
+        /* Giảm font một chút để vừa màn hình */
+        #otp-code {
+          font-size: 1.3rem !important;
+        }
+        .content-slideForm_identifyUser-quizInfo___group-firstLine {
+          font-size: 0.9rem;
+        }
+        .content-slideForm_identifyUser-quizInfo___group i {
+          font-size: 0.95rem;
+        }
+        /* Khoảng cách tổng thể */
+        .content-slideForm__question_qr {
+          margin-top: 4px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="sticky-top-bar"></div>
+      <div class="sticky-bottom-bar"></div>
+
+      <div
+        class="modal"
+        id="loading"
+        data-backdrop="static"
+        style="z-index: 2000"
+      >
+        <div
+          class="modal-dialog"
+          style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+          "
+        >
+          <div id="circle">
+            <div class="loader"></div>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="content" class="container" v-show="Object.keys(vote).length !== 0">
-      <section id="content-slideForm">
-        <div class="background-top" style="background-color: rgb(1, 147, 46);display: flex;align-items: center;justify-content: center;height: 80px;">
-          <span class="fw-bold"
-            style="font-size: 20px; color: rgb(255, 255, 255); font-weight: bold;">汎用投票を実施するためにQRコードをスキャンしてください</span>
-        </div>
-        <div class="background-bottom" style="background-color: whitesmoke; bottom: -10%;"></div>
-        <div class="content-scroll">
-        <div id="" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false"
-          style="position: absolute; top: 11%; left: 20px; right: 20px;">
-          <div class="carousel-inner row" style="background-color: white; border-radius: 10px; margin: auto;">
-            <div class="content-slideForm__question_qr col-xl-5">
-              <div class=" mb-1 d-flex justify-content-center">
-                <span id="otp-code" v-show="vote.usePassCode == 'はい'">ログインコード：<strong>{{vote.passcode}}</strong></span>
-              </div>
-              <div class="row mb-1 d-flex justify-content-center carousel-item m-auto">
-                <div class="my-2" id="qrcode"
-                  :style="vote.usePassCode != 'はい' ? 'text-align: -webkit-center; margin-top: 28px; margin-bottom: 28px;' : 'text-align: -webkit-center;'">
+      <div
+        id="content"
+        class="container"
+        v-show="Object.keys(vote).length !== 0"
+      >
+        <section id="content-slideForm">
+          <div
+            class="background-top"
+            style="
+              background-color: rgb(1, 147, 46);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 80px;
+            "
+          >
+            <span
+              class="fw-bold"
+              style="
+                font-size: 20px;
+                color: rgb(255, 255, 255);
+                font-weight: bold;
+              "
+              >汎用投票を実施するためにQRコードをスキャンしてください</span
+            >
+          </div>
+          <div
+            class="background-bottom"
+            style="background-color: whitesmoke; bottom: -10%"
+          ></div>
+          <div class="content-scroll">
+            <div
+              id=""
+              class="carousel slide"
+              data-bs-ride="carousel"
+              data-bs-interval="false"
+              style="position: absolute; top: 11%; left: 20px; right: 20px"
+            >
+              <div
+                class="carousel-inner row"
+                style="
+                  background-color: white;
+                  border-radius: 10px;
+                  margin: auto;
+                "
+              >
+                <div class="content-slideForm__question_qr col-xl-5">
+                  <div class="mb-1 d-flex justify-content-center">
+                    <span id="otp-code" v-show="vote.usePassCode == 'はい'"
+                      >ログインコード：<strong>{{vote.passcode}}</strong></span
+                    >
+                  </div>
+                  <div
+                    class="row mb-1 d-flex justify-content-center carousel-item m-auto"
+                  >
+                    <div
+                      class="my-2"
+                      id="qrcode"
+                      :style="vote.usePassCode != 'はい' ? 'text-align: -webkit-center; margin-top: 28px; margin-bottom: 28px;' : 'text-align: -webkit-center;'"
+                    ></div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="col-xl-7" style="padding: 0px; margin-top: 10px; ">
-              <div class="content-otherInfo2" style="padding: 20px; padding-top: 0px;">
-                <span class="m-auto mb-2" style="font-size: 18px;">{{ vote.nameVote }}</span>
-                <div class="content-slideForm_identifyUser-quizInfo row">
-                  <div class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-3 mb-2">
-                    <i class="fa-regular fa-file-lines"></i>
-                    <span class="content-slideForm_identifyUser-quizInfo___group-firstLine"
-                      style="display: flex; align-items: center;">質問数：{{vote.numberQuestion}}問</span>
-                  </div>
+                <div class="col-xl-7" style="padding: 0px; margin-top: 10px">
+                  <div
+                    class="content-otherInfo2"
+                    style="padding: 20px; padding-top: 0px"
+                  >
+                    <span class="m-auto mb-2" style="font-size: 18px"
+                      >{{ vote.nameVote }}</span
+                    >
+                    <div class="content-slideForm_identifyUser-quizInfo row">
+                      <div
+                        class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-3 mb-2"
+                      >
+                        <i class="fa-regular fa-file-lines"></i>
+                        <span
+                          class="content-slideForm_identifyUser-quizInfo___group-firstLine"
+                          style="display: flex; align-items: center"
+                          >質問数：{{vote.numberQuestion}}問</span
+                        >
+                      </div>
 
-                  <div class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-6 mb-2"
-                    style="grid-template-rows: 1fr; height: 41px; align-items: center;" v-show="vote.dateRun != ''">
-                    <i class="fa-regular fa-clock"></i>
-                    <span class="content-slideForm_identifyUser-quizInfo___group-firstLine"
-                    style="align-content: center;">実施期間：{{vote.dateRun}} 〜 
-                    <span class="time-survey" style="white-space: nowrap;">{{vote.dateEnd}}</span></span>
-                  </div>
+                      <div
+                        class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-6 mb-2"
+                        style="
+                          grid-template-rows: 1fr;
+                          height: 41px;
+                          align-items: center;
+                        "
+                        v-show="vote.dateRun != ''"
+                      >
+                        <i class="fa-regular fa-clock"></i>
+                        <span
+                          class="content-slideForm_identifyUser-quizInfo___group-firstLine"
+                          style="align-content: center"
+                          >実施期間：{{vote.dateRun}} 〜
+                          <span class="time-survey" style="white-space: nowrap"
+                            >{{vote.dateEnd}}</span
+                          ></span
+                        >
+                      </div>
 
-                  <div class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-3 mb-2">
-                    <i class="fa-regular fa-star"></i>
-                    <span class="content-slideForm_identifyUser-quizInfo___group-firstLine"
-                      style="display: flex; align-items: center;">結果公開：{{ vote.statistics }}</span>
-                  </div>
+                      <div
+                        class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-3 mb-2"
+                      >
+                        <i class="fa-regular fa-star"></i>
+                        <span
+                          class="content-slideForm_identifyUser-quizInfo___group-firstLine"
+                          style="display: flex; align-items: center"
+                          >結果公開：{{ vote.statistics }}</span
+                        >
+                      </div>
 
-                  <div style="padding: 0px 13px;" class="show-rich-text">
-                    <span class="" v-html="vote.description"></span>
-                  </div>
-                  <div class="col-12 col-md-12 mx-auto" style="padding: 0 12px;">
-                    <button class="btn btn-success col-12 mx-auto my-2" style="height: 45px;"
-                      @click="openURL(vote.url)">PCで実施はこちら
-                    </button>
+                      <div style="padding: 0px 13px" class="show-rich-text">
+                        <span class="" v-html="vote.description"></span>
+                      </div>
+                      <div
+                        class="col-12 col-md-12 mx-auto"
+                        style="padding: 0 12px"
+                      >
+                        <button
+                          class="btn btn-success col-12 mx-auto my-2"
+                          style="height: 45px"
+                          @click="openURL(vote.url)"
+                        >
+                          PCで実施はこちら
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        </div>
-        
-      </section>
+        </section>
+      </div>
     </div>
-  </div>
-  <script type="module">
-    // Create a Vue app
-    const app = Vue.createApp({
-      data() {
-        return {
-          title: "QRコード",
-          vote: {},
-        };
-      },
-      created() {
-
-      },
-      watch: {},
-      async mounted() {
-        await this.getVoteById(voteID);
-        await this.genQRCode();
-      },
-      computed: {},
-      methods: {
-        getVoteById(voteID) {
-          let scope = this;
-          document.getElementById('loading').style.display = 'block'
-          return new Promise((resolve, reject) => {
-            google.script.run
-              .withSuccessHandler((res) => {
-                // console.log({ res })
-                if (!res.status) {
-                  scope.failureHandler(res.msg)
-                  return
-                } else {
-                  // console.log(res);
-                  this.vote = res;
-                  resolve(res)
-                  document.getElementById('loading').style.display = ''
-                }
-              })
-              .withFailureHandler((error) => {
-                // console.log({ error })
-                scope.failureHandler(res.msg)
-                resolve(null)
-              })
-              .getVoteById(voteID);
-          })
+    <script type="module">
+      // Create a Vue app
+      const app = Vue.createApp({
+        data() {
+          return {
+            title: "QRコード",
+            vote: {},
+          };
         },
-        openURL(URL) {
-          // console.log(URL);
-          window.open(URL, '_blank');
+        created() {},
+        watch: {},
+        async mounted() {
+          await this.getVoteById(voteID);
+          await this.genQRCode();
         },
-        genQRCode() {
-          let qrCodeURL = this.vote.url;
-          const qrCodeElement = document.getElementById('qrcode');
-          qrCodeElement.innerHTML = "";
+        computed: {},
+        methods: {
+          getVoteById(voteID) {
+            let scope = this;
+            document.getElementById("loading").style.display = "block";
+            return new Promise((resolve, reject) => {
+              google.script.run
+                .withSuccessHandler((res) => {
+                  // console.log({ res })
+                  if (!res.status) {
+                    scope.failureHandler(res.msg);
+                    return;
+                  } else {
+                    // console.log(res);
+                    this.vote = res;
+                    resolve(res);
+                    document.getElementById("loading").style.display = "";
+                  }
+                })
+                .withFailureHandler((error) => {
+                  // console.log({ error })
+                  scope.failureHandler(res.msg);
+                  resolve(null);
+                })
+                .getVoteById(voteID);
+            });
+          },
+          openURL(URL) {
+            // console.log(URL);
+            window.open(URL, "_blank");
+          },
+          genQRCode() {
+            let qrCodeURL = this.vote.url;
+            const qrCodeElement = document.getElementById("qrcode");
+            qrCodeElement.innerHTML = "";
 
-          let screenWidth = window.innerWidth;
+            let screenWidth = window.innerWidth;
 
-          // Điều chỉnh kích thước logic: trên màn hình nhỏ ưu tiên kích thước cố định nhỏ hơn
-          let qrCodeSize;
-          if (screenWidth > 768) {
-            // Desktop: vẫn dựa vào container nhưng giới hạn tối đa
-            qrCodeSize = Math.min(300, qrCodeElement.clientWidth * 0.35);
-          } else {
-            // SP dọc: dùng kích thước nhỏ hơn để còn chỗ cho thông tin và nút
-            qrCodeSize = Math.min(200, Math.floor(screenWidth * 0.55));
-          }
+            // Điều chỉnh kích thước logic: trên màn hình nhỏ ưu tiên kích thước cố định nhỏ hơn
+            let qrCodeSize;
+            if (screenWidth > 768) {
+              // Desktop
+              qrCodeSize = Math.min(320, qrCodeElement.clientWidth * 0.38);
+            } else {
+              // SP dọc: ưu tiên kích thước 250 (nếu màn hình nhỏ hơn thì co lại vừa)
+              qrCodeSize = Math.min(250, Math.floor(screenWidth * 0.6));
+            }
 
-          const qrCode = new QRCode(qrCodeElement, {
-            text: qrCodeURL,
-            width: qrCodeSize,
-            height: qrCodeSize,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-          });
-        }
-      },
-    });
+            const qrCode = new QRCode(qrCodeElement, {
+              text: qrCodeURL,
+              width: qrCodeSize,
+              height: qrCodeSize,
+              colorDark: "#000000",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.H,
+            });
+          },
+        },
+      });
 
-    app.mount('#app');
-  </script>
-</body>
-
+      app.mount("#app");
+    </script>
+  </body>
 </html>
