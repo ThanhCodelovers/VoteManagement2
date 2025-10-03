@@ -6,10 +6,6 @@
     -webkit-transition: all 0.3s ease;
     -webkit-tap-highlight-color: transparent;
   }
-  .btn.btn-success:hover {
-    background-color: #157347 !important;
-    border-color: #157347 !important;
-  }
   .btn.btn-success:active {
     background-color: #157347 !important;
     border-color: #157347 !important;
@@ -776,7 +772,7 @@
               <!-- Unified vote method label (after title, like form.html) -->
               <div
                 class="vote-method-label"
-                style="margin-left: 26px; color: blue"
+                style="margin-left: 34px; color: blue"
                 v-if="item.voteThreshold"
               >
                 可決条件: {{ item.voteThreshold }}
@@ -1157,12 +1153,7 @@
               <!-- TH câu vote không phải đa tiêu chí -->
               <div class="row" v-else>
                 <div class="form-group col-12 form-check">
-                  <div
-                    class="vote-method-label"
-                    style="margin-left: 38px; margin-bottom: 6px; color: blue"
-                  >
-                    可決条件: {{ item.voteThreshold }}
-                  </div>
+                  <!-- vote-method-label removed (now shown once under question title) -->
                   <div
                     class="row"
                     v-if="item.typeQuestion === '1 つだけ選択' || item.typeQuestion === '複数選択'"
@@ -1603,11 +1594,14 @@
         );
       },
       isImage(url) {
-        // Nhận diện cả link file ảnh và data:image base64
-        return (
-          /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url) ||
-          /^data:image\//i.test(url)
-        );
+        if (!url) return false;
+        const link = String(url).trim();
+        const pure = link.split('?')[0].split('#')[0];
+        if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(pure)) return true;
+        if (/^data:image\//i.test(link)) return true;
+        if (/https?:\/\/tse\d+\.mm\.bing\.net\/th\/id\/OIP\.[^?]+/i.test(link)) return true;
+        if (/https?:\/\/[^/]*ftcdn\.net\/v2\/jpg\//i.test(link)) return true;
+        return false;
       },
       onTypeChange(item) {
         if (item.typeQuestion === "複数選択") {
@@ -1675,7 +1669,10 @@
         this.isTouched = true;
       },
       handleTouchEnd() {
-        // Không reset ngay lập tức để tránh conflict với handleClick
+        // Fallback: nếu sau 400ms vẫn đang touched và không còn thao tác => reset
+        setTimeout(() => {
+          if (this.isTouched) this.isTouched = false;
+        }, 400);
       },
       handleClick(event, idx = null) {
         event.target.blur();
@@ -1755,6 +1752,10 @@
         } else {
           this.createQuestion();
         }
+        // Force reset UI state after action (mobile safari sometimes keeps :active)
+        setTimeout(() => {
+          this.isTouched = false;
+        }, 300);
       },
       adjustHeight() {
         const referenceElements = document.getElementsByClassName("rich-text");
