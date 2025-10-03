@@ -418,20 +418,42 @@
       }
 
       @media (max-width: 640px) and (orientation: portrait) {
-        /* mobile portrait fix */
-        #content-total__dataSummay { flex-direction: column; }
-        .project-list { width: 100% !important; max-height: 45vh; overflow-y: auto; }
-        .project-list::after { display: none; }
-        .project-total { width: 100% !important; margin-top: 12px; }
-        .content-total__dataSummary-chart { height: 240px !important; min-height: 240px; padding-top:4px; display:flex; align-items:center; justify-content:center; }
+        #content-total__dataSummay {
+          flex-direction: column;
+        }
+        .project-list {
+          width: 100% !important;
+          max-height: 45vh;
+          overflow-y: auto;
+        }
+        .project-list::after {
+          display: none;
+        }
+        .project-total {
+          width: 100% !important;
+          margin-top: 12px;
+        }
+        /* Chart wrapper adaptive height – allow JS to set real chart size */
+        .content-total__dataSummary-chart {
+          height: auto !important;
+          min-height: 380px;
+          padding: 0;
+          display: block;
+        }
       }
 
       @media (max-width: 926px) and (orientation: landscape) {
-        .project-list { max-height: 65vh !important; overflow-y:auto !important; }
-        .project-total { max-height: 65vh !important; overflow-y:auto !important; }
-        .project-list::after { right: -6px; }
-        .content-total__dataSummary-chart { min-height: 180px !important; height: 180px !important; display:flex; align-items:center; justify-content:center; }
+        /* Stretch list full height; avoid wasted blank space */
+        .project-list { max-height: none !important; height:auto !important; overflow:visible !important; }
+        .project-total { max-height: 70vh !important; overflow-y:auto !important; }
+        .project-list::after { right:-6px; }
+        .content-total__dataSummary-chart { min-height:200px !important; height:200px !important; }
       }
+
+      /* Font size normalization for result lines */
+      .q-body .line, .q-body .stats-line, .q-body .answer-line, .criteria-name-line { font-size: 12px; }
+      .q-body .success-line .label-winning { font-size:12px; }
+      @media (max-width: 640px) { .q-body .line, .q-body .stats-line, .q-body .answer-line, .criteria-name-line { font-size:11px; } .q-body .success-line .label-winning { font-size:11px; } }
 
       /* ================== Responsive ================== */
       @media screen and (max-width: 1000px) {
