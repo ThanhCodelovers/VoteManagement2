@@ -55,6 +55,7 @@
       .description-preview {
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -99,7 +100,8 @@
         border-radius: 8px;
         overflow: hidden;
         background: #ffffff;
-        transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease,
+          background 0.2s ease;
         display: flex;
         flex-direction: column;
       }
@@ -112,9 +114,10 @@
         color: #222;
         line-height: 1.3;
         display: flex;
-        align-items: flex-start;
+        align-items: center; /* vertical center */
         gap: 4px;
         word-break: break-word;
+        transition: background .25s ease, color .25s ease;
       }
 
       .question-card .q-body {
@@ -149,9 +152,16 @@
         text-align: center;
         font-weight: 600;
       }
-      .q-body .success-line { color: #0b803f; }
-      .q-body .error-line { color: #d23b3b; font-weight: 500; }
-      .q-body .line i { font-size: 14px; }
+      .q-body .success-line {
+        color: #0b803f;
+      }
+      .q-body .error-line {
+        color: #d23b3b;
+        font-weight: 500;
+      }
+      .q-body .line i {
+        font-size: 14px;
+      }
 
       /* Dòng thống kê (vote-stats) */
       .q-body .stats-line {
@@ -160,26 +170,59 @@
         text-align: center;
         font-weight: 500;
       }
+      .q-body .answer-line { font-size: 12px; color:#6b7280; text-align:center; font-weight:500; }
+      .truncate-one { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; min-width:0; }
+      .q-header .question-title { flex:1; min-width:0; }
+      .q-body .success-line .label-winning { font-weight:700; font-size:13px; }
+      .criteria-name-line { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
       /* Khối tiêu chí */
-      .criteria-block-new { text-align: left; }
-      .criteria-block-new + .criteria-block-new { margin-top: 6px; }
-      .criteria-block-new hr { margin: 8px 0; border: 0; border-top: 1px solid #eceff1; }
-      .criteria-name-line { font-size: 12px; font-weight: 600; color: #333; text-align: left; }
+      .criteria-block-new {
+        text-align: left;
+      }
+      .criteria-block-new + .criteria-block-new {
+        margin-top: 6px;
+      }
+      .criteria-block-new hr {
+        margin: 8px 0;
+        border: 0;
+        border-top: 1px solid #eceff1;
+      }
+      .criteria-name-line {
+        font-size: 12px;
+        font-weight: 600;
+        color: #333;
+        text-align: left;
+      }
 
       /* Hover state */
-      .question-card:hover .card-inner { background: #fff0f5; border-color: #e5b8cc; }
-      .question-card:hover .q-header { background: #ffe6ef; }
+      .question-card:hover .card-inner {
+        background: #fff0f5;
+        border-color: #e5b8cc;
+      }
+      .question-card:hover .q-header {
+        background: #ffe6ef;
+      }
 
       /* Selected state */
-      .question-card.selected .card-inner { border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,0.15); }
-      .question-card.selected .q-header { background: #0d6efd; color: #ffffff; }
-      .question-card.selected .q-body { background: #ffe6ef; }
+      @keyframes selectPulse { 0% { transform:scale(.985); box-shadow:0 0 0 0 rgba(1,147,46,0); } 100% { transform:scale(1); box-shadow:0 0 0 2px rgba(1,147,46,.18);} }
+      .question-card.selected .card-inner { border-color:#01932e; animation:selectPulse .25s ease; }
+      .question-card.selected .q-header { background:#01932e; color:#fff; }
+      .question-card.selected .q-body {
+        background: #ffe6ef;
+      }
 
       /* Responsive adjust */
       @media (max-width: 640px) {
-        .question-card .q-header { font-size: 12px; padding: 6px 8px; }
-        .q-body .method-badge, .q-body .line, .q-body .stats-line { font-size: 11px; }
+        .question-card .q-header {
+          font-size: 12px;
+          padding: 6px 8px;
+        }
+        .q-body .method-badge,
+        .q-body .line,
+        .q-body .stats-line {
+          font-size: 11px;
+        }
       }
 
       /* ================== Card Header ================== */
@@ -434,6 +477,7 @@
           font-size: 9px !important;
           line-height: 1.2 !important;
           -webkit-line-clamp: 2 !important;
+          line-clamp: 2 !important;
         }
 
         /* Main layout */
@@ -516,6 +560,7 @@
           white-space: normal !important;
           display: -webkit-box !important;
           -webkit-line-clamp: 2 !important;
+          line-clamp: 2 !important;
           -webkit-box-orient: vertical !important;
           overflow: hidden !important;
         }
@@ -1067,14 +1112,18 @@
                     <div class="card-inner">
                       <div class="q-header">
                         <span class="question-index">問{{ index + 1 }}：</span>
-                        <span class="question-title" :title="item.question">{{ item.question }}</span>
+                        <span class="question-title truncate-one" :title="item.question">{{ item.question }}</span>
                       </div>
                       <div class="q-body">
-                        <div class="method-badge">{{ item.voteMethod || '単純多数決' }} ｜ {{ item.voteThreshold || '60%' }}</div>
+                        <div class="method-badge">
+                          {{ item.voteMethod || '単純多数決' }} ｜ {{
+                          item.voteThreshold || '60%' }}
+                        </div>
                         <!-- Non-criteria question -->
                         <template v-if="results && results[index] && !results[index].criteria">
                           <template v-if="hasAnswerMeetingThreshold(index)">
-                            <div class="line success-line"><i class="fas fa-check-circle"></i><span>最も投票された回答</span></div>
+                            <div class="line success-line"><i class="fas fa-check-circle"></i><span class="label-winning">最も投票された回答</span></div>
+                            <div class="answer-line truncate-one" :title="getWinningAnswer(index)">{{ getWinningAnswer(index) }}</div>
                             <div class="stats-line">{{ getWinningVoteCount(index) }}/{{ getTotalVotes(index) }}票 ({{ getWinningPercentage(index) }}%)</div>
                           </template>
                           <template v-else>
@@ -1084,9 +1133,10 @@
                         <!-- Multi-criteria question -->
                         <template v-else-if="results && results[index] && results[index].criteria">
                           <div class="criteria-block-new" v-for="(criteriaName, cIndex) in getCriteriaNames(index)" :key="criteriaName">
-                            <div class="criteria-name-line">{{ criteriaName }}</div>
+                            <div class="criteria-name-line" :title="criteriaName">{{ criteriaName }}</div>
                             <template v-if="hasAnswerMeetingThresholdForCriteria(index, criteriaName)">
-                              <div class="line success-line"><i class="fas fa-check-circle"></i><span>最も投票された回答</span></div>
+                              <div class="line success-line"><i class="fas fa-check-circle"></i><span class="label-winning">最も投票された回答</span></div>
+                              <div class="answer-line truncate-one" :title="getWinningAnswerForCriteria(index, criteriaName)">{{ getWinningAnswerForCriteria(index, criteriaName) }}</div>
                               <div class="stats-line">{{ getWinningVoteCountForCriteria(index, criteriaName) }}/{{ getTotalVotesForCriteriaWrapper(index, criteriaName) }}票 ({{ getWinningPercentageForCriteria(index, criteriaName) }}%)</div>
                             </template>
                             <template v-else>
