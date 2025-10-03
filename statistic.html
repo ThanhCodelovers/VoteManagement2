@@ -96,6 +96,7 @@
       }
 
       .question-card .card-inner {
+        --divider-color: #f2f3f5;
         border: 1px solid #d4d7dc;
         border-radius: 8px;
         overflow: hidden;
@@ -206,7 +207,7 @@
       }
       .criteria-block-new hr {
         height: 2px;
-        background: #e0e3e7;
+        background: var(--divider-color);
         border: 0;
         margin: 12px -12px; /* full bleed inside q-body (padding 12px) */
         width: calc(100% + 24px);
@@ -239,6 +240,7 @@
         }
       }
       .question-card.selected .card-inner {
+        --divider-color: #01932e;
         border-color: #01932e;
         animation: selectPulse 0.25s ease;
       }
@@ -397,18 +399,38 @@
         margin: 0; /* nếu cần bỏ khoảng cách mặc định */
         padding-bottom: 15px; /* issue 3: bottom spacing */
       }
-      .project-list { position: relative; }
-      .project-list::after { /* issue 2: vertical separator */
-        content: ""; position: absolute; top:0; bottom:0; right:-10px; width:1px; background:#d7dade; pointer-events:none;
+      .project-list {
+        position: relative;
       }
-      #content-total__dataSummay { align-items: stretch; }
-      
-      @media (max-width: 640px) and (orientation: portrait) { /* mobile portrait fix */
+      .project-list::after {
+        /* issue 2: vertical separator */
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: -10px;
+        width: 1px;
+        background: #d7dade;
+        pointer-events: none;
+      }
+      #content-total__dataSummay {
+        align-items: stretch;
+      }
+
+      @media (max-width: 640px) and (orientation: portrait) {
+        /* mobile portrait fix */
         #content-total__dataSummay { flex-direction: column; }
-        .project-list { width:100% !important; max-height:45vh; overflow-y:auto; }
-        .project-list::after { display:none; }
-        .project-total { width:100% !important; margin-top:12px; }
-        .content-total__dataSummary-chart { height:240px !important; min-height:240px; }
+        .project-list { width: 100% !important; max-height: 45vh; overflow-y: auto; }
+        .project-list::after { display: none; }
+        .project-total { width: 100% !important; margin-top: 12px; }
+        .content-total__dataSummary-chart { height: 240px !important; min-height: 240px; padding-top:4px; display:flex; align-items:center; justify-content:center; }
+      }
+
+      @media (max-width: 926px) and (orientation: landscape) {
+        .project-list { max-height: 65vh !important; overflow-y:auto !important; }
+        .project-total { max-height: 65vh !important; overflow-y:auto !important; }
+        .project-list::after { right: -6px; }
+        .content-total__dataSummary-chart { min-height: 180px !important; height: 180px !important; display:flex; align-items:center; justify-content:center; }
       }
 
       /* ================== Responsive ================== */
