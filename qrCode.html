@@ -163,16 +163,15 @@
         }
         /* Bỏ position absolute để phần tử tính đúng chiều cao và cuộn được */
         #content .carousel {
-          position: static !important;
-          top: auto !important;
           left: auto !important;
           right: auto !important;
-          margin-top: 12px !important; /* tách khỏi thanh xanh trên */
         }
         /* Thu nhỏ QR CODE hơn nữa trên SP dọc */
         #qrcode canvas {
-          width: 250px !important;  /* tăng kích thước để phần mô tả xuống dưới fold */
-          height: 250px !important;
+          width: 300px !important;  /* phóng to hơn theo yêu cầu (khung đỏ) */
+          height: 300px !important;
+          max-width: 86vw;          /* co lại nếu màn hình hẹp */
+          max-height: 86vw;
         }
         /* Khối rich text nếu dài thì cuộn riêng bên trong */
         .show-rich-text {
@@ -210,6 +209,23 @@
         .content-slideForm__question_qr {
           margin-top: 4px;
         }
+      }
+      /* SP portrait >600px (thiết bị lớn / tablet hẹp) áp dụng tương tự scroll và giới hạn rich text */
+      @media (min-width: 600px) and (max-width: 768px) and (orientation: portrait) {
+        html, body { overflow: auto; -webkit-overflow-scrolling: touch; }
+        #content { height: auto; min-height: 100vh; overflow-y: visible; padding-bottom: 50px; }
+        #content .carousel { position: static !important; margin-top: 14px !important; }
+        #qrcode canvas { width: 340px !important; height: 340px !important; max-width: 70vw; max-height: 70vw; }
+        .show-rich-text {
+          max-height: 220px;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          border: 1px solid #e5e5e5; border-radius: 4px; background: #fff;
+          padding: 10px 12px !important; margin-top: 8px; margin-bottom: 14px;
+        }
+        .show-rich-text::-webkit-scrollbar { width: 6px; }
+        .show-rich-text::-webkit-scrollbar-thumb { background:#c7c7c7; border-radius:3px; }
+        .show-rich-text::-webkit-scrollbar-track { background:#f3f3f3; }
       }
     </style>
   </head>
@@ -433,10 +449,13 @@
             let qrCodeSize;
             if (screenWidth > 768) {
               // Desktop
-              qrCodeSize = Math.min(320, qrCodeElement.clientWidth * 0.38);
+              qrCodeSize = Math.min(340, qrCodeElement.clientWidth * 0.40);
+            } else if (screenWidth > 600) {
+              // 600px - 768px portrait range
+              qrCodeSize = Math.min(340, Math.floor(screenWidth * 0.70));
             } else {
-              // SP dọc: ưu tiên kích thước 250 (nếu màn hình nhỏ hơn thì co lại vừa)
-              qrCodeSize = Math.min(250, Math.floor(screenWidth * 0.6));
+              // <600px portrait
+              qrCodeSize = Math.min(300, Math.floor(screenWidth * 0.86));
             }
 
             const qrCode = new QRCode(qrCodeElement, {
