@@ -147,6 +147,60 @@
         width: 75% !important;
       }
     }
+
+    /* ---------------- SP Portrait Enhancements ---------------- */
+    @media (max-width: 600px) and (orientation: portrait) {
+      html, body {
+        overflow: auto; /* Cho phép cuộn toàn trang trên SP dọc */
+        -webkit-overflow-scrolling: touch;
+      }
+      #content {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: visible; /* để body xử lý cuộn chính */
+        padding-bottom: 40px; /* tránh nút dính sát mép dưới */
+      }
+      /* Bỏ position absolute để phần tử tính đúng chiều cao và cuộn được */
+      #content .carousel {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+      }
+      /* Thu nhỏ QR CODE hơn nữa trên SP dọc */
+      #qrcode canvas {
+        width: 200px !important;
+        height: 200px !important;
+      }
+      /* Khối rich text nếu dài thì cuộn riêng bên trong */
+      .show-rich-text {
+        max-height: 160px; /* chiều cao giới hạn để còn thấy nút */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        background: #fff;
+        padding: 8px 10px !important; /* override inline padding */
+        margin-top: 6px;
+        margin-bottom: 10px;
+      }
+      .show-rich-text::-webkit-scrollbar {
+        width: 6px;
+      }
+      .show-rich-text::-webkit-scrollbar-thumb {
+        background: #c7c7c7;
+        border-radius: 3px;
+      }
+      .show-rich-text::-webkit-scrollbar-track {
+        background: #f3f3f3;
+      }
+      /* Giảm font một chút để vừa màn hình */
+      #otp-code { font-size: 1.3rem !important; }
+      .content-slideForm_identifyUser-quizInfo___group-firstLine { font-size: 0.9rem; }
+      .content-slideForm_identifyUser-quizInfo___group i { font-size: 0.95rem; }
+      /* Khoảng cách tổng thể */
+      .content-slideForm__question_qr { margin-top: 4px; }
+    }
   </style>
 </head>
 
@@ -174,7 +228,7 @@
         <div id="" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false"
           style="position: absolute; top: 11%; left: 20px; right: 20px;">
           <div class="carousel-inner row" style="background-color: white; border-radius: 10px; margin: auto;">
-            <div class="content-slideForm__question col-xl-5">
+            <div class="content-slideForm__question_qr col-xl-5">
               <div class=" mb-1 d-flex justify-content-center">
                 <span id="otp-code" v-show="vote.usePassCode == 'はい'">ログインコード：<strong>{{vote.passcode}}</strong></span>
               </div>
@@ -281,11 +335,14 @@
 
           let screenWidth = window.innerWidth;
 
+          // Điều chỉnh kích thước logic: trên màn hình nhỏ ưu tiên kích thước cố định nhỏ hơn
           let qrCodeSize;
           if (screenWidth > 768) {
-            qrCodeSize = qrCodeElement.clientWidth * 0.3;
+            // Desktop: vẫn dựa vào container nhưng giới hạn tối đa
+            qrCodeSize = Math.min(300, qrCodeElement.clientWidth * 0.35);
           } else {
-            qrCodeSize = qrCodeElement.clientWidth * 0.8;
+            // SP dọc: dùng kích thước nhỏ hơn để còn chỗ cho thông tin và nút
+            qrCodeSize = Math.min(200, Math.floor(screenWidth * 0.55));
           }
 
           const qrCode = new QRCode(qrCodeElement, {
