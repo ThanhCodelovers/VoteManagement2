@@ -615,7 +615,7 @@
                             </div>
 
                             <!-- media cho crit -->
-                            <div v-if="crit.media" class="media-wrapper">
+                            <div v-if="crit.media" class="media-wrapper form-mode">
                               <!-- Nếu là ảnh -->
                               <template v-if="isImage(crit.media)">
                                 <img
@@ -652,7 +652,7 @@
                             >
                               <div class="mb-2">
                                 <!-- media cho ans -->
-                                <div v-if="ans.media" class="media-wrapper">
+                                <div v-if="ans.media" class="media-wrapper form-mode">
                                   <!-- Nếu là ảnh -->
                                   <template v-if="isImage(ans.media)">
                                     <img
@@ -786,7 +786,7 @@
                           v-for="(crit, idex) in item.criterias"
                         >
                           <div class="">
-                            <div v-if="crit.media" class="media-wrapper">
+                            <div v-if="crit.media" class="media-wrapper form-mode">
                               <!-- Nếu là ảnh -->
                               <template v-if="isImage(crit.media)">
                                 <img
@@ -838,7 +838,7 @@
                           v-for="(crit, idex) in item.criterias"
                         >
                           <div class="">
-                            <div v-if="crit.media" class="media-wrapper">
+                            <div v-if="crit.media" class="media-wrapper form-mode">
                               <!-- Nếu là ảnh -->
                               <template v-if="isImage(crit.media)">
                                 <img
@@ -892,7 +892,7 @@
                               v-for="(ans, idx) in item.question_answers"
                             >
                               <div class="mb-2">
-                                <div v-if="ans.media" class="media-wrapper">
+                                <div v-if="ans.media" class="media-wrapper form-mode">
                                   <!-- Nếu là ảnh -->
                                   <template v-if="isImage(ans.media)">
                                     <img
@@ -1034,9 +1034,21 @@
                   <!-- validation -->
                   <span
                     class="text-danger"
-                    v-if="validates[`${index + 1}．${item.question}`] == false"
+                    v-if="['empty', false].includes(validates[`${index + 1}．${item.question}`])"
                   >
                     ※このフィールドを記入してください。
+                  </span>
+                  <span
+                    class="text-danger"
+                    v-if="validates[`${index + 1}．${item.question}`] === 'min'"
+                  >
+                    ※最小選択数（{{ item.min || 0 }}）を満たしていません。
+                  </span>
+                  <span
+                    class="text-danger"
+                    v-if="validates[`${index + 1}．${item.question}`] === 'max'"
+                  >
+                    ※最大選択数（{{ item.max || 0 }}）を超えています。
                   </span>
 
                   <span
@@ -1216,6 +1228,51 @@
                         </div>
                       </div>
                     </div>
+                    <!-- Statistics block for non-criteria questions (one-question mode) -->
+                    <div
+                      v-if="(!item.criterias || item.criterias.length === 0) && results[currentQuestionIndex] && results[currentQuestionIndex].question_answers"
+                      class="row mb-3 border-bottom border-bottom-row"
+                    >
+                      <!-- Label column (giống col tiêu chí) -->
+                      <div class="col-12 col-md-2 fw-bold mb-1 mb-md-0">
+                        結果:
+                      </div>
+                      <!-- Winner column -->
+                      <div class="col-12 col-md-2 mb-1 mb-md-0">
+                        <span
+                          >{{ getWinner(results[currentQuestionIndex],
+                          null).name }}</span
+                        >
+                      </div>
+                      <!-- Answers with progress -->
+                      <div class="col-12 col-md-8">
+                        <div
+                          v-for="(ans, aIdx) in results[currentQuestionIndex].question_answers"
+                          :key="aIdx"
+                          class="d-flex align-items-center mb-2"
+                        >
+                          <div
+                            class="progress flex-grow-1 me-2"
+                            style="height: 12px"
+                          >
+                            <div
+                              class="progress-bar"
+                              role="progressbar"
+                              :style="{ width: safeCalculatePercentage(ans.total || 0, getTotalAnswers(results[currentQuestionIndex])) + '%', backgroundColor: getColor(item, aIdx) }"
+                              :aria-valuenow="safeCalculatePercentage(ans.total || 0, getTotalAnswers(results[currentQuestionIndex]))"
+                              aria-valuemin="0"
+                              :aria-valuemax="getTotalAnswers(results[currentQuestionIndex])"
+                            ></div>
+                          </div>
+                          <small class="text-nowrap">
+                            {{ ans.total || 0 }}/{{
+                            getTotalAnswers(results[currentQuestionIndex]) }}票
+                            ({{ safeCalculatePercentage(ans.total || 0,
+                            getTotalAnswers(results[currentQuestionIndex])) }}%)
+                          </small>
+                        </div>
+                      </div>
+                    </div>
                     <div class="col-12 row g-2 mx-0">
                       <div class="form-group col-12 px-0">
                         <div class="align-items-center mt-3">
@@ -1285,7 +1342,7 @@
                                     </div>
                                     <div
                                       v-if="crit.media"
-                                      class="media-wrapper"
+                                      class="media-wrapper form-mode"
                                     >
                                       <!-- Nếu là ảnh -->
                                       <template v-if="isImage(crit.media)">
@@ -1335,7 +1392,7 @@
                                       <div class="mb-2">
                                         <div
                                           v-if="ans.media"
-                                          class="media-wrapper"
+                                          class="media-wrapper form-mode"
                                         >
                                           <!-- Nếu là ảnh -->
                                           <template v-if="isImage(ans.media)">
@@ -1469,7 +1526,7 @@
                                   <div class="">
                                     <div
                                       v-if="crit.media"
-                                      class="media-wrapper"
+                                      class="media-wrapper form-mode"
                                     >
                                       <!-- Nếu là ảnh -->
                                       <template v-if="isImage(crit.media)">
@@ -1522,7 +1579,7 @@
                                   <div class="">
                                     <div
                                       v-if="crit.media"
-                                      class="media-wrapper"
+                                      class="media-wrapper form-mode"
                                     >
                                       <!-- Nếu là ảnh -->
                                       <template v-if="isImage(crit.media)">
@@ -1584,7 +1641,7 @@
                                       <div class="mb-2">
                                         <div
                                           v-if="ans.media"
-                                          class="media-wrapper"
+                                          class="media-wrapper form-mode"
                                         >
                                           <!-- Nếu là ảnh -->
                                           <template v-if="isImage(ans.media)">
@@ -1700,35 +1757,6 @@
                                             {{ ans.name }}
                                           </label>
                                         </div>
-
-                                        <!-- Progress bar + số phiếu -->
-                                        <div
-                                          class="d-flex align-items-center mt-1"
-                                        >
-                                          <div
-                                            class="progress flex-grow-1 me-2"
-                                            style="height: 12px"
-                                          >
-                                            <div
-                                              class="progress-bar"
-                                              role="progressbar"
-                                              :style="{
-                                                width: getPercentageNoCriteria(getResultAnswer(ans.name), results[currentQuestionIndex]) + '%',
-                                                backgroundColor: getColor(item, idx)
-                                              }"
-                                            ></div>
-                                          </div>
-
-                                          <small class="text-nowrap">
-                                            {{ getResultAnswer(ans.name)?.total
-                                            || 0 }}/{{
-                                            getTotalAnswers(results[currentQuestionIndex])
-                                            }}票 ({{
-                                            getPercentageNoCriteria(getResultAnswer(ans.name),
-                                            results[currentQuestionIndex]).toFixed(1)
-                                            }}%)
-                                          </small>
-                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -1758,9 +1786,22 @@
                           <!-- validation -->
                           <span
                             class="text-danger"
-                            v-if="validates[`${index + 1}．${item.question}`] == false"
+                            v-if="['empty', false].includes(validates[`${index + 1}．${item.question}`])"
                           >
                             ※このフィールドを記入してください。
+                          </span>
+                          <span
+                            class="text-danger"
+                            v-if="validates[`${index + 1}．${item.question}`] === 'min'"
+                          >
+                            ※最小選択数（{{ item.min || 0
+                            }}）を満たしていません。
+                          </span>
+                          <span
+                            class="text-danger"
+                            v-if="validates[`${index + 1}．${item.question}`] === 'max'"
+                          >
+                            ※最大選択数（{{ item.max || 0 }}）を超えています。
                           </span>
 
                           <span

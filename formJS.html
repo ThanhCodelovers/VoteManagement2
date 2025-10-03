@@ -59,7 +59,7 @@
     watch: {},
     async mounted() {
       for (let key in this.questions) {
-        console.log(key, this.questions[key]);
+        console.log(key, this.questions[key])
       }
 
       document.getElementById("loading").style.display = "block";
@@ -86,156 +86,125 @@
         // window.addEventListener('resize', this.updateElementHeights);
       }, 500);
       this.ensureFormStructure();
-      this.fullscreenTarget = null; // Reset fullscreen modal state on mount
     },
     computed: {},
     methods: {
-      getAnswersArray(questionResult) {
-        if (!questionResult || !questionResult.question_answers) return [];
-        return Array.isArray(questionResult.question_answers)
-          ? questionResult.question_answers
-          : Object.values(questionResult.question_answers);
-      },
+    getAnswersArray(questionResult) {
+    if (!questionResult || !questionResult.question_answers) return [];
+    return Array.isArray(questionResult.question_answers)
+      ? questionResult.question_answers
+      : Object.values(questionResult.question_answers);
+  },
 
-      getTotalAnswers(questionResult) {
-        const arr = this.getAnswersArray(questionResult);
-        return arr.reduce((sum, a) => sum + Number(a.total || 0), 0);
-      },
+  getTotalAnswers(questionResult) {
+    const arr = this.getAnswersArray(questionResult);
+    return arr.reduce((sum, a) => sum + (Number(a.total || 0)), 0);
+  },
 
-      // Method mới để tìm answer result theo name
-      getResultAnswer(answerName) {
-        if (
-          !this.results[this.currentQuestionIndex] ||
-          !this.results[this.currentQuestionIndex].question_answers
-        ) {
-          return { total: 0 };
-        }
+  // Method mới để tìm answer result theo name
+  getResultAnswer(answerName) {
+    if (!this.results[this.currentQuestionIndex] || !this.results[this.currentQuestionIndex].question_answers) {
+      return { total: 0 };
+    }
+    
+    const answers = this.getAnswersArray(this.results[this.currentQuestionIndex]);
+    const found = answers.find(a => a.name === answerName);
+    return found || { total: 0 };
+  },
 
-        const answers = this.getAnswersArray(
-          this.results[this.currentQuestionIndex]
-        );
-        const found = answers.find((a) => a.name === answerName);
-        return found || { total: 0 };
-      },
+  getPercentageNoCriteria(ans, questionResult) {
+    if (!ans || !questionResult) return 0;
+    
+    const arr = this.getAnswersArray(questionResult);
+    const total = arr.reduce((sum, a) => sum + (Number(a.total || 0)), 0);
+    return total > 0 ? (Number(ans.total || 0)) / total * 100 : 0;
+  },
 
-      getPercentageNoCriteria(ans, questionResult) {
-        if (!ans || !questionResult) return 0;
+  // Debug method để kiểm tra data
+  debugData() {
+    console.log('Current Question Index:', this.currentQuestionIndex);
+    console.log('Item question_answers:', this.questions[this.currentQuestionIndex]?.question_answers);
+    console.log('Results question_answers:', this.results[this.currentQuestionIndex]?.question_answers);
+    console.log('Full results:', this.results[this.currentQuestionIndex]);
+  },
+    getWinner(questionResult, crit) {
+    if (!questionResult) return { name: '-' };
 
-        const arr = this.getAnswersArray(questionResult);
-        const total = arr.reduce((sum, a) => sum + Number(a.total || 0), 0);
-        return total > 0 ? (Number(ans.total || 0) / total) * 100 : 0;
-      },
+    const qa = questionResult.question_answers;
 
-      // Debug method để kiểm tra data
-      debugData() {
-        console.log("Current Question Index:", this.currentQuestionIndex);
-        console.log(
-          "Item question_answers:",
-          this.questions[this.currentQuestionIndex]?.question_answers
-        );
-        console.log(
-          "Results question_answers:",
-          this.results[this.currentQuestionIndex]?.question_answers
-        );
-        console.log("Full results:", this.results[this.currentQuestionIndex]);
-      },
-      getWinner(questionResult, crit) {
-        if (!questionResult) return { name: "-" };
+    // Chuyển về mảng an toàn:
+    let answers = [];
+    if (Array.isArray(qa)) {
+      answers = qa;
+    } else if (qa && typeof qa === 'object') {
+      // Nếu muốn giữ id/key, dùng Object.keys -> map; nếu không cần id thì dùng Object.values
+      answers = Object.keys(qa).map(key => {
+        // nếu giá trị đã có answer/label... giữ nguyên, bổ sung id
+        return Object.assign({ id: key }, qa[key]);
+      });
+      // hoặc: answers = Object.values(qa);
+    } else {
+      // unexpected type
+      console.warn('getWinner: unexpected question_answers type', qa);
+      return { name: '-' };
+    }
 
-        const qa = questionResult.question_answers;
+    // Tìm answer có số vote lớn nhất (an toàn với trường hợp thiếu fields)
+    let maxAns = null;
+    let maxVotes = -Infinity;
+    answers.forEach(ans => {
+      const votes = (crit && ans.criteria) ? (ans.criteria[crit.name] || 0) : (ans.total || 0) || 0;
+      if (typeof votes === 'number' && votes > maxVotes) {
+        maxVotes = votes;
+        maxAns = ans;
+      }
+    });
 
-        // Chuyển về mảng an toàn:
-        let answers = [];
-        if (Array.isArray(qa)) {
-          answers = qa;
-        } else if (qa && typeof qa === "object") {
-          // Nếu muốn giữ id/key, dùng Object.keys -> map; nếu không cần id thì dùng Object.values
-          answers = Object.keys(qa).map((key) => {
-            // nếu giá trị đã có answer/label... giữ nguyên, bổ sung id
-            return Object.assign({ id: key }, qa[key]);
-          });
-          // hoặc: answers = Object.values(qa);
-        } else {
-          // unexpected type
-          console.warn("getWinner: unexpected question_answers type", qa);
-          return { name: "-" };
-        }
+    // Lấy tên hiển thị: ưu tiên các field thường thấy
+    const name = maxAns ? (maxAns.answer || maxAns.label || maxAns.name || maxAns.title || '-') : '-';
+    return { name };
+  },
+    convertDriveLink(originalLink) {
+      if (!originalLink) return "";
 
-        // Tìm answer có số vote lớn nhất (an toàn với trường hợp thiếu fields)
-        let maxAns = null;
-        let maxVotes = -Infinity;
-        answers.forEach((ans) => {
-          const votes =
-            crit && ans.criteria
-              ? ans.criteria[crit.name] || 0
-              : ans.total || 0 || 0;
-          if (typeof votes === "number" && votes > maxVotes) {
-            maxVotes = votes;
-            maxAns = ans;
-          }
-        });
+      // ép về string để chắc chắn .match() không lỗi
+      const link = String(originalLink);
 
-        // Lấy tên hiển thị: ưu tiên các field thường thấy
-        const name = maxAns
-          ? maxAns.answer || maxAns.label || maxAns.name || maxAns.title || "-"
-          : "-";
-        return { name };
-      },
-      convertDriveLink(originalLink) {
-        if (!originalLink) return "";
+      // Kiểm tra nếu là link ảnh trực tiếp
+      if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(link)) {
+        return link; // giữ nguyên
+      }
 
-        // ép về string để chắc chắn .match() không lỗi
-        const link = String(originalLink);
+      // Kiểm tra nếu là link Google Drive dạng /d/xxx/
+      const fileIdMatch = link.match(/\/d\/(.*?)\//);
+      if (fileIdMatch && fileIdMatch[1]) {
+        const fileId = fileIdMatch[1];
+        return "https://drive.google.com/file/d/" + fileId + "/preview";
+      }
 
-        // Kiểm tra nếu là link ảnh trực tiếp
-        if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(link)) {
-          return link; // giữ nguyên
-        }
-
-        // Kiểm tra nếu là link Google Drive dạng /d/xxx/
-        const fileIdMatch = link.match(/\/d\/(.*?)\//);
-        if (fileIdMatch && fileIdMatch[1]) {
-          const fileId = fileIdMatch[1];
-          return "https://drive.google.com/file/d/" + fileId + "/preview";
-        }
-
-        // Nếu không thuộc dạng nào thì trả về link gốc
-        return link;
-      },
-      isImage(url) {
-        if (!url) return false;
-        // Nhận diện cả link file ảnh và data:image base64
-        return (
-          /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(String(url)) ||
-          /^data:image\//i.test(String(url))
-        );
-      },
+      // Nếu không thuộc dạng nào thì trả về link gốc
+      return link;
+    },
+    // Đồng bộ logic với voteRegisterJS: nhận diện cả link file ảnh & chuỗi base64 data URI
+    isImage(url) {
+      if (!url) return false;
+      const link = String(url).trim();
+      return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(link) || /^data:image\//i.test(link);
+    },
       isCriteriaEmpty(ans) {
-        return ans == null || ans.criteria === "" || ans.criteria == null;
-      },
+    return ans == null || ans.criteria === '' || ans.criteria == null;
+    },
 
       // Trả total an toàn (number)
       safeTotal(item1, critName) {
         if (!item1 || !item1.total) {
-          console.log(
-            "safeTotal for crit:",
-            critName,
-            "= 0 (item1 invalid)",
-            item1
-          );
+          console.log("safeTotal for crit:", critName, "= 0 (item1 invalid)", item1);
           return 0;
         }
         const v = item1.total[critName];
         const total = Number(v) || 0;
 
-        console.log(
-          "safeTotal for crit:",
-          critName,
-          "=",
-          total,
-          "from item1.total:",
-          item1.total
-        );
+        console.log("safeTotal for crit:", critName, "=", total, "from item1.total:", item1.total);
 
         return total;
       },
@@ -263,46 +232,44 @@
 
       // Lấy màu an toàn (fallback '#ffffff')
       getColor(item, idx) {
-        if (!item || !item.colors || !this.colors) return "#ffffff";
+        if (!item || !item.colors || !this.colors) return '#ffffff';
         const key = item.colors[idx];
-        return key && this.colors[key] ? this.colors[key] : "#ffffff";
+        return (key && this.colors[key]) ? this.colors[key] : '#ffffff';
       },
 
       // Gọi khi component load hoặc ngay sau khi 'items' / 'form' / 'criterias' được load từ API
       ensureFormStructure() {
-        (this.items || []).forEach((it, i) => {
-          const key = `${i + 1}．${it.question}`;
+  (this.items || []).forEach((it, i) => {
+    const key = `${i + 1}．${it.question}`;
 
-          // Nếu form[key] chưa tồn tại → tạo mới
-          if (!this.form[key]) {
-            if (this.$set) {
-              this.$set(this.form, key, {
-                criterias: {}, // cho trường hợp đa tiêu chí
-                value: it.question_type === "multiSelect" ? [] : "", // cho trường hợp không đa tiêu chí
-              });
-            } else {
-              this.form[key] = {
-                criterias: {},
-                value: it.question_type === "multiSelect" ? [] : "",
-              };
-            }
-          }
-
-          // Nếu có tiêu chí → khởi tạo sẵn
-          (it.criterias || []).forEach((crit) => {
-            if (!this.form[key].criterias[crit.name]) {
-              const defaultValue = it.question_type === "multiSelect" ? [] : "";
-              if (this.$set) {
-                this.$set(this.form[key].criterias, crit.name, {
-                  value: defaultValue,
-                });
-              } else {
-                this.form[key].criterias[crit.name] = { value: defaultValue };
-              }
-            }
-          });
+    // Nếu form[key] chưa tồn tại → tạo mới
+    if (!this.form[key]) {
+      if (this.$set) {
+        this.$set(this.form, key, {
+          criterias: {},   // cho trường hợp đa tiêu chí
+          value: it.question_type === 'multiSelect' ? [] : ''  // cho trường hợp không đa tiêu chí
         });
-      },
+      } else {
+        this.form[key] = {
+          criterias: {},
+          value: it.question_type === 'multiSelect' ? [] : ''
+        };
+      }
+    }
+
+    // Nếu có tiêu chí → khởi tạo sẵn
+    (it.criterias || []).forEach(crit => {
+      if (!this.form[key].criterias[crit.name]) {
+        const defaultValue = it.question_type === 'multiSelect' ? [] : '';
+        if (this.$set) {
+          this.$set(this.form[key].criterias, crit.name, { value: defaultValue });
+        } else {
+          this.form[key].criterias[crit.name] = { value: defaultValue };
+        }
+      }
+    });
+  });
+},
       calculatePercentage(value, total) {
         if (total == 0 || total == undefined) {
           return 0; // Tránh chia cho 0
@@ -478,330 +445,305 @@
             .getQuestions(surveyID);
         });
       },
+      
+     
+        dataStatistics(surveyID) {
+  let scope = this;
+  document.getElementById("loading").style.display = "block";
 
-      dataStatistics(surveyID) {
-        let scope = this;
-        document.getElementById("loading").style.display = "block";
+  return new Promise((resolve, reject) => {
+    google.script.run
+      .withSuccessHandler((res) => {
+        if (!res) {
+          document.getElementById("loading").style.display = "none";
+          scope.failureHandler("No data from server");
+          reject(new Error("No data"));
+          return;
+        }
 
-        return new Promise((resolve, reject) => {
-          google.script.run
-            .withSuccessHandler((res) => {
-              if (!res) {
-                document.getElementById("loading").style.display = "none";
-                scope.failureHandler("No data from server");
-                reject(new Error("No data"));
-                return;
+        // Luôn giữ đúng index, thay null/undefined bằng object trống
+        const rawData = res.data;
+let normalizedArray = [];
+
+if (Array.isArray(rawData)) {
+  normalizedArray = rawData;
+} else if (rawData && typeof rawData === "object") {
+  normalizedArray = Object.values(rawData); // 👈 biến object có key số thành array
+}
+
+this.results = normalizedArray.map(q => q || { 
+  total: {}, 
+  maxChoices: {}, 
+  question_answers: {} 
+});
+
+        const qList = Array.isArray(this.questions) ? this.questions : [];
+
+        this.results.forEach((question, qIndex) => {
+          const questionAnswers = question.question_answers || {};
+          const answersArray = Object.values(questionAnswers);
+          const max = (qList[qIndex] && qList[qIndex].max !== undefined) ? qList[qIndex].max : 1;
+          const min = (qList[qIndex] && qList[qIndex].min !== undefined) ? qList[qIndex].min : 0;
+
+          let totals = {};
+          let maxChoices = {};
+
+          // 🔹 Tính totals
+          answersArray.forEach((answer) => {
+            if (!answer || answer.criteria == undefined || answer.criteria === "") {
+              if (!totals["投票結果"]) totals["投票結果"] = 0;
+              totals["投票結果"] += Number(answer && answer.total) || 0;
+              if (answer) answer.criteria = "";
+            } else {
+              Object.keys(answer.criteria).forEach((key) => {
+                if (!totals[key]) totals[key] = 0;
+                totals[key] += Number(answer.criteria[key]) || 0;
+              });
+            }
+          });
+
+          // 🔹 Chuẩn bị keyValueArray / keyArray
+          let keyValueArray = [];
+          let keyArray = [];
+          let i = 0;
+          answersArray.forEach((answer) => {
+            if (!answer || answer.criteria === "") {
+              if (!keyValueArray[i]) {
+                keyValueArray[i] = [];
+                keyArray.push("投票結果");
               }
-
-              // Luôn giữ đúng index, thay null/undefined bằng object trống
-              const rawData = res.data;
-              let normalizedArray = [];
-
-              if (Array.isArray(rawData)) {
-                normalizedArray = rawData;
-              } else if (rawData && typeof rawData === "object") {
-                normalizedArray = Object.values(rawData); // 👈 biến object có key số thành array
-              }
-
-              this.results = normalizedArray.map(
-                (q) =>
-                  q || {
-                    total: {},
-                    maxChoices: {},
-                    question_answers: {},
-                  }
-              );
-
-              const qList = Array.isArray(this.questions) ? this.questions : [];
-
-              this.results.forEach((question, qIndex) => {
-                const questionAnswers = question.question_answers || {};
-                const answersArray = Object.values(questionAnswers);
-                const max =
-                  qList[qIndex] && qList[qIndex].max !== undefined
-                    ? qList[qIndex].max
-                    : 1;
-                const min =
-                  qList[qIndex] && qList[qIndex].min !== undefined
-                    ? qList[qIndex].min
-                    : 0;
-
-                let totals = {};
-                let maxChoices = {};
-
-                // 🔹 Tính totals
-                answersArray.forEach((answer) => {
-                  if (
-                    !answer ||
-                    answer.criteria == undefined ||
-                    answer.criteria === ""
-                  ) {
-                    if (!totals["投票結果"]) totals["投票結果"] = 0;
-                    totals["投票結果"] += Number(answer && answer.total) || 0;
-                    if (answer) answer.criteria = "";
-                  } else {
-                    Object.keys(answer.criteria).forEach((key) => {
-                      if (!totals[key]) totals[key] = 0;
-                      totals[key] += Number(answer.criteria[key]) || 0;
-                    });
-                  }
+              keyValueArray[i].push({
+                key: Number(answer && answer.total) || 0,
+                value: answer && answer.name ? answer.name : ""
+              });
+            } else {
+              let j = 0;
+              Object.keys(answer.criteria).forEach((key) => {
+                if (i === 0) {
+                  keyValueArray[j] = keyValueArray[j] || [];
+                  keyArray.push(key);
+                }
+                keyValueArray[j].push({
+                  key: Number(answer.criteria[key]) || 0,
+                  value: answer && answer.name ? answer.name : ""
                 });
+                j++;
+              });
+              i++;
+            }
+          });
 
-                // 🔹 Chuẩn bị keyValueArray / keyArray
-                let keyValueArray = [];
-                let keyArray = [];
-                let i = 0;
-                answersArray.forEach((answer) => {
-                  if (!answer || answer.criteria === "") {
-                    if (!keyValueArray[i]) {
-                      keyValueArray[i] = [];
-                      keyArray.push("投票結果");
-                    }
-                    keyValueArray[i].push({
-                      key: Number(answer && answer.total) || 0,
-                      value: answer && answer.name ? answer.name : "",
-                    });
-                  } else {
-                    let j = 0;
-                    Object.keys(answer.criteria).forEach((key) => {
-                      if (i === 0) {
-                        keyValueArray[j] = keyValueArray[j] || [];
-                        keyArray.push(key);
-                      }
-                      keyValueArray[j].push({
-                        key: Number(answer.criteria[key]) || 0,
-                        value: answer && answer.name ? answer.name : "",
-                      });
-                      j++;
-                    });
-                    i++;
-                  }
-                });
+          // 🔹 Chọn maxChoices
+          let resultArray = [];
+          let num1 = 0;
+          keyValueArray.forEach((array) => {
+            if (!array || array.length === 0) {
+              resultArray.push("");
+              num1++;
+              return;
+            }
 
-                // 🔹 Chọn maxChoices
-                let resultArray = [];
-                let num1 = 0;
-                keyValueArray.forEach((array) => {
-                  if (!array || array.length === 0) {
-                    resultArray.push("");
-                    num1++;
-                    return;
-                  }
+            let sortedArray = [...array].sort((a, b) => b.key - a.key);
+            let selectedElements = [];
+            let count = 0;
+            let currentKey = sortedArray[0].key;
+            let keyPosition = keyArray[num1];
+            const totalForKey = totals && totals[keyPosition] ? totals[keyPosition] : 0;
 
-                  let sortedArray = [...array].sort((a, b) => b.key - a.key);
-                  let selectedElements = [];
-                  let count = 0;
-                  let currentKey = sortedArray[0].key;
-                  let keyPosition = keyArray[num1];
-                  const totalForKey =
-                    totals && totals[keyPosition] ? totals[keyPosition] : 0;
+            if (totalForKey > 0 && Math.floor((currentKey / totalForKey) * 100) >= min) {
+              sortedArray.forEach((item) => {
+                if (item.key === currentKey) {
+                  selectedElements.push(item.value);
+                  count++;
+                }
+              });
 
-                  if (
-                    totalForKey > 0 &&
-                    Math.floor((currentKey / totalForKey) * 100) >= min
-                  ) {
+              if (count < max) {
+                const nextKeyObj = sortedArray.find((item) => item.key < currentKey);
+                if (nextKeyObj) {
+                  const nextKey = nextKeyObj.key;
+                  if (Math.floor((nextKey / totalForKey) * 100) >= min) {
                     sortedArray.forEach((item) => {
-                      if (item.key === currentKey) {
+                      if (item.key === nextKey) {
                         selectedElements.push(item.value);
                         count++;
                       }
                     });
-
-                    if (count < max) {
-                      const nextKeyObj = sortedArray.find(
-                        (item) => item.key < currentKey
-                      );
-                      if (nextKeyObj) {
-                        const nextKey = nextKeyObj.key;
-                        if (Math.floor((nextKey / totalForKey) * 100) >= min) {
-                          sortedArray.forEach((item) => {
-                            if (item.key === nextKey) {
-                              selectedElements.push(item.value);
-                              count++;
-                            }
-                          });
-                        }
-                      }
-                    }
-                  }
-
-                  resultArray.push(selectedElements.join(", "));
-                  num1++;
-                });
-
-                // 🔹 gán maxChoices tương ứng
-                let idx = 0;
-                Object.keys(totals).forEach((key) => {
-                  maxChoices[key] = resultArray[idx] || "";
-                  idx++;
-                });
-
-                // 🔹 Gán vào từng question
-                this.results[qIndex].total = totals;
-                this.results[qIndex].maxChoices = maxChoices;
-              });
-
-              console.log("👉 Processed results:", this.results);
-
-              document.getElementById("loading").style.display = "none";
-              resolve(this.results);
-            })
-            .withFailureHandler((error) => {
-              document.getElementById("loading").style.display = "none";
-              console.error(error);
-              scope.failureHandler(error);
-              reject(error);
-            })
-            .dataStatistics(surveyID);
-        });
-      },
-      formatData(keys, rows) {
-        var i = 0;
-        this.questions = [];
-        let linkRegex = /<([^>]+)>/;
-
-        let storage = localStorage.getItem(surveyID)
-          ? JSON.parse(localStorage.getItem(surveyID))
-          : null;
-        let user = localStorage.getItem("user")
-          ? JSON.parse(localStorage.getItem("user"))
-          : null;
-
-        if (storage && user) {
-          this.user.address = user.address ? user.address : "";
-          this.user.phone_number = user.phone_number ? user.phone_number : "";
-          this.user.email = user.email ? user.email : "";
-          this.user.name = user.name ? user.name : "";
-        } else {
-          this.user.address = "";
-          this.user.phone_number = "";
-          this.user.email = "";
-          this.user.name = "";
-        }
-
-        if (this.vote.informationRequired == "あり") {
-          this.validates = {
-            email: true,
-            name: true,
-          };
-        } else {
-          this.validates = {};
-        }
-
-        for (let i = 0; i < rows.length; i++) {
-          let obj = {};
-          for (const [k, v] of Object.entries(keys)) {
-            if (v === -1) continue;
-            obj[k] = rows[i][v];
-
-            if (k === "question") {
-              this.form[`${i + 1}．${rows[i][v]}`] = {
-                type: rows[i][keys.question_type],
-              };
-
-              // ==== Xử lý tiêu chí (criterias) ====
-              if (rows[i][keys.criterias].length > 0) {
-                for (let key = 0; key < rows[i][keys.criterias].length; key++) {
-                  let text = rows[i][keys.criterias][key];
-                  let match = text.match(linkRegex);
-
-                  if (match) {
-                    rows[i][keys.criterias][key] = {
-                      name: text.replace(match[0], ""),
-                    };
-                    let url = match[1];
-
-                    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url)) {
-                      rows[i][keys.criterias][key]["media"] = url; // ảnh ngoài
-                    } else if (url.includes("/d/")) {
-                      // link Google Drive
-                      let startIndex = url.indexOf("/d/");
-                      let endIndex = url.indexOf("/", startIndex + 3);
-                      if (endIndex === -1) endIndex = url.length;
-                      let link =
-                        "https://drive.google.com/file/d/" +
-                        url.substring(startIndex + 3, endIndex) +
-                        "/preview";
-                      rows[i][keys.criterias][key]["media"] = link;
-                    } else {
-                      rows[i][keys.criterias][key]["media"] = url; // fallback
-                    }
-                  } else {
-                    rows[i][keys.criterias][key] = { name: text, media: false };
-                  }
-                }
-
-                this.form[`${i + 1}．${rows[i][v]}`].criteria = true;
-                this.form[`${i + 1}．${rows[i][v]}`]["criterias"] = {};
-
-                for (let key = 0; key < rows[i][keys.criterias].length; key++) {
-                  this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
-                    `${rows[i][keys.criterias][key]["name"]}`
-                  ] = {};
-                  if (rows[i][keys.question_type] === "multiSelect") {
-                    this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
-                      `${rows[i][keys.criterias][key]["name"]}`
-                    ]["value"] = [];
-                  } else {
-                    this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
-                      `${rows[i][keys.criterias][key]["name"]}`
-                    ]["value"] = "";
-                  }
-                }
-              } else {
-                this.form[`${i + 1}．${rows[i][v]}`].criteria = false;
-                if (rows[i][keys.question_type] === "multiSelect") {
-                  this.form[`${i + 1}．${rows[i][v]}`]["value"] = [];
-                } else {
-                  this.form[`${i + 1}．${rows[i][v]}`]["value"] = "";
-                }
-              }
-
-              if (rows[i][keys.question_hasNote])
-                this.form[`${i + 1}．${rows[i][v]}`]["note"] = "";
-
-              // ==== Xử lý câu trả lời (answers) ====
-              if (rows[i][keys.question_answers].length > 0) {
-                for (
-                  let key = 0;
-                  key < rows[i][keys.question_answers].length;
-                  key++
-                ) {
-                  let text = rows[i][keys.question_answers][key];
-                  let match = text.match(linkRegex);
-
-                  if (match) {
-                    rows[i][keys.question_answers][key] = {
-                      name: text.replace(match[0], ""),
-                    };
-                    let url = match[1];
-
-                    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url)) {
-                      rows[i][keys.question_answers][key]["media"] = url;
-                    } else if (url.includes("/d/")) {
-                      let startIndex = url.indexOf("/d/");
-                      let endIndex = url.indexOf("/", startIndex + 3);
-                      if (endIndex === -1) endIndex = url.length;
-                      let link =
-                        "https://drive.google.com/file/d/" +
-                        url.substring(startIndex + 3, endIndex) +
-                        "/preview";
-                      rows[i][keys.question_answers][key]["media"] = link;
-                    } else {
-                      rows[i][keys.question_answers][key]["media"] = url;
-                    }
-                  } else {
-                    rows[i][keys.question_answers][key] = {
-                      name: text,
-                      media: false,
-                    };
                   }
                 }
               }
             }
+
+            resultArray.push(selectedElements.join(", "));
+            num1++;
+          });
+
+          // 🔹 gán maxChoices tương ứng
+          let idx = 0;
+          Object.keys(totals).forEach((key) => {
+            maxChoices[key] = resultArray[idx] || "";
+            idx++;
+          });
+
+          // 🔹 Gán vào từng question
+          this.results[qIndex].total = totals;
+          this.results[qIndex].maxChoices = maxChoices;
+        });
+
+        console.log("👉 Processed results:", this.results);
+
+        document.getElementById("loading").style.display = "none";
+        resolve(this.results);
+      })
+      .withFailureHandler((error) => {
+        document.getElementById("loading").style.display = "none";
+        console.error(error);
+        scope.failureHandler(error);
+        reject(error);
+      })
+      .dataStatistics(surveyID);
+  });
+      },
+      formatData(keys, rows) {
+        var i = 0;
+  this.questions = [];
+  let linkRegex = /<([^>]+)>/;
+
+  let storage = localStorage.getItem(surveyID)
+    ? JSON.parse(localStorage.getItem(surveyID))
+    : null;
+  let user = localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user"))
+    : null;
+
+  if (storage && user) {
+    this.user.address = user.address ? user.address : "";
+    this.user.phone_number = user.phone_number ? user.phone_number : "";
+    this.user.email = user.email ? user.email : "";
+    this.user.name = user.name ? user.name : "";
+  } else {
+    this.user.address = "";
+    this.user.phone_number = "";
+    this.user.email = "";
+    this.user.name = "";
+  }
+
+  if (this.vote.informationRequired == "あり") {
+    this.validates = {
+      email: true,
+      name: true,
+    };
+  } else {
+    this.validates = {};
+  }
+
+  for (let i = 0; i < rows.length; i++) {
+    let obj = {};
+    for (const [k, v] of Object.entries(keys)) {
+      if (v === -1) continue;
+      obj[k] = rows[i][v];
+
+      if (k === "question") {
+        this.form[`${i + 1}．${rows[i][v]}`] = {
+          type: rows[i][keys.question_type],
+        };
+
+        // ==== Xử lý tiêu chí (criterias) ====
+        if (rows[i][keys.criterias].length > 0) {
+          for (let key = 0; key < rows[i][keys.criterias].length; key++) {
+            let text = rows[i][keys.criterias][key];
+            let match = text.match(linkRegex);
+
+            if (match) {
+              rows[i][keys.criterias][key] = {
+                name: text.replace(match[0], ""),
+              };
+              let url = match[1];
+
+              if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url)) {
+                rows[i][keys.criterias][key]["media"] = url; // ảnh ngoài
+              } else if (url.includes("/d/")) {
+                // link Google Drive
+                let startIndex = url.indexOf("/d/");
+                let endIndex = url.indexOf("/", startIndex + 3);
+                if (endIndex === -1) endIndex = url.length;
+                let link =
+                  "https://drive.google.com/file/d/" +
+                  url.substring(startIndex + 3, endIndex) +
+                  "/preview";
+                rows[i][keys.criterias][key]["media"] = link;
+              } else {
+                rows[i][keys.criterias][key]["media"] = url; // fallback
+              }
+            } else {
+              rows[i][keys.criterias][key] = { name: text, media: false };
+            }
           }
-          this.questions.push(obj);
+
+          this.form[`${i + 1}．${rows[i][v]}`].criteria = true;
+          this.form[`${i + 1}．${rows[i][v]}`]["criterias"] = {};
+
+          for (let key = 0; key < rows[i][keys.criterias].length; key++) {
+            this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
+              `${rows[i][keys.criterias][key]["name"]}`
+            ] = {};
+            if (rows[i][keys.question_type] === "multiSelect") {
+              this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
+                `${rows[i][keys.criterias][key]["name"]}`
+              ]["value"] = [];
+            } else {
+              this.form[`${i + 1}．${rows[i][v]}`]["criterias"][
+                `${rows[i][keys.criterias][key]["name"]}`
+              ]["value"] = "";
+            }
+          }
+        } else {
+          this.form[`${i + 1}．${rows[i][v]}`].criteria = false;
+          if (rows[i][keys.question_type] === "multiSelect") {
+            this.form[`${i + 1}．${rows[i][v]}`]["value"] = [];
+          } else {
+            this.form[`${i + 1}．${rows[i][v]}`]["value"] = "";
+          }
         }
+
+        if (rows[i][keys.question_hasNote])
+          this.form[`${i + 1}．${rows[i][v]}`]["note"] = "";
+
+        // ==== Xử lý câu trả lời (answers) ====
+        if (rows[i][keys.question_answers].length > 0) {
+          for (let key = 0; key < rows[i][keys.question_answers].length; key++) {
+            let text = rows[i][keys.question_answers][key];
+            let match = text.match(linkRegex);
+
+            if (match) {
+              rows[i][keys.question_answers][key] = {
+                name: text.replace(match[0], ""),
+              };
+              let url = match[1];
+
+              if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url)) {
+                rows[i][keys.question_answers][key]["media"] = url;
+              } else if (url.includes("/d/")) {
+                let startIndex = url.indexOf("/d/");
+                let endIndex = url.indexOf("/", startIndex + 3);
+                if (endIndex === -1) endIndex = url.length;
+                let link =
+                  "https://drive.google.com/file/d/" +
+                  url.substring(startIndex + 3, endIndex) +
+                  "/preview";
+                rows[i][keys.question_answers][key]["media"] = link;
+              } else {
+                rows[i][keys.question_answers][key]["media"] = url;
+              }
+            } else {
+              rows[i][keys.question_answers][key] = { name: text, media: false };
+            }
+          }
+        }
+      }
+    }
+    this.questions.push(obj);
+  }
       },
 
       startVote() {
@@ -1065,27 +1007,27 @@
         window.open(url, "_self");
       },
       failureHandler(error) {
-        document.getElementById("loading").style.display = "none";
+              document.getElementById('loading').style.display = 'none';
 
-        let errorMessage = "不明なエラーが発生しました"; // fallback message
+  let errorMessage = "不明なエラーが発生しました"; // fallback message
 
-        if (error) {
-          if (typeof error === "string") {
-            errorMessage = error;
-          } else if (error.message) {
-            errorMessage = error.message;
-          } else if (typeof error === "object") {
-            const str = JSON.stringify(error);
-            errorMessage = str === "{}" ? errorMessage : str;
-          }
-        }
+  if (error) {
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object') {
+      const str = JSON.stringify(error);
+      errorMessage = str === '{}' ? errorMessage : str;
+    }
+  }
 
-        Swal.fire({
-          title: "エラーが発生しました",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonColor: "#01932e",
-          confirmButtonText: "閉じる",
+  Swal.fire({
+    title: "エラーが発生しました",
+    text: errorMessage,
+    icon: "error",
+    confirmButtonColor: "#01932e",
+    confirmButtonText: "閉じる",
         }).then((result) => {});
       },
       questionHandler(msg) {
@@ -1097,7 +1039,7 @@
           cancelButtonColor: "#6A6A6A",
           confirmButtonText: "はい",
           cancelButtonText: "いいえ",
-          reverseButtons: true,
+          reverseButtons: true
         }).then((result) => {
           if (result.isConfirmed) {
             this.disabledClick = false;
@@ -1133,64 +1075,7 @@
       saveResponse() {
         let scope = this;
         let form = scope.form;
-        // Validate min/max for all questions before submit
-        let hasError = false;
-        for (let i = 0; i < scope.questions.length; i++) {
-          let q = scope.questions[i];
-          let key = `${i + 1}．${q.question}`;
-          let formNow = scope.form[key];
-          let min = q.min || 0;
-          let max = q.max || 999;
-          if (q.question_type === "multiSelect") {
-            if (formNow && Array.isArray(formNow.value)) {
-              if (formNow.value.length === 0) {
-                this.validates[key] = "empty";
-                hasError = true;
-              } else if (formNow.value.length < min) {
-                this.validates[key] = "min";
-                hasError = true;
-              } else if (formNow.value.length > max) {
-                this.validates[key] = "max";
-                hasError = true;
-              } else {
-                this.validates[key] = true;
-              }
-            }
-            if (
-              formNow &&
-              formNow.criterias &&
-              Object.keys(formNow.criterias).length > 0
-            ) {
-              for (const [critName, critValue] of Object.entries(
-                formNow.criterias
-              )) {
-                if (Array.isArray(critValue.value)) {
-                  if (critValue.value.length === 0) {
-                    this.validates[key] = "empty";
-                    hasError = true;
-                  } else if (critValue.value.length < min) {
-                    this.validates[key] = "min";
-                    hasError = true;
-                  } else if (critValue.value.length > max) {
-                    this.validates[key] = "max";
-                    hasError = true;
-                  } else {
-                    this.validates[key] = true;
-                  }
-                }
-              }
-            }
-          }
-        }
-        if (hasError) {
-          Swal.fire({
-            title: "エラー",
-            text: `選択肢の数を確認してください。`,
-            icon: "warning",
-            confirmButtonText: "OK",
-          });
-          return;
-        }
+
         Swal.fire({
           title: "送信しますか？",
           icon: "question",
@@ -1215,7 +1100,7 @@
               .withSuccessHandler((res) => {
                 if (!res) {
                   scope.failureHandler(res.msg);
-                } else {
+                }else {
                   // scope.vote = res.data.vote;
                   // save storage user information
                   localStorage.setItem(
@@ -1266,67 +1151,47 @@
       },
       nextQuestion() {
         if (this.currentQuestionIndex < this.questions.length - 1) {
-          let currentQuestion = this.questions[this.currentQuestionIndex];
-          let key = `${this.currentQuestionIndex + 1}．${
-            currentQuestion.question
-          }`;
-          let formNow = this.form[key];
-          let min = currentQuestion.min || 0;
-          let max = currentQuestion.max || 999;
-          // reset validate mặc định
-          this.validates[key] = true;
-          if (this.questions[this.currentQuestionIndex].question_required) {
-            if (
-              formNow &&
-              formNow.criterias &&
-              Object.keys(formNow.criterias).length > 0
-            ) {
-              // === ĐA TIÊU CHÍ ===
-              for (const [critName, critValue] of Object.entries(
-                formNow.criterias
-              )) {
-                if (Array.isArray(critValue.value)) {
-                  if (critValue.value.length === 0) {
-                    this.validates[key] = "empty";
-                  } else if (critValue.value.length < min) {
-                    this.validates[key] = "min";
-                  } else if (critValue.value.length > max) {
-                    this.validates[key] = "max";
-                  } else {
-                    this.validates[key] = true;
-                  }
-                }
-              }
-            } else {
-              // === CÂU THƯỜNG ===
-              const v = formNow ? formNow.value : null;
-              if (Array.isArray(v)) {
-                if (v.length === 0) {
-                  this.validates[key] = "empty";
-                } else if (v.length < min) {
-                  this.validates[key] = "min";
-                } else if (v.length > max) {
-                  this.validates[key] = "max";
-                } else {
-                  this.validates[key] = true;
-                }
-              } else {
-                if (v === "" || v == null) {
-                  this.validates[key] = "empty";
-                } else {
-                  this.validates[key] = true;
-                }
+        let currentQuestion = this.questions[this.currentQuestionIndex];
+        let key = `${this.currentQuestionIndex + 1}．${currentQuestion.question}`;
+        let formNow = this.form[key];
+
+        // reset validate mặc định
+        this.validates[key] = true;
+
+        if (this.questions[this.currentQuestionIndex].question_required) {
+          if (formNow && formNow.criterias && Object.keys(formNow.criterias).length > 0) {
+            // === ĐA TIÊU CHÍ ===
+            for (const [critName, critValue] of Object.entries(formNow.criterias)) {
+              if (
+                critValue.value === "" ||
+                critValue.value == null ||
+                (Array.isArray(critValue.value) && critValue.value.length === 0)
+              ) {
+                this.validates[key] = false;
+                break;
               }
             }
-          }
-          // Nếu validate pass → next
-          if (this.validates[key] === true) {
-            this.currentQuestionIndex++;
-            if (this.quesVisit < this.currentQuestionIndex) {
-              this.quesVisit = this.currentQuestionIndex;
+          } else {
+            // === CÂU THƯỜNG ===
+            const v = formNow ? formNow.value : null;
+            if (
+              v === "" ||
+              v == null ||
+              (Array.isArray(v) && v.length === 0)
+            ) {
+              this.validates[key] = false;
             }
           }
         }
+
+        // Nếu validate pass → next
+        if (this.validates[key] === true) {
+          this.currentQuestionIndex++;
+          if (this.quesVisit < this.currentQuestionIndex) {
+            this.quesVisit = this.currentQuestionIndex;
+          }
+        }
+      }
       },
       activateInput(index, idex, idx) {
         let inputId = `Q${index + 1}-C${idex + 1}-${idx + 1}`;
@@ -1367,10 +1232,6 @@
           formSlideElement.style.top = totalHeight + "px";
           backgroundBottomElement.style.top = totalHeight + 20 + "px";
         }
-      },
-      // Đóng modal fullscreen
-      closeFullscreen() {
-        this.fullscreenTarget = null;
       },
     },
   });
