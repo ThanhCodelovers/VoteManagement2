@@ -232,6 +232,12 @@
               </div>
               </div>
               </div>
+
+              <!-- No data state -->
+              <div v-if="votes.length === 0" class="text-center my-5 py-5">
+                <i class="fas fa-folder-open fa-3x text-secondary mb-2"></i>
+                <div class="text-muted" style="font-size:16px; font-weight:600; letter-spacing:1px;">NO DATA</div>
+              </div>
               <div class="table-scroll-padding-spacer"></div>
               </div>
               
