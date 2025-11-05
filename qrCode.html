@@ -27,6 +27,27 @@
       const voteID = "<?= voteCode ?>";
     </script>
     <style>
+      /* macOS Chrome text rendering normalization */
+      #app,
+      #content,
+      .container-fuild {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo,
+          Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-synthesis-weight: none;
+        font-synthesis-style: none;
+        text-rendering: optimizeLegibility;
+      }
+      #content p,
+      #content span,
+      #content li,
+      #content td,
+      #content th,
+      #content label {
+        font-weight: 400;
+      }
       html,
       body {
         height: 100%;
@@ -168,10 +189,8 @@
         }
         /* Thu nhỏ QR CODE hơn nữa trên SP dọc */
         #qrcode canvas {
-          width: 300px !important;  /* phóng to hơn theo yêu cầu (khung đỏ) */
-          height: 300px !important;
-          max-width: 86vw;          /* co lại nếu màn hình hẹp */
-          max-height: 86vw;
+          width: 250px !important; /* tăng kích thước để phần mô tả xuống dưới fold */
+          height: 250px !important;
         }
         /* Khối rich text nếu dài thì cuộn riêng bên trong */
         .show-rich-text {
@@ -209,23 +228,69 @@
         .content-slideForm__question_qr {
           margin-top: 4px;
         }
+
+        /* Match form.html time-range layout to avoid horizontal scroll */
+        .content-slideForm_identifyUser-quizInfo___group {
+          display: grid;
+          grid-template-columns: 30px 1fr;
+          column-gap: 8px;
+          align-items: flex-start;
+        }
+        .content-slideForm_identifyUser-quizInfo___group > i {
+          width: 26px;
+          height: 26px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .content-slideForm_identifyUser-quizInfo___group-firstLine {
+          min-height: 26px;
+          line-height: 1.4;
+          display: flex;
+          align-items: center;
+        }
+        .content-slideForm_identifyUser-quizInfo___group .time-range {
+          grid-column: 2;
+          display: block;
+          white-space: normal !important;
+          line-height: 1.4;
+        }
+        .time-range .date-label {
+          display: inline;
+        }
+        .time-range .date-run {
+          display: inline;
+        }
+        .time-range .sp-time-end {
+          display: block;
+          padding-left: 72px;
+          margin-left: 0;
+        }
       }
-      /* SP portrait >600px (thiết bị lớn / tablet hẹp) áp dụng tương tự scroll và giới hạn rich text */
-      @media (min-width: 600px) and (max-width: 768px) and (orientation: portrait) {
-        html, body { overflow: auto; -webkit-overflow-scrolling: touch; }
-        #content { height: auto; min-height: 100vh; overflow-y: visible; padding-bottom: 50px; }
-        #content .carousel { position: static !important; margin-top: 14px !important; }
-        #qrcode canvas { width: 340px !important; height: 340px !important; max-width: 70vw; max-height: 70vw; }
+      /* ----------- SP Portrait >600px: show-rich-text scroll ----------- */
+      @media (min-width: 601px) and (max-width: 1100px) and (orientation: portrait) {
         .show-rich-text {
-          max-height: 220px;
+          max-height: 180px;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
-          border: 1px solid #e5e5e5; border-radius: 4px; background: #fff;
-          padding: 10px 12px !important; margin-top: 8px; margin-bottom: 14px;
+          border: 1px solid #e5e5e5;
+          border-radius: 4px;
+          background: #fff;
+          padding: 10px 14px !important;
+          margin-top: 8px;
+          margin-bottom: 12px;
         }
-        .show-rich-text::-webkit-scrollbar { width: 6px; }
-        .show-rich-text::-webkit-scrollbar-thumb { background:#c7c7c7; border-radius:3px; }
-        .show-rich-text::-webkit-scrollbar-track { background:#f3f3f3; }
+        .show-rich-text::-webkit-scrollbar {
+          width: 6px;
+        }
+        .show-rich-text::-webkit-scrollbar-thumb {
+          background: #c7c7c7;
+          border-radius: 3px;
+        }
+        .show-rich-text::-webkit-scrollbar-track {
+          background: #f3f3f3;
+        }
       }
     </style>
   </head>
@@ -333,28 +398,22 @@
                         <span
                           class="content-slideForm_identifyUser-quizInfo___group-firstLine"
                           style="display: flex; align-items: center"
-                          >質問数：{{vote.numberQuestion}}問</span
+                          >質問数：&nbsp;&nbsp;&nbsp;&nbsp;{{vote.numberQuestion}}問</span
                         >
                       </div>
 
                       <div
-                        class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-6 mb-2"
-                        style="
-                          grid-template-rows: 1fr;
-                          height: 41px;
-                          align-items: center;
-                        "
+                        class="content-slideForm_identifyUser-quizInfo___group col-12 col-md-6 mb-2 width-custom"
                         v-show="vote.dateRun != ''"
                       >
                         <i class="fa-regular fa-clock"></i>
-                        <span
-                          class="content-slideForm_identifyUser-quizInfo___group-firstLine"
-                          style="align-content: center"
-                          >実施期間：{{vote.dateRun}} 〜
-                          <span class="time-survey" style="white-space: nowrap"
-                            >{{vote.dateEnd}}</span
-                          ></span
+                        <div
+                          class="content-slideForm_identifyUser-quizInfo___group-firstLine time-range"
                         >
+                          <span class="date-label">実施期間：</span>
+                          <span class="date-run">{{ vote.dateRun }} 〜</span>
+                          <span class="sp-time-end">{{vote.dateEnd }}</span>
+                        </div>
                       </div>
 
                       <div
@@ -368,7 +427,11 @@
                         >
                       </div>
 
-                      <div style="padding: 0px 13px" class="show-rich-text">
+                      <div
+                        style="padding: 0px 13px"
+                        class="show-rich-text"
+                        v-if="hasDescription"
+                      >
                         <span class="" v-html="vote.description"></span>
                       </div>
                       <div
@@ -407,7 +470,16 @@
           await this.getVoteById(voteID);
           await this.genQRCode();
         },
-        computed: {},
+        computed: {
+          hasDescription() {
+            const html = this.vote?.description || "";
+            // Strip tags and decode basic entities to check for visible text
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+            const text = (temp.textContent || temp.innerText || "").trim();
+            return text.length > 0;
+          },
+        },
         methods: {
           getVoteById(voteID) {
             let scope = this;
@@ -449,13 +521,10 @@
             let qrCodeSize;
             if (screenWidth > 768) {
               // Desktop
-              qrCodeSize = Math.min(340, qrCodeElement.clientWidth * 0.40);
-            } else if (screenWidth > 600) {
-              // 600px - 768px portrait range
-              qrCodeSize = Math.min(340, Math.floor(screenWidth * 0.70));
+              qrCodeSize = Math.min(320, qrCodeElement.clientWidth * 0.38);
             } else {
-              // <600px portrait
-              qrCodeSize = Math.min(300, Math.floor(screenWidth * 0.86));
+              // SP dọc: ưu tiên kích thước 250 (nếu màn hình nhỏ hơn thì co lại vừa)
+              qrCodeSize = Math.min(250, Math.floor(screenWidth * 0.6));
             }
 
             const qrCode = new QRCode(qrCodeElement, {

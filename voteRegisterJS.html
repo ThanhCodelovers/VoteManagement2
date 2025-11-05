@@ -24,6 +24,25 @@
       will-change: background-color, border-color;
     }
   }
+  /* Typography normalization for Mac Chrome within vote editor */
+  #content-pageCreateNew {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-synthesis-weight: none;
+    font-synthesis-style: none;
+  }
+  #content-pageCreateNew .ql-editor,
+  #content-pageCreateNew .ql-editor p,
+  #content-pageCreateNew .ql-editor li {
+    font-weight: 400 !important;
+  }
+  /* Ensure Font Awesome icons render (solid/regular) */
+  #content-pageCreateNew .fa-solid {
+    font-weight: 900 !important;
+  }
+  #content-pageCreateNew .fa-regular {
+    font-weight: 400 !important;
+  }
 </style>
 <template id="content-pageCreateNew_context">
   <div
@@ -431,9 +450,12 @@
           class="row align-items-start"
           style="margin-top: 10px; flex-wrap: wrap"
         >
-          <!-- Dropdown 投票方法 -->
-          <div class="col-12 col-md-5 mb-2">
-            <div class="form-group">
+          <!-- 投票方法 + Threshold on same row for SP dọc -->
+          <div
+            class="d-flex flex-wrap flex-md-nowrap align-items-end w-100 mb-2 vote-method-threshold-row"
+            v-if="item.voteMethod === '単純多数決' || item.voteMethod === '全会一致'"
+          >
+            <div class="form-group me-2 flex-grow-1" style="min-width: 0">
               <label for="voteMethod" class="form-label" style="color: #555"
                 >投票方法（<span style="color: red">*</span>）</label
               >
@@ -448,14 +470,10 @@
                 <option value="全会一致">全会一致</option>
               </select>
             </div>
-          </div>
-
-          <!-- 単純多数決 / 全会一致 -->
-          <div
-            class="col-12 col-md-6 mb-2"
-            v-if="item.voteMethod === '単純多数決' || item.voteMethod === '全会一致'"
-          >
-            <div class="form-group">
+            <div
+              class="form-group flex-shrink-1"
+              style="min-width: 90px; max-width: 120px"
+            >
               <label for="voteThreshold" class="form-label d-none d-md-block"
                 >&nbsp;</label
               >
@@ -469,12 +487,30 @@
             </div>
           </div>
 
-          <!-- 特別多数決 -->
+          <!-- 特別多数決: threshold select on same row as voteMethod -->
           <div
-            class="col-12 col-md-6 mb-2"
+            class="d-flex flex-wrap flex-md-nowrap align-items-end w-100 mb-2 vote-method-threshold-row"
             v-if="item.voteMethod === '特別多数決'"
           >
-            <div class="form-group">
+            <div class="form-group me-2 flex-grow-1" style="min-width: 0">
+              <label for="voteMethod" class="form-label" style="color: #555"
+                >投票方法（<span style="color: red">*</span>）</label
+              >
+              <select
+                class="form-select w-100"
+                id="voteMethod"
+                v-model="item.voteMethod"
+                @change="onVoteMethodChange(item)"
+              >
+                <option value="単純多数決">単純多数決</option>
+                <option value="特別多数決">特別多数決</option>
+                <option value="全会一致">全会一致</option>
+              </select>
+            </div>
+            <div
+              class="form-group flex-shrink-1"
+              style="min-width: 90px; max-width: 120px"
+            >
               <label
                 for="voteThresholdSelect"
                 class="form-label d-none d-md-block"
@@ -540,6 +576,7 @@
                 v-model="cri.media"
                 :disabled="!allowChangeQuest || !allowChangeVote"
                 :placeholder="'※URLを入力してください。'"
+                :class="{ 'is-invalid': cri.media && !isValidMediaUrl(cri.media) }"
               />
               <button
                 type="button"
@@ -604,6 +641,7 @@
                 v-model="ans.media"
                 :disabled="!allowChangeQuest || !allowChangeVote"
                 :placeholder="'※URLを入力してください。'"
+                :class="{ 'is-invalid': ans.media && !isValidMediaUrl(ans.media) }"
               />
 
               <div class="dropdown ml-4 mr-2">
@@ -662,7 +700,7 @@
             :disabled="!allowChangeQuest"
             v-if="allowChangeVote && allowChangeQuest && isEditing < 0"
             @click="resetQuestion"
-            style="margin-left: 10px; height: 38px; min-width: 80px"
+            style="margin-left: 10px; height: 38px; min-width: 100px"
           >
             リセット
           </button>
@@ -772,7 +810,7 @@
               <!-- Unified vote method label (after title, like form.html) -->
               <div
                 class="vote-method-label"
-                style="margin-left: 34px; color: blue"
+                style="margin-left: 34px; color: #ffb400"
                 v-if="item.voteThreshold"
               >
                 可決条件: {{ item.voteThreshold }}
@@ -1596,12 +1634,30 @@
       isImage(url) {
         if (!url) return false;
         const link = String(url).trim();
-        const pure = link.split('?')[0].split('#')[0];
+        const pure = link.split("?")[0].split("#")[0];
         if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(pure)) return true;
+        // Googleusercontent: không có đuôi nhưng là ảnh
+        if (/https?:\/\/lh\d+\.googleusercontent\.com\//i.test(link))
+          return true;
         if (/^data:image\//i.test(link)) return true;
-        if (/https?:\/\/tse\d+\.mm\.bing\.net\/th\/id\/OIP\.[^?]+/i.test(link)) return true;
+        // Bing thumbnail: OIP.* (chữ hoa/thường, nhiều ký tự)
+        if (
+          /https?:\/\/tse\d+\.mm\.bing\.net\/th\/id\/OIP\.[A-Za-z0-9_-]+/i.test(
+            link
+          )
+        )
+          return true;
         if (/https?:\/\/[^/]*ftcdn\.net\/v2\/jpg\//i.test(link)) return true;
         return false;
+      },
+      // Lightweight URL validator used for inline invalid state on media fields
+      isValidMediaUrl(val) {
+        if (!val) return true; // empty is allowed (no media)
+        const s = String(val).trim();
+        // Accept http(s) URLs or data:image base64; allow google drive preview/file links
+        const httpUrl = /^(https?:)\/\//i.test(s);
+        const dataImg = /^data:image\//i.test(s);
+        return httpUrl || dataImg;
       },
       onTypeChange(item) {
         if (item.typeQuestion === "複数選択") {

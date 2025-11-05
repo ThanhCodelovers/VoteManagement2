@@ -1,613 +1,683 @@
 <script type="module">
-    // Create a Vue app
-    const app = Vue.createApp({
-        data() {
-            return {
-                votes: [],
-                loading: true,
-                validate: false,
-                url_top: null,
-                verified: false,
-                columns: [
-                    { id: 'nameVote', label: '投票タイトル', width: 670 },
-                    { id: 'passcode', label: 'ログインコード', width: 100 },
-                    { id: 'dateRun', label: '実施日', width: 200 },
-                    { id: 'dateEnd', label: '終了日', width: 200 },
-                    // { id: 'author', label: '担当者名', width: 80 },
-                    { id: 'numberQuestion', label: '問数', width: 80 },
-                    { id: 'numberVoted', label: '参加者数', width: 80 },
-                    // { id: 'displayType', label: '表示モード', width: 80 },
-                    { id: 'statistics', label: '結果公開', width: 100 },
-                    { id: 'informationRequired', label: '参加者情報', width: 100 },
-                    { id: 'status', label: 'ステータス', width: 100 },
-                ],
-                surveyID: null,
-                voteIndex: null,
-                perPage: 20,
-                currentPage: 1,
-                isAnswered: null,
-                formSearch: {
-                    keywords: null,
-                    status: null,
-                    startDateRun: null,
-                    endDateRun: null,
-                    status: '全て',
-                },
-                showComponent: false,
-                userEmail: '',
-                userName: '',
-                showUserInfo: false,
-                nowRow: null,
-                nowIndex: null,
-                isEdit: false,
-                allowChangeQuest: true,
-                changeContentSurvey: false,
+  // Create a Vue app
+  const app = Vue.createApp({
+    data() {
+      return {
+        votes: [],
+        loading: true,
+        validate: false,
+        url_top: null,
+        verified: false,
+        columns: [
+          { id: "nameVote", label: "投票タイトル", width: 670 },
+          { id: "passcode", label: "ログインコード", width: 100 },
+          { id: "dateRun", label: "実施日", width: 200 },
+          { id: "dateEnd", label: "終了日", width: 200 },
+          // { id: 'author', label: '担当者名', width: 80 },
+          { id: "numberQuestion", label: "問数", width: 80 },
+          { id: "numberVoted", label: "参加者数", width: 80 },
+          // { id: 'displayType', label: '表示モード', width: 80 },
+          { id: "statistics", label: "結果公開", width: 100 },
+          { id: "informationRequired", label: "参加者情報", width: 100 },
+          { id: "status", label: "ステータス", width: 100 },
+        ],
+        surveyID: null,
+        voteIndex: null,
+        perPage: 20,
+        currentPage: 1,
+        isAnswered: null,
+        formSearch: {
+          keywords: null,
+          status: null,
+          startDateRun: null,
+          endDateRun: null,
+          status: "全て",
+        },
+        showComponent: false,
+        userEmail: "",
+        userName: "",
+        showUserInfo: false,
+        nowRow: null,
+        nowIndex: null,
+        isEdit: false,
+        allowChangeQuest: true,
+        changeContentSurvey: false,
+      };
+    },
+    created() {},
+    watch: {},
+    async mounted() {
+      document.addEventListener("click", this.handleClickOutside);
+      // document.getElementById('loading').style.display = 'block',
+      this.url_top = await this.getUrlTop();
+      // const japanTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
+      // const formattedDate = new Date(japanTime);
+      // document.getElementById('createAt').value = new Date(japanTime).toISOString().split('T')[0];
+      if (login) {
+        this.userEmail = (login && login.email) || "";
+        this.userName = (login && login.fullname) || "";
+      } else {
+        this.userEmail = "";
+        this.userName = "";
+      }
+    },
+    computed: {
+      visiblePages() {
+        const total = this.totalPages;
+        const current = this.currentPage;
+        const pages = [];
+
+        // số trang hiển thị tối đa trên SP
+        const delta = window.innerWidth < 768 ? 2 : 5;
+
+        let left = current - delta;
+        let right = current + delta;
+
+        if (left < 1) {
+          left = 1;
+          right = Math.min(1 + delta * 2, total);
+        }
+        if (right > total) {
+          right = total;
+          left = Math.max(total - delta * 2, 1);
+        }
+
+        if (left > 1) {
+          pages.push(1);
+          if (left > 2) pages.push("...");
+        }
+
+        for (let i = left; i <= right; i++) {
+          pages.push(i);
+        }
+
+        if (right < total) {
+          if (right < total - 1) pages.push("...");
+          pages.push(total);
+        }
+
+        return pages;
+      },
+      paginatedData() {
+        const start = (this.currentPage - 1) * this.perPage;
+        const end = start + this.perPage;
+        return this.votes.slice(start, end);
+      },
+      totalPages() {
+        return Math.ceil(this.votes.length / this.perPage);
+      },
+    },
+    methods: {
+      getInitial() {
+        return this.userEmail.charAt(0).toUpperCase();
+      },
+      toggleUserInfo(event) {
+        event.stopPropagation();
+        this.showUserInfo = !this.showUserInfo;
+      },
+      handleClickOutside(event) {
+        const userInfo = document.getElementById("user-info");
+        const userAvatar = document.getElementById("user-avatar");
+        if (
+          userInfo &&
+          userAvatar &&
+          !userAvatar.contains(event.target) &&
+          !userInfo.contains(event.target)
+        ) {
+          this.showUserInfo = false;
+        }
+      },
+      getUrlTop() {
+        let scope = this;
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              // console.log(res);
+              resolve(res);
+            })
+            .withFailureHandler((error) => {
+              reject(error);
+            })
+            .getUrlTop();
+        });
+      },
+      search() {
+        this.showLoading();
+
+        this.formSearch.keywords = this.formSearch.keywords?.trim() || "";
+        this.formSearch.startDateRun =
+          this.formSearch.startDateRun?.trim() || "";
+        this.formSearch.endDateRun = this.formSearch.endDateRun?.trim() || "";
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            // console.log('search:', res);
+            if (!res) {
+              scope.failureHandler(res.msg);
+              return;
             }
-        },
-        created() {
+            let { keys, rows } = res.data;
+            this.formatData(keys, rows);
+            this.currentPage = 1;
+            document.getElementById("loading").style.display = "";
+          })
+          .getListVote();
+      },
+      formatData(keys, rows) {
+        this.votes = [];
 
-        },
-        watch: {
-
-        },
-        async mounted() {
-            document.addEventListener('click', this.handleClickOutside);
-            // document.getElementById('loading').style.display = 'block',
-            this.url_top = await this.getUrlTop();
-            // const japanTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
-            // const formattedDate = new Date(japanTime);
-            // document.getElementById('createAt').value = new Date(japanTime).toISOString().split('T')[0];
-            if (login) {
-                this.userEmail = (login && login.email) || '';
-                this.userName = (login && login.fullname) || '';
-            } else {
-                this.userEmail = '';
-                this.userName = '';
+        for (let i = 0; i < rows.length; i++) {
+          let obj = {};
+          for (const [k, v] of Object.entries(keys)) {
+            obj[k] = rows[i][v];
+          }
+          // filter
+          let check = true;
+          if (this.formSearch.keywords != null) {
+            if (
+              !obj.nameVote.includes(this.formSearch.keywords) &&
+              !obj.author.includes(this.formSearch.keywords) &&
+              !obj.description.includes(this.formSearch.keywords) &&
+              !obj.statistics.includes(this.formSearch.keywords)
+            ) {
+              check = false;
             }
-        },
-        computed: {
-            visiblePages() {
-              const total = this.totalPages;
-              const current = this.currentPage;
-              const pages = [];
+          }
+          if (
+            this.formSearch.status != null &&
+            this.formSearch.status != "全て"
+          ) {
+            if (obj.status != this.formSearch.status) {
+              check = false;
+            }
+          }
+          if (this.formSearch.startDateRun != null) {
+            let startDateRun = new Date(
+              this.formSearch.startDateRun
+                .replace("年", "-")
+                .replace("月", "-")
+                .replace("日", "")
+            );
+            let dateRun = new Date(
+              obj.dateRun
+                .replace("年", "-")
+                .replace("月", "-")
+                .replace("日", "")
+            );
+            if (dateRun < startDateRun) {
+              check = false;
+            }
+          }
+          if (this.formSearch.endDateRun != null) {
+            let endDateRun = new Date(
+              this.formSearch.endDateRun
+                .replace("年", "-")
+                .replace("月", "-")
+                .replace("日", "")
+            );
+            let dateEnd = new Date(
+              obj.dateEnd
+                .replace("年", "-")
+                .replace("月", "-")
+                .replace("日", "")
+            );
+            if (dateEnd > endDateRun) {
+              check = false;
+            }
+          }
+          if (check) this.votes.push(obj);
+        }
+        this.hideLoading();
+      },
+      reset() {
+        this.formSearch = {
+          status: "全て",
+        };
+        this.search();
+      },
+      copyPassCode(passCode) {
+        let Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
 
-              // số trang hiển thị tối đa trên SP
-              const delta = window.innerWidth < 768 ? 2 : 5; 
+        const copyTextToClipboard = (text) => {
+          return new Promise((resolve, reject) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
 
-              let left = current - delta;
-              let right = current + delta;
+            try {
+              document.execCommand("copy");
+              document.body.removeChild(textArea);
+              resolve();
+            } catch (error) {
+              document.body.removeChild(textArea);
+              reject(error);
+            }
+          });
+        };
 
-              if (left < 1) {
-                left = 1;
-                right = Math.min(1 + delta * 2, total);
-              }
-              if (right > total) {
-                right = total;
-                left = Math.max(total - delta * 2, 1);
-              }
-
-              if (left > 1) {
-                pages.push(1);
-                if (left > 2) pages.push("...");
-              }
-
-              for (let i = left; i <= right; i++) {
-                pages.push(i);
-              }
-
-              if (right < total) {
-                if (right < total - 1) pages.push("...");
-                pages.push(total);
-              }
-
-              return pages;
-            },
-            paginatedData() {
-                const start = (this.currentPage - 1) * this.perPage;
-                const end = start + this.perPage;
-                return this.votes.slice(start, end);
-            },
-            totalPages() {
-                return Math.ceil(this.votes.length / this.perPage);
-            },
-        },
-        methods: {
-            getInitial() {
-                return this.userEmail.charAt(0).toUpperCase();
-            },
-            toggleUserInfo(event) {
-                event.stopPropagation();
-                this.showUserInfo = !this.showUserInfo;
-            },
-            handleClickOutside(event) {
-                const userInfo = document.getElementById('user-info');
-                const userAvatar = document.getElementById('user-avatar');
-                if (userInfo && userAvatar && !userAvatar.contains(event.target) && !userInfo.contains(event.target)) {
-                    this.showUserInfo = false;
+        copyTextToClipboard(passCode)
+          .then(() => {
+            Toast.fire({
+              icon: "success",
+              title: "パスコードをコピーしました。",
+            });
+          })
+          .catch((error) => {
+            console.error("Error copying text to clipboard: ", error);
+            Toast.fire({
+              icon: "error",
+              title: "クリップボードにコピーする際にエラーが発生しました。",
+            });
+          });
+      },
+      changeQuest(allowChangeQuest) {
+        this.allowChangeQuest = allowChangeQuest;
+      },
+      changeContent() {
+        console.log(this.changeContentSurvey);
+        this.changeContentSurvey = true;
+      },
+      makeAcopy(vote) {
+        this.changeContentSurvey = false;
+        let scope = this;
+        Swal.fire({
+          text: "コピーを作成しますか？",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#01932e",
+          cancelButtonColor: "#6A6A6A",
+          confirmButtonText: "はい",
+          cancelButtonText: "いいえ",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            if (this.isEdit) {
+              let tabSearch = document.querySelector("#tab-pageSearch");
+              tabSearch.click();
+              this.isEdit = false;
+            }
+            this.showLoading();
+            google.script.run
+              .withSuccessHandler((res) => {
+                if (!res.status) {
+                  scope.failureHandler(res.msg);
+                  return false;
+                } else {
+                  this.hideLoading();
+                  let newVote = res.data;
+                  this.votes.unshift(newVote);
+                  this.editVote(newVote, 0);
+                  // scope.successHandler('コピーする成功');
                 }
-            },
-            getUrlTop() {
-                let scope = this
-                return new Promise((resolve, reject) => {
-                    google.script.run
-                        .withSuccessHandler((res) => {
-                            // console.log(res);
-                            resolve(res);
-                        })
-                        .withFailureHandler((error) => {
-                            reject(error)
-                        })
-                        .getUrlTop();
-                })
-            },
-            search() {
-                this.showLoading()
-
-                this.formSearch.keywords = this.formSearch.keywords?.trim() || '';
-                this.formSearch.startDateRun = this.formSearch.startDateRun?.trim() || '';
-                this.formSearch.endDateRun = this.formSearch.endDateRun?.trim() || '';
-
-                google.script.run
-                    .withSuccessHandler((res) => {
-                        // console.log('search:', res);
-                        if (!res) {
-                            scope.failureHandler(res.msg)
-                            return
-                        }
-                        let { keys, rows } = res.data;
-                        this.formatData(keys, rows);
-                        this.currentPage = 1;
-                        document.getElementById('loading').style.display = ''
-                    })
-                    .getListVote();
-            },
-            formatData(keys, rows) {
-                this.votes = [];
-
-                for (let i = 0; i < rows.length; i++) {
-                    let obj = {};
-                    for (const [k, v] of Object.entries(keys)) {
-                        obj[k] = rows[i][v];
-                    }
-                    // filter
-                    let check = true;
-                    if (this.formSearch.keywords != null) {
-                        if (!obj.nameVote.includes(this.formSearch.keywords) && !obj.author.includes(this.formSearch.keywords) && !obj.description.includes(this.formSearch.keywords) && !obj.statistics.includes(this.formSearch.keywords)) {
-                            check = false;
-                        }
-                    }
-                    if (this.formSearch.status != null && this.formSearch.status != '全て') {
-                        if (obj.status != this.formSearch.status) {
-                            check = false;
-                        }
-                    }
-                    if (this.formSearch.startDateRun != null) {
-                        let startDateRun = new Date(this.formSearch.startDateRun.replace('年', '-').replace('月', '-').replace('日', ''));
-                        let dateRun = new Date(obj.dateRun.replace('年', '-').replace('月', '-').replace('日', ''));
-                        if (dateRun < startDateRun) {
-                            check = false;
-                        }
-                    }
-                    if (this.formSearch.endDateRun != null) {
-                        let endDateRun = new Date(this.formSearch.endDateRun.replace('年', '-').replace('月', '-').replace('日', ''));
-                        let dateEnd = new Date(obj.dateEnd.replace('年', '-').replace('月', '-').replace('日', ''));
-                        if (dateEnd > endDateRun) {
-                            check = false;
-                        }
-                    }
-                    if (check) this.votes.push(obj)
+              })
+              .withFailureHandler((error) => {
+                scope.failureHandler(error);
+              })
+              .makeAcopy(vote);
+          }
+        });
+      },
+      editVote(row, index) {
+        let tabSearch = document.querySelector("#tab-pageSearch");
+        tabSearch.click();
+        this.nowRow = row;
+        this.nowIndex = index;
+        this.isEdit = true;
+        this.surveyID = row.id;
+        this.voteIndex = index;
+        let tabDetail = document.querySelector("#tab-pageCreateNew");
+        tabDetail.click();
+      },
+      cancel() {
+        this.isEdit = false;
+        this.changeContentSurvey = false;
+      },
+      delVote(surveyID, index) {
+        this.changeContentSurvey = false;
+        let title = "削除してもよろしいですか？";
+        if (this.votes[index].status == "公開中") {
+          title = "公開中投票です。<br>削除してよろしいでしょうか?";
+        }
+        Swal.fire({
+          title: title,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#e3342f",
+          confirmButtonText: "はい",
+          cancelButtonText: "いいえ",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            if (this.isEdit) {
+              let tabSearch = document.querySelector("#tab-pageSearch");
+              tabSearch.click();
+              this.isEdit = false;
+            }
+            this.showLoading();
+            google.script.run
+              .withSuccessHandler((res) => {
+                // console.log({ res })
+                if (!res.status) {
+                  this.failureHandler(res.msg);
+                  return false;
+                } else {
+                  this.votes.splice(index, 1);
+                  this.hideLoading();
+                  return true;
                 }
-                this.hideLoading();
+              })
+              .withFailureHandler((error) => {
+                this.failureHandler(error);
+              })
+              .delVote(surveyID);
+          }
+        });
+      },
+      changeVote(newVal, index) {
+        // delete newVal.questions
+        // this.votes[index] = newVal
+        this.changeContentSurvey = false;
+        this.search();
+        document.querySelector("#tab-pageSearch").click();
+      },
+      statistic(surveyID, dateRun) {
+        // sessionStorage.setItem('vote', JSON.stringify({ surveyID: surveyID, dateRun: dateRun }))
+        let pageObject = {
+          page: "statistic",
+          code: surveyID,
+          dateRun: dateRun,
+          userEmail: this.userEmail || "",
+          userName: this.userName || "",
+        };
+        let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
+        window.open(
+          `https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`,
+          "_blank"
+        );
+      },
+      openQR(vote) {
+        if (vote.status != "公開中") {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.onmouseenter = Swal.stopTimer;
+              toast.onmouseleave = Swal.resumeTimer;
             },
-            reset() {
-                this.formSearch = {
-                    status: '全て',
-                };
-                this.search();
-            },
-            copyPassCode(passCode) {
-                let Toast = Swal.mixin({
-                    toast: true,
-                    position: "top-end",
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    didOpen: (toast) => {
-                        toast.onmouseenter = Swal.stopTimer;
-                        toast.onmouseleave = Swal.resumeTimer;
-                    }
-                });
+          });
+          let title = `投票は${vote.status}状態のため、QRコードを開けません。`;
+          Toast.fire({
+            icon: "error",
+            title: title,
+          });
+          return;
+        }
+        // sessionStorage.setItem('vote_infor', JSON.stringify({ vote: vote }))
+        let pageObject = {
+          page: "qrCode",
+          code: vote.id,
+        };
+        let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
+        window.open(
+          `https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`,
+          "_blank"
+        );
+      },
+      shareVote(link) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
 
-                const copyTextToClipboard = (text) => {
-                    return new Promise((resolve, reject) => {
-                        const textArea = document.createElement('textarea');
-                        textArea.value = text;
-                        document.body.appendChild(textArea);
-                        textArea.select();
+        const copyTextToClipboard = (text) => {
+          return new Promise((resolve, reject) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
 
-                        try {
-                            document.execCommand('copy');
-                            document.body.removeChild(textArea);
-                            resolve();
-                        } catch (error) {
-                            document.body.removeChild(textArea);
-                            reject(error);
-                        }
-                    });
-                };
+            try {
+              document.execCommand("copy");
+              document.body.removeChild(textArea);
+              resolve();
+            } catch (error) {
+              document.body.removeChild(textArea);
+              reject(error);
+            }
+          });
+        };
 
-                copyTextToClipboard(passCode)
-                    .then(() => {
-                        Toast.fire({
-                            icon: "success",
-                            title: "パスコードをコピーしました。"
-                        });
-                    })
-                    .catch((error) => {
-                        console.error('Error copying text to clipboard: ', error);
-                        Toast.fire({
-                            icon: "error",
-                            title: "クリップボードにコピーする際にエラーが発生しました。"
-                        });
-                    }
-                    );
-            },
-            changeQuest(allowChangeQuest) {
-                this.allowChangeQuest = allowChangeQuest;
-            },
-            changeContent() {
-                console.log(this.changeContentSurvey);
-                this.changeContentSurvey = true;
-            },
-            makeAcopy(vote) {
-                this.changeContentSurvey = false;
-                let scope = this;
-                Swal.fire({
-                    text: "コピーを作成しますか？",
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonColor: "#01932e",
-                    cancelButtonColor: "#6A6A6A",
-                    confirmButtonText: "はい",
-                    cancelButtonText: "いいえ",
-                    reverseButtons: true,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        if (this.isEdit) {
-                            let tabSearch = document.querySelector('#tab-pageSearch')
-                            tabSearch.click();
-                            this.isEdit = false;
-                        }
-                        this.showLoading();
-                        google.script.run
-                            .withSuccessHandler((res) => {
-                                if (!res.status) {
-                                    scope.failureHandler(res.msg)
-                                    return false
-                                } else {
-                                    this.hideLoading();
-                                    let newVote = res.data;
-                                    this.votes.unshift(newVote);
-                                    this.editVote(newVote, 0);
-                                    // scope.successHandler('コピーする成功');
-                                }
-                            })
-                            .withFailureHandler((error) => {
-                                scope.failureHandler(error)
-                            })
-                            .makeAcopy(vote);
-                    }
-                });
-            },
-            editVote(row, index) {
-                let tabSearch = document.querySelector('#tab-pageSearch')
-                tabSearch.click();
-                this.nowRow = row;
-                this.nowIndex = index;
-                this.isEdit = true;
-                this.surveyID = row.id
-                this.voteIndex = index
-                let tabDetail = document.querySelector('#tab-pageCreateNew')
-                tabDetail.click();
-            },
-            cancel() {
+        copyTextToClipboard(link)
+          .then(() => {
+            Toast.fire({
+              icon: "success",
+              title: "クリップボードにリンクを正常にコピーしました。",
+            });
+          })
+          .catch((error) => {
+            console.error("Error copying text to clipboard: ", error);
+            Toast.fire({
+              icon: "error",
+              title: "クリップボードにコピーする際にエラーが発生しました。",
+            });
+          });
+      },
+      verifyManager(email, fullname) {
+        this.userName = fullname;
+        this.userEmail = email;
+        this.verified = true;
+
+        this.$nextTick(() => {
+          /* Format UI datepicker */
+          $.fn.datepicker.dates["ja"] = {
+            days: [
+              "日曜",
+              "月曜",
+              "火曜",
+              "水曜",
+              "木曜",
+              "金曜",
+              "土曜",
+              "日曜",
+            ],
+            daysShort: ["日", "月", "火", "水", "木", "金", "土", "日"],
+            daysMin: ["日", "月", "火", "水", "木", "金", "土", "日"],
+            months: [
+              "1月",
+              "2月",
+              "3月",
+              "4月",
+              "5月",
+              "6月",
+              "7月",
+              "8月",
+              "9月",
+              "10月",
+              "11月",
+              "12月",
+            ],
+            monthsShort: [
+              "1月",
+              "2月",
+              "3月",
+              "4月",
+              "5月",
+              "6月",
+              "7月",
+              "8月",
+              "9月",
+              "10月",
+              "11月",
+              "12月",
+            ],
+            today: "今日",
+            suffix: [],
+            meridiem: [],
+            titleFormat: "yyyy年 M",
+          };
+
+          $(".input-date")
+            .datepicker({
+              format: "yyyy年mm月dd日",
+              autoclose: true,
+              todayHighlight: true,
+              forceParse: false,
+              language: "ja",
+            })
+            .on("changeDate", ({ target }) => {
+              let name = target.name;
+              let value = target.value;
+              this.form[name] = value;
+            });
+
+          flatpickr(".input-date-search", {
+            enableTime: true,
+            dateFormat: "Y年m月d日 H:i",
+            time_24hr: true,
+            locale: "ja",
+            onChange: function (selectedDates, dateStr, instance) {
+              const target = instance.input;
+              const name = target.name;
+              const value = dateStr;
+              this.formSearch[name] = value;
+            }.bind(this),
+          });
+
+          document.querySelectorAll(".input-date-search").forEach((input) => {
+            input.removeAttribute("readonly");
+          });
+
+          this.search();
+        });
+      },
+      showTab(id) {
+        if (this.changeContentSurvey) {
+          Swal.fire({
+            title: "作成中内容が保存されません。<br>よろしいでしょうか？",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#01932e",
+            confirmButtonText: "はい",
+            cancelButtonText: "いいえ",
+            reverseButtons: true,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Hide all tab content
+              $(".tab-pane").removeClass("show active");
+              $(".tab-pane").addClass("d-none");
+              $(".nav-link").removeClass("active");
+
+              // Show the selected tab content
+              $(`#tab-${id}`).tab("show");
+              $(`#content-${id}`).removeClass("d-none");
+              $(`#content-${id}`).addClass("show active");
+              if (id === "pageSearch") {
+                this.surveyID = null;
+                this.showComponent = false;
                 this.isEdit = false;
                 this.changeContentSurvey = false;
-            },
-            delVote(surveyID, index) {
-                this.changeContentSurvey = false;
-                let title = '削除してもよろしいですか？';
-                if (this.votes[index].status == '公開中') {
-                    title = '公開中投票です。<br>削除してよろしいでしょうか?'
-                }
-                Swal.fire({
-                    title: title,
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#e3342f",
-                    confirmButtonText: "はい",
-                    cancelButtonText: "いいえ",
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        if (this.isEdit) {
-                            let tabSearch = document.querySelector('#tab-pageSearch')
-                            tabSearch.click();
-                            this.isEdit = false;
-                        }
-                        this.showLoading();
-                        google.script.run
-                            .withSuccessHandler((res) => {
-                                // console.log({ res })
-                                if (!res.status) {
-                                    this.failureHandler(res.msg)
-                                    return false
-                                } else {
-                                    this.votes.splice(index, 1)
-                                    this.hideLoading();
-                                    return true
-                                }
-                            })
-                            .withFailureHandler((error) => {
-                                this.failureHandler(error)
-                            })
-                            .delVote(surveyID);
-                    }
-                });
-            },
-            changeVote(newVal, index) {
-                // delete newVal.questions
-                // this.votes[index] = newVal
-                this.changeContentSurvey = false;
-                this.search();
-                document.querySelector('#tab-pageSearch').click();
-            },
-            statistic(surveyID, dateRun) {
-                // sessionStorage.setItem('vote', JSON.stringify({ surveyID: surveyID, dateRun: dateRun }))
-                let pageObject = {
-                    page: "statistic",
-                    code: surveyID,
-                    dateRun: dateRun
-                };
-                let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
-                window.open(`https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`, '_blank');
-            },
-            openQR(vote) {
-                if (vote.status != '公開中') {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.onmouseenter = Swal.stopTimer;
-                            toast.onmouseleave = Swal.resumeTimer;
-                        }
-                    });
-                    let title = `投票は${vote.status}状態のため、QRコードを開けません。`
-                    Toast.fire({
-                        icon: "error",
-                        title: title
-                    });
-                    return;
-                }
-                // sessionStorage.setItem('vote_infor', JSON.stringify({ vote: vote }))
-                let pageObject = {
-                    page: "qrCode",
-                    code: vote.id
-                };
-                let encodedPageParam = encodeURIComponent(JSON.stringify(pageObject));
-                window.open(`https://myportal.sateraito.jp/gas?url=${this.url_top}?page=${encodedPageParam}`, '_blank');
-            },
-            shareVote(link) {
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: "top-end",
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    didOpen: (toast) => {
-                        toast.onmouseenter = Swal.stopTimer;
-                        toast.onmouseleave = Swal.resumeTimer;
-                    }
-                });
+              } else {
+                this.showComponent = true;
+              }
+            }
+          });
+        } else {
+          // Hide all tab content
+          $(".tab-pane").removeClass("show active");
+          $(".tab-pane").addClass("d-none");
+          $(".nav-link").removeClass("active");
 
-                const copyTextToClipboard = (text) => {
-                    return new Promise((resolve, reject) => {
-                        const textArea = document.createElement('textarea');
-                        textArea.value = text;
-                        document.body.appendChild(textArea);
-                        textArea.select();
+          // Show the selected tab content
+          $(`#tab-${id}`).tab("show");
+          $(`#content-${id}`).removeClass("d-none");
+          $(`#content-${id}`).addClass("show active");
+          if (id === "pageSearch") {
+            this.surveyID = null;
+            this.showComponent = false;
+            this.isEdit = false;
+            this.changeContentSurvey = false;
+          } else {
+            this.showComponent = true;
+          }
+        }
+      },
+      newVote(vote) {
+        this.votes.unshift(vote);
+        this.changeContentSurvey = false;
+        document.querySelector("#tab-pageSearch").click();
+      },
+      successHandler(msg) {
+        // console.log({ msg })
+        document.getElementById("loading").style.display = "";
+        Swal.fire({
+          title: msg,
+          icon: "success",
+          confirmButtonColor: "#01932e",
+          confirmButtonText: "閉じる",
+          timer: 3000,
+        }).then((result) => {
+          // update table
+        });
+      },
+      changePage(newPage) {
+        if (newPage >= 1 && newPage <= this.totalPages) {
+          this.currentPage = newPage;
+        }
+      },
+      failureHandler(error) {
+        document.getElementById("loading").style.display = "none";
 
-                        try {
-                            document.execCommand('copy');
-                            document.body.removeChild(textArea);
-                            resolve();
-                        } catch (error) {
-                            document.body.removeChild(textArea);
-                            reject(error);
-                        }
-                    });
-                };
+        let errorMessage = "不明なエラーが発生しました"; // fallback message
 
-                copyTextToClipboard(link)
-                    .then(() => {
-                        Toast.fire({
-                            icon: "success",
-                            title: "クリップボードにリンクを正常にコピーしました。"
-                        });
-                    })
-                    .catch((error) => {
-                        console.error('Error copying text to clipboard: ', error);
-                        Toast.fire({
-                            icon: "error",
-                            title: "クリップボードにコピーする際にエラーが発生しました。"
-                        });
-                    }
-                    );
-            },
-            verifyManager(email, fullname) {
-                this.userName = fullname;
-                this.userEmail = email;
-                this.verified = true;
+        if (error) {
+          if (typeof error === "string") {
+            errorMessage = error;
+          } else if (error.message) {
+            errorMessage = error.message;
+          } else if (typeof error === "object") {
+            const str = JSON.stringify(error);
+            errorMessage = str === "{}" ? errorMessage : str;
+          }
+        }
 
-                this.$nextTick(() => {
-                    /* Format UI datepicker */
-                    $.fn.datepicker.dates['ja'] = {
-                        days: ["日曜", "月曜", "火曜", "水曜", "木曜", "金曜", "土曜", "日曜"],
-                        daysShort: ["日", "月", "火", "水", "木", "金", "土", "日"],
-                        daysMin: ["日", "月", "火", "水", "木", "金", "土", "日"],
-                        months: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
-                        monthsShort: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
-                        today: "今日",
-                        suffix: [],
-                        meridiem: [],
-                        titleFormat: "yyyy年 M"
-                    };
-
-                    $('.input-date').datepicker({
-                        format: 'yyyy年mm月dd日',
-                        autoclose: true,
-                        todayHighlight: true,
-                        forceParse: false,
-                        language: 'ja',
-                    }).on('changeDate', ({ target }) => {
-                        let name = target.name;
-                        let value = target.value;
-                        this.form[name] = value;
-                    });
-
-                    flatpickr(".input-date-search", {
-                      enableTime: true,
-                      dateFormat: "Y年m月d日 H:i",
-                      time_24hr: true,
-                      locale: "ja",
-                      onChange: function (selectedDates, dateStr, instance) {
-                          const target = instance.input;
-                          const name = target.name;
-                          const value = dateStr;
-                          this.formSearch[name] = value;
-                      }.bind(this)
-                    });
-
-                    document.querySelectorAll(".input-date-search").forEach(input => {
-                        input.removeAttribute("readonly");
-                    });
-
-    this.search();
-                });
-            },
-            showTab(id) {
-                if (this.changeContentSurvey) {
-                    Swal.fire({
-                        title: "作成中内容が保存されません。<br>よろしいでしょうか？",
-                        icon: "question",
-                        showCancelButton: true,
-                        confirmButtonColor: "#01932e",
-                        confirmButtonText: "はい",
-                        cancelButtonText: "いいえ",
-                        reverseButtons: true,
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Hide all tab content
-                            $('.tab-pane').removeClass('show active');
-                            $('.tab-pane').addClass('d-none')
-                            $('.nav-link').removeClass('active')
-
-                            // Show the selected tab content
-                            $(`#tab-${id}`).tab('show')
-                            $(`#content-${id}`).removeClass('d-none')
-                            $(`#content-${id}`).addClass('show active')
-                            if (id === 'pageSearch') {
-                                this.surveyID = null
-                                this.showComponent = false
-                                this.isEdit = false
-                                this.changeContentSurvey = false
-                            } else {
-                                this.showComponent = true
-                            }
-                        }
-                    });
-                } else {
-                    // Hide all tab content
-                    $('.tab-pane').removeClass('show active');
-                    $('.tab-pane').addClass('d-none')
-                    $('.nav-link').removeClass('active')
-
-                    // Show the selected tab content
-                    $(`#tab-${id}`).tab('show')
-                    $(`#content-${id}`).removeClass('d-none')
-                    $(`#content-${id}`).addClass('show active')
-                    if (id === 'pageSearch') {
-                        this.surveyID = null
-                        this.showComponent = false
-                        this.isEdit = false
-                        this.changeContentSurvey = false
-                    } else {
-                        this.showComponent = true
-                    }
-                }
-            },
-            newVote(vote) {
-                this.votes.unshift(vote)
-                this.changeContentSurvey = false;
-                document.querySelector('#tab-pageSearch').click();
-            },
-            successHandler(msg) {
-                // console.log({ msg })
-                document.getElementById('loading').style.display = ''
-                Swal.fire({
-                    title: msg,
-                    icon: "success",
-                    confirmButtonColor: "#01932e",
-                    confirmButtonText: "閉じる",
-                    timer: 3000,
-                }).then((result) => {
-                    // update table
-
-                })
-            },
-            changePage(newPage) {
-                if (newPage >= 1 && newPage <= this.totalPages) {
-                    this.currentPage = newPage;
-                }
-            },
-            failureHandler(error) {
-                      document.getElementById('loading').style.display = 'none';
-
-  let errorMessage = "不明なエラーが発生しました"; // fallback message
-
-  if (error) {
-    if (typeof error === 'string') {
-      errorMessage = error;
-    } else if (error.message) {
-      errorMessage = error.message;
-    } else if (typeof error === 'object') {
-      const str = JSON.stringify(error);
-      errorMessage = str === '{}' ? errorMessage : str;
-    }
-  }
-
-  Swal.fire({
-    title: "エラーが発生しました",
-    text: errorMessage,
-    icon: "error",
-    confirmButtonColor: "#01932e",
-    confirmButtonText: "閉じる",
-                }).then((result) => {
-
-                })
-            },
-            showLoading() {
-                document.getElementById('loading').style.display = 'block'
-            },
-            hideLoading() {
-                document.getElementById('loading').style.display = ''
-            },
-        },
-    })
-    app.component('vote-register', voteTab);
-    app.component('verify-otp', verifyOTP);
-    app.mount('#app');
+        Swal.fire({
+          title: "エラーが発生しました",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonColor: "#01932e",
+          confirmButtonText: "閉じる",
+        }).then((result) => {});
+      },
+      showLoading() {
+        document.getElementById("loading").style.display = "block";
+      },
+      hideLoading() {
+        document.getElementById("loading").style.display = "";
+      },
+    },
+  });
+  app.component("vote-register", voteTab);
+  app.component("verify-otp", verifyOTP);
+  app.mount("#app");
 </script>

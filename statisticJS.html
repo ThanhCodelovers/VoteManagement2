@@ -360,27 +360,35 @@
         }
         /* Responsive height tweak for small portrait phones */
         if (
-          window.matchMedia('(max-width:640px) and (orientation:portrait)').matches
+          window.matchMedia("(max-width:640px) and (orientation:portrait)")
+            .matches
         ) {
           // Base dynamic height depending on categories
           const categoryCount = data.length;
           let base;
-          if (categoryCount <= 2) base = 420; else if (categoryCount <= 4) base = 450; else if (categoryCount <= 6) base = 480; else base = 520;
-          elChart.style.height = base + 'px';
+          if (categoryCount <= 2) base = 420;
+          else if (categoryCount <= 4) base = 450;
+          else if (categoryCount <= 6) base = 480;
+          else base = 520;
+          elChart.style.height = base + "px";
           // Ensure wrapper is tall enough (CSS set height:auto)
           const wrapper = parentElement;
-          if (wrapper) wrapper.style.minHeight = (base + 20) + 'px';
+          if (wrapper) wrapper.style.minHeight = base + 20 + "px";
         }
 
         // Nếu có instance cũ trên element này, dispose trước
         const prev = echarts.getInstanceByDom(elChart);
         if (prev) {
-          try { prev.dispose(); } catch (e) { /* ignore */ }
+          try {
+            prev.dispose();
+          } catch (e) {
+            /* ignore */
+          }
         }
 
         var myChar = echarts.init(elChart, null, { throttle: 70 });
-        myChar.showLoading('default', {
-          color: '#01932e',
+        myChar.showLoading("default", {
+          color: "#01932e",
           showSpinner: true,
           spinnerRadius: 10,
         });
@@ -390,13 +398,24 @@
             tooltip: {},
             legend: {
               left: "center",
-              left: 10,
+              top: 0,
+              orient: "horizontal",
+              padding: [0, 0, 0, 0],
+              type: "scroll",
+              pageIconColor: "#01932e",
+              pageIconInactiveColor: "#ccc",
+              pageIconSize: 16,
+              pageButtonItemGap: 6,
+              pageTextStyle: { color: "#555" },
+              itemGap: 18,
+              icon: "roundRect",
             },
             grid: {
               left: 15,
-              right: "50%",
-              bottom: 5,
-              top: 25,
+              right: 15,
+              bottom: 120,
+              top: 40,
+              containLabel: true,
             },
             xAxis: [
               {
@@ -432,71 +451,69 @@
           },
           media: [
             {
-              /* Very small screens (portrait phones) - stack vertically, enlarge pie */
+              /* Mobile portrait (<=430px): legend on top, then bar below, then pie below */
               query: { maxWidth: 430 },
               option: {
-                grid: [
-                  {
-                    left: "8%",
-                    right: "8%",
-                    top: "10%",
-                    bottom: "55%",
-                    containLabel: true,
-                  },
-                  {
-                    left: "8%",
-                    right: "8%",
-                    top: "50%",
-                    bottom: "4%",
-                    containLabel: true,
-                  },
-                ],
+                grid: {
+                  left: "8%",
+                  right: "8%",
+                  top: "12%",
+                  bottom: "50%",
+                  containLabel: true,
+                },
+                legend: {
+                  left: "center",
+                  top: 0,
+                  orient: "horizontal",
+                  type: "scroll",
+                  pageIconColor: "#01932e",
+                  pageIconInactiveColor: "#ccc",
+                  pageIconSize: 16,
+                  pageButtonItemGap: 6,
+                  pageTextStyle: { color: "#555" },
+                  itemGap: 18,
+                  icon: "roundRect",
+                },
                 series: [
-                  { id: "lineChart", xAxisIndex: 0, yAxisIndex: 0 },
+                  { id: "barChart", xAxisIndex: 0, yAxisIndex: 0 },
                   {
                     id: "pieChart",
-                    radius: ["42%", "68%"],
-                    center: ["50%", "78%"],
-                    xAxisIndex: 1,
-                    yAxisIndex: 1,
+                    radius: ["22%", "36%"],
+                    center: ["50%", "70%"],
                   },
                 ],
               },
             },
             {
-              query: {
-                minWidth: 431,
-                maxWidth: 640,
-              },
+              /* Wide mobile portrait (431-640px): still stack vertically */
+              query: { minWidth: 431, maxWidth: 640 },
               option: {
-                grid: [
-                  {
-                    left: "10%",
-                    right: "55%",
-                    bottom: "0%",
-                    top: "10%",
-                    containLabel: true,
-                  },
-                  {
-                    left: "55%",
-                    right: "10%",
-                    bottom: "0%",
-                    top: "10%",
-                    containLabel: true,
-                  },
-                ],
+                grid: {
+                  left: "8%",
+                  right: "8%",
+                  top: "12%",
+                  bottom: "50%",
+                  containLabel: true,
+                },
+                legend: {
+                  left: "center",
+                  top: 0,
+                  orient: "horizontal",
+                  type: "scroll",
+                  pageIconColor: "#01932e",
+                  pageIconInactiveColor: "#ccc",
+                  pageIconSize: 16,
+                  pageButtonItemGap: 6,
+                  pageTextStyle: { color: "#555" },
+                  itemGap: 18,
+                  icon: "roundRect",
+                },
                 series: [
-                  {
-                    id: "lineChart",
-                    xAxisIndex: 0,
-                    yAxisIndex: 0,
-                  },
+                  { id: "barChart", xAxisIndex: 0, yAxisIndex: 0 },
                   {
                     id: "pieChart",
-                    radius: ["25%", "45%"],
-                    center: ["75%", "50%"],
-                    xAxisIndex: 1,
-                    yAxisIndex: 1,
+                    radius: ["22%", "36%"],
+                    center: ["50%", "70%"],
                   },
                 ],
               },
@@ -509,16 +526,20 @@
                 legend: {
                   left: "75%",
                   top: "center",
-                  orient: "vertical", // Đặt hướng theo chiều dọc
-                  // formatter: function (name) {
-                  //     // Trả về tên không bị cắt bớt
-                  //     return name.replace(/ /g, '<br/>'); // Thay dấu cách bằng <br/> để xuống dòng
-                  // },
+                  orient: "vertical",
+                  type: "scroll",
+                  pageIconColor: "#01932e",
+                  pageIconInactiveColor: "#ccc",
+                  pageIconSize: 16,
+                  pageButtonItemGap: 6,
+                  pageTextStyle: { color: "#555" },
+                  itemGap: 18,
+                  icon: "roundRect",
                   textStyle: {
                     width: 500,
-                    overflow: "break", // Cho phép văn bản xuống dòng
+                    overflow: "break",
                   },
-                  padding: [10, 10, 10, 10], // Padding cho legend
+                  padding: [10, 10, 10, 10],
                 },
                 grid: [
                   {

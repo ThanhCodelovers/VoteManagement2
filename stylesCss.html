@@ -39,6 +39,29 @@
   /*--- circle loading ---*/
 
   /* QR Code Screen Scrollable Container */
+
+  /* 投票方法 + Threshold on same row for SP dọc */
+  @media (max-width: 600px) and (orientation: portrait) {
+    .vote-method-threshold-row {
+      flex-direction: row !important;
+      gap: 8px;
+      align-items: flex-end !important;
+    }
+    .vote-method-threshold-row .form-group {
+      margin-bottom: 0 !important;
+    }
+    .vote-method-threshold-row select,
+    .vote-method-threshold-row input {
+      font-size: 1rem;
+      padding: 4px 8px;
+      height: 38px;
+    }
+    .vote-method-threshold-row label {
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+  }
+
   .qrcode-container {
     max-height: 100vh;
     overflow-y: auto;
@@ -87,6 +110,20 @@
     align-items: center;
     justify-content: center;
     border: 1px solid #e2e2e2;
+  }
+
+  /* In vote editor preview, let media fill the column width to avoid tiny squeezed thumbnails */
+  #content-pageCreateNew .preview-questions .media-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 16/9;
+    height: auto;
+    max-height: none;
+  }
+  #content-pageCreateNew .preview-questions .preview-img,
+  #content-pageCreateNew .preview-questions .preview-iframe {
+    width: 100% !important;
+    height: 100% !important;
   }
 
   /* Biến thể dành riêng cho trang form nếu cần override nhỏ */
@@ -549,7 +586,7 @@
     grid-template-rows: auto 50px;
     row-gap: 10px;
     position: absolute;
-    top: 11%;
+    top: 6%;
     bottom: 15px;
     right: 20px;
     left: 20px;
@@ -591,6 +628,20 @@
   #content-slideForm_carousel .carousel-footer button span {
     align-self: center;
     font-size: 14px;
+  }
+
+  /* Ensure FA icons render correctly in form footer (avoid being affected by generic span rules) */
+  #content .fa-solid {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900 !important;
+  }
+  #content .fa-regular {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 400 !important;
+  }
+  #content .fa-brands {
+    font-family: "Font Awesome 6 Brands";
+    font-weight: 400 !important;
   }
 
   #content-slideForm_carousel .carousel-footer button.btn-success {
@@ -812,6 +863,7 @@
 
   .content-slideForm_identifyUser-quizInfo___group-firstLine {
     font-weight: 500;
+    white-space: nowrap; /* keep short labels on one line */
   }
 
   .content-slideForm_identifyUser-quizInfo___group-secondLine {
@@ -833,6 +885,32 @@
   #content-slideForm .background-top span {
     text-align: center;
     width: 100%;
+  }
+
+  /* Compact the quiz info row to make room for 表示モード */
+  .content-slideForm_identifyUser-quizInfo {
+    row-gap: 6px;
+  }
+  .content-slideForm_identifyUser-quizInfo___group {
+    /* reduce inner spacing */
+    column-gap: 6px;
+  }
+  /* For md>=, shrink the first, third, fourth blocks so display-mode can grow */
+  @media (min-width: 768px) {
+    .content-slideForm_identifyUser-quizInfo___group.col-md-2 {
+      flex: 0 1 15%; /* was ~16.6% each -> make them a bit smaller */
+      max-width: 15%;
+    }
+    /* Give display-mode block a bit more width */
+    .content-slideForm_identifyUser-quizInfo___group.col-md-2:nth-of-type(2) {
+      flex: 0 1 25%;
+      max-width: 25%;
+    }
+    /* Let 実施期間 (width-custom) expand to fill remaining space */
+    .content-slideForm_identifyUser-quizInfo___group.width-custom {
+      flex: 1 1 0%;
+      max-width: 100%;
+    }
   }
 
   #content-slideForm .background-top p {
@@ -898,7 +976,7 @@
     background-color: white;
     border-radius: 15px;
     padding: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 140px;
   }
 
   .form-check-input:checked:disabled {
@@ -1272,7 +1350,7 @@
     }
 
     .vote-title {
-      font-size: 15px !important;
+      font-size: 20px !important;
     }
 
     .form-section-spacing {
@@ -1505,7 +1583,7 @@
     }
 
     .sp-time-end {
-      margin-left: 75px;
+      margin-left: 0;
     }
 
     .content-pageCreateNew_context__quizDetail___editQuestion___category
@@ -1890,7 +1968,7 @@
 
   @media only screen and (max-width: 800px) and (orientation: landscape) {
     .custom-header {
-      padding: 8px 12px 0px !important;
+      padding: 28px 12px 0px !important;
     }
 
     #app {
@@ -2024,7 +2102,7 @@
   .custom-header {
     align-items: center;
     background-color: #fff;
-    padding: 48px 12px 0px;
+    padding: 14px 12px 0px !important;
   }
 
   input:disabled {
@@ -2101,7 +2179,7 @@
     }
 
     .custom-header {
-      padding: 0px 12px 0px !important;
+      padding: 30px 12px 0px !important;
     }
 
     .width-custom {

@@ -45,7 +45,29 @@
     </script>
     <?!= include('stylesCss2') ?>
     <style>
-      /* ================== General ================== */
+      /* macOS Chrome text rendering normalization */
+      #app,
+      #content,
+      .container-fuild {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo,
+          Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-synthesis-weight: none;
+        font-synthesis-style: none;
+        text-rendering: optimizeLegibility;
+      }
+      /* Default text regular weight to avoid unintended bold */
+      #content p,
+      #content span,
+      #content li,
+      #content td,
+      #content th,
+      #content label {
+        font-weight: 400;
+      }
+  /* ================== General ================== */
       .modal-description {
         word-break: break-word;
         white-space: pre-wrap;
@@ -413,8 +435,12 @@
         background: #d7dade;
         pointer-events: none;
       }
-      #content-total__dataSummay {
-        align-items: stretch;
+      #content-total__dataSummay .project-list {
+        width: auto !important;
+        min-width: 0;
+      }
+      #content-total__dataSummay .project-total {
+        min-width: 0; /* allow charts to expand and absorb remaining space */
       }
 
       @media (max-width: 640px) and (orientation: portrait) {
@@ -444,18 +470,66 @@
 
       @media (max-width: 926px) and (orientation: landscape) {
         /* Stretch list full height; avoid wasted blank space */
-        .project-list { max-height: none !important; height:auto !important; overflow:visible !important; }
-        .project-total { max-height: 70vh !important; overflow-y:auto !important; }
-        .project-list::after { right:-6px; }
-        .content-total__dataSummary-chart { min-height:200px !important; height:200px !important; }
+        .project-list {
+          max-height: none !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        .project-total {
+          max-height: 70vh !important;
+          overflow-y: auto !important;
+        }
+        .project-list::after {
+          right: -6px;
+        }
+        .content-total__dataSummary-chart {
+          min-height: 200px !important;
+          height: 200px !important;
+        }
       }
 
       /* Font size normalization for result lines */
-      .q-body .line, .q-body .stats-line, .q-body .answer-line, .criteria-name-line { font-size: 12px; }
-      .q-body .success-line .label-winning { font-size:12px; }
-      @media (max-width: 640px) { .q-body .line, .q-body .stats-line, .q-body .answer-line, .criteria-name-line { font-size:11px; } .q-body .success-line .label-winning { font-size:11px; } }
+      .q-body .line,
+      .q-body .stats-line,
+      .q-body .answer-line,
+      .criteria-name-line {
+        font-size: 12px;
+      }
+      .q-body .success-line .label-winning {
+        font-size: 12px;
+      }
+      @media (max-width: 640px) {
+        .q-body .line,
+        .q-body .stats-line,
+        .q-body .answer-line,
+        .criteria-name-line {
+          font-size: 11px;
+        }
+        .q-body .success-line .label-winning {
+          font-size: 11px;
+        }
+      }
 
       /* ================== Responsive ================== */
+      /* Desktop: make left list scroll internally to avoid large page scroll */
+      @media (min-width: 992px) {
+        #content-total__dataSummay {
+          align-items: stretch !important;
+        }
+        .project-list {
+          display: flex !important;
+          flex-direction: column !important;
+          height: calc(100vh - 220px) !important; /* header + cards approx */
+          max-height: calc(100vh - 220px) !important;
+          overflow: hidden !important;
+        }
+        .project-list .question-list {
+          flex: 1 1 auto !important;
+          max-height: none !important;
+          overflow-y: auto !important; /* inner scroll only here */
+          min-height: 0 !important;
+        }
+      }
       @media screen and (max-width: 1000px) {
         .list-group {
           flex-direction: row;
@@ -613,6 +687,29 @@
           overflow-y: auto !important;
           margin: 0 -3px 0 0 !important;
           padding-right: 3px !important;
+        }
+
+        /* On desktop, stretch the list to use available vertical space */
+        @media (min-width: 992px) {
+          #content-total__dataSummay {
+            align-items: stretch !important;
+          }
+          .project-list {
+            display: flex !important;
+            flex-direction: column !important;
+            height: calc(
+              100vh - 160px
+            ) !important; /* fixed height to allow inner scroll */
+            max-height: calc(100vh - 160px) !important; /* safety cap */
+          }
+          .project-list .question-list {
+            flex: 1 1 auto !important;
+            max-height: none !important;
+            overflow-y: auto !important;
+            min-height: 0 !important; /* allow flex item to shrink for scroll */
+            overscroll-behavior: contain !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
         }
 
         /* Question card - GIỮ NGUYÊN MÀU ACTIVE */
@@ -1183,12 +1280,12 @@
             class="tab-pane fade mt-2 active show"
           >
             <section id="content-total__dataSummay" class="row">
-              <div class="project-list" style="width: 100%">
+              <div class="project-list">
                 <div class="col-12">
                   <p
                     class="project-total__byPhase-label mt-1 mb-2"
                     for="project-total__byPhase-data"
-                    style="font-size: 16px"
+                    style="font-size: 16px; font-weight: bold"
                   >
                     <span class="vertical-line"></span> 質問一覧（{{
                     vote.numberQuestion }}）
@@ -1312,7 +1409,7 @@
                     <p
                       class="project-total__byPhase-label mt-2 mb-2"
                       for="project-total__byPhase-data"
-                      style="font-size: 16px"
+                      style="font-size: 16px; font-weight: bold"
                     >
                       <span class="vertical-line"></span>投票結果
                     </p>
@@ -1497,7 +1594,7 @@
                     <p
                       class="project-total__byPhase-label mt-1 mb-2"
                       for="project-total__byPhase-data"
-                      style="font-size: 16px"
+                      style="font-size: 16px; font-weight: bold"
                     >
                       <span class="vertical-line"></span>集計結果
                     </p>

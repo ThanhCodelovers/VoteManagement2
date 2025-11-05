@@ -206,17 +206,27 @@
         if (!url) return false;
         const link = String(url).trim();
         // Tách bỏ query/hash để kiểm tra phần đuôi file chuẩn
-        const pure = link.split('?')[0].split('#')[0];
+        const pure = link.split("?")[0].split("#")[0];
 
         // 1. Đuôi ảnh chuẩn (hỗ trợ có query phía sau)
         if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(pure)) return true;
+
+        // 1b. Googleusercontent: không có đuôi nhưng là ảnh
+        if (/https?:\/\/lh\d+\.googleusercontent\.com\//i.test(link))
+          return true;
 
         // 2. data URI base64
         if (/^data:image\//i.test(link)) return true;
 
         // 3. Bing thumbnail (không có extension nhưng pattern OIP.*)
         //    Ví dụ: https://tse4.mm.bing.net/th/id/OIP.XXXX?pid=Api&P=0&h=220
-        if (/https?:\/\/tse\d+\.mm\.bing\.net\/th\/id\/OIP\.[^?]+/i.test(link)) return true;
+        // Bing thumbnail: OIP.* (chữ hoa/thường, nhiều ký tự)
+        if (
+          /https?:\/\/tse\d+\.mm\.bing\.net\/th\/id\/OIP\.[A-Za-z0-9_-]+/i.test(
+            link
+          )
+        )
+          return true;
 
         // 4. ftcdn pattern (đôi khi có nhiều segment, đảm bảo chứa /v2/jpg/)
         if (/https?:\/\/[^/]*ftcdn\.net\/v2\/jpg\//i.test(link)) return true;
