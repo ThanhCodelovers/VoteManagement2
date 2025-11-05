@@ -375,6 +375,16 @@
           const wrapper = parentElement;
           if (wrapper) wrapper.style.minHeight = base + 20 + "px";
         }
+        /* Ensure reasonable height in landscape phones/tablets */
+        if (
+          window.matchMedia("(max-width:926px) and (orientation:landscape)")
+            .matches
+        ) {
+          const baseLandscape = 240; // balanced default height
+          elChart.style.height = baseLandscape + "px";
+          const wrapper = parentElement;
+          if (wrapper) wrapper.style.minHeight = baseLandscape + 20 + "px";
+        }
 
         // Nếu có instance cũ trên element này, dispose trước
         const prev = echarts.getInstanceByDom(elChart);
@@ -618,8 +628,16 @@
         myChar.hideLoading();
 
         this.$nextTick(() => {
+          // Resize twice to ensure proper layout after any CSS/layout adjustments
           requestAnimationFrame(() => {
-            myChar.resize();
+            try {
+              myChar.resize();
+            } catch (e) {}
+            setTimeout(() => {
+              try {
+                myChar.resize();
+              } catch (e) {}
+            }, 120);
           });
         });
 

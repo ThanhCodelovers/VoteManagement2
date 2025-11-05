@@ -53,6 +53,8 @@
           "bg-primary",
         ],
         colors: {},
+        // transient holder for validation context
+        lastValidation: null,
       };
     },
     created() {},
@@ -871,7 +873,7 @@
         }
       },
 
-      startVote() {
+      async startVote() {
         // Validate
         let check = true;
         for (const [k, v] of Object.entries(this.validates)) {
@@ -903,6 +905,14 @@
           }
         }
         if (!check) return;
+
+        // When name/email is required, check if this email already voted for this survey
+        // If so, show a confirmation dialog before proceeding
+        const proceed = await this.checkDuplicateEmailBeforeStart();
+        if (!proceed) {
+          // stay on current modal, do not continue
+          return;
+        }
         $("#userInformation").modal("hide");
         this.identified = true;
         this.$nextTick(() => {
@@ -916,30 +926,133 @@
           }, 100);
         });
       },
+      // Check if entered email has already been used for this survey; if yes, ask user to confirm
+      checkDuplicateEmailBeforeStart() {
+        return new Promise((resolve) => {
+          try {
+            const isInfoRequired =
+              this.vote && this.vote.informationRequired === "あり";
+            const currentEmail = (
+              this.user && this.user.email ? String(this.user.email) : ""
+            )
+              .trim()
+              .toLowerCase();
+            if (!isInfoRequired || !currentEmail) {
+              resolve(true);
+              return;
+            }
+
+            const hasVotedThisSurvey = !!localStorage.getItem(surveyID);
+            const storedUserRaw = localStorage.getItem("user");
+            const storedEmail = storedUserRaw
+              ? JSON.parse(storedUserRaw).email || ""
+              : "";
+            const sameEmail =
+              storedEmail &&
+              String(storedEmail).trim().toLowerCase() === currentEmail;
+
+            if (hasVotedThisSurvey && sameEmail) {
+              Swal.fire({
+                // Reuse Japanese confirmation style already used elsewhere
+                text: "このメールアドレスは以前この投票で使用されています。もう一度投票しますか？",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#01932e",
+                cancelButtonColor: "#6A6A6A",
+                confirmButtonText: "はい",
+                cancelButtonText: "いいえ",
+                reverseButtons: true,
+              }).then((result) => {
+                resolve(result.isConfirmed === true);
+              });
+            } else {
+              resolve(true);
+            }
+          } catch (e) {
+            // In case of any parsing/storage errors, do not block user
+            resolve(true);
+          }
+        });
+      },
       validate(submitData) {
         let status = true;
         for (let i = 0; i < this.questions.length; i++) {
-          if (this.questions[i].question_required) {
-            let questionKey = `${i + 1}．${this.questions[i].question}`;
-            if (submitData[questionKey].criteria) {
-              this.validates[questionKey] = true;
-              for (const [critName, critValue] of Object.entries(
-                submitData[questionKey].criterias
-              )) {
-                if (critValue.value === "" || critValue.value.length === 0) {
-                  this.validates[questionKey] = false;
+          const q = this.questions[i];
+          const questionKey = `${i + 1}．${q.question}`;
+          const formNow = submitData[questionKey];
+
+          // default state
+          this.validates[questionKey] = true;
+
+          // 1) required empty check (applies to all types)
+          if (q.question_required) {
+            if (
+              formNow &&
+              formNow.criterias &&
+              Object.keys(formNow.criterias).length > 0
+            ) {
+              for (const [, critValue] of Object.entries(formNow.criterias)) {
+                const v = critValue && critValue.value;
+                if (
+                  v === "" ||
+                  v == null ||
+                  (Array.isArray(v) && v.length === 0)
+                ) {
+                  this.validates[questionKey] = "empty";
                   status = false;
                   break;
                 }
               }
             } else {
+              const v = formNow ? formNow.value : null;
               if (
-                submitData[questionKey].value === "" ||
-                submitData[questionKey].value.length === 0
+                v === "" ||
+                v == null ||
+                (Array.isArray(v) && v.length === 0)
               ) {
-                this.validates[questionKey] = false;
+                this.validates[questionKey] = "empty";
                 status = false;
-              } else this.validates[questionKey] = true;
+              }
+            }
+          }
+
+          // 2) min/max check for multiSelect
+          if (q.question_type === "multiSelect") {
+            const min = Number(q.min ?? 0);
+            const max = Number(q.max ?? 0);
+
+            if (
+              formNow &&
+              formNow.criterias &&
+              Object.keys(formNow.criterias).length > 0
+            ) {
+              // per criteria validation
+              for (const [, critValue] of Object.entries(formNow.criterias)) {
+                const arr = Array.isArray(critValue && critValue.value)
+                  ? critValue.value
+                  : [];
+                if (min && arr.length < min) {
+                  this.validates[questionKey] = "min";
+                  status = false;
+                  break;
+                }
+                if (max && arr.length > max) {
+                  this.validates[questionKey] = "max";
+                  status = false;
+                  break;
+                }
+              }
+            } else {
+              const arr = Array.isArray(formNow && formNow.value)
+                ? formNow.value
+                : [];
+              if (min && arr.length < min) {
+                this.validates[questionKey] = "min";
+                status = false;
+              } else if (max && arr.length > max) {
+                this.validates[questionKey] = "max";
+                status = false;
+              }
             }
           }
         }
@@ -1183,7 +1296,33 @@
         }
 
         let validateState = this.validate(form);
-        if (!validateState) return;
+        if (!validateState) {
+          // Find and announce the first min/max violation (all-questions view)
+          for (let i = 0; i < this.questions.length; i++) {
+            const q = this.questions[i];
+            const key = `${i + 1}．${q.question}`;
+            const vstate = this.validates[key];
+            if (vstate === "min") {
+              Swal.fire({
+                text: `質問${i + 1}では、最低${q.min || 0}個の選択が必要です。`,
+                icon: "warning",
+                confirmButtonColor: "#01932e",
+                confirmButtonText: "閉じる",
+              });
+              break;
+            }
+            if (vstate === "max") {
+              Swal.fire({
+                text: `質問${i + 1}では、最大${q.max || 0}個まで選択できます。`,
+                icon: "warning",
+                confirmButtonColor: "#01932e",
+                confirmButtonText: "閉じる",
+              });
+              break;
+            }
+          }
+          return;
+        }
 
         // sessionStorage.setItem('vote_data', JSON.stringify({ question: scope.questions, user: scope.user, response: form, vote: scope.vote, surveyID: surveyID }))
         // let pageObject = { page: "previewForm"};
@@ -1292,16 +1431,14 @@
               Object.keys(formNow.criterias).length > 0
             ) {
               // === ĐA TIÊU CHÍ ===
-              for (const [critName, critValue] of Object.entries(
-                formNow.criterias
-              )) {
+              for (const [, critValue] of Object.entries(formNow.criterias)) {
                 if (
                   critValue.value === "" ||
                   critValue.value == null ||
                   (Array.isArray(critValue.value) &&
                     critValue.value.length === 0)
                 ) {
-                  this.validates[key] = false;
+                  this.validates[key] = "empty";
                   break;
                 }
               }
@@ -1313,7 +1450,74 @@
                 v == null ||
                 (Array.isArray(v) && v.length === 0)
               ) {
-                this.validates[key] = false;
+                this.validates[key] = "empty";
+              }
+            }
+          }
+
+          // Min/Max validation for multiSelect on next
+          if (currentQuestion.question_type === "multiSelect") {
+            const min = Number(currentQuestion.min ?? 0);
+            const max = Number(currentQuestion.max ?? 0);
+
+            if (
+              formNow &&
+              formNow.criterias &&
+              Object.keys(formNow.criterias).length > 0
+            ) {
+              for (const [, critValue] of Object.entries(formNow.criterias)) {
+                const arr = Array.isArray(critValue && critValue.value)
+                  ? critValue.value
+                  : [];
+                if (min && arr.length < min) {
+                  this.validates[key] = "min";
+                  Swal.fire({
+                    text: `質問${
+                      this.currentQuestionIndex + 1
+                    }では、最低${min}個の選択が必要です。`,
+                    icon: "warning",
+                    confirmButtonColor: "#01932e",
+                    confirmButtonText: "閉じる",
+                  });
+                  break;
+                }
+                if (max && arr.length > max) {
+                  this.validates[key] = "max";
+                  Swal.fire({
+                    text: `質問${
+                      this.currentQuestionIndex + 1
+                    }では、最大${max}個まで選択できます。`,
+                    icon: "warning",
+                    confirmButtonColor: "#01932e",
+                    confirmButtonText: "閉じる",
+                  });
+                  break;
+                }
+              }
+            } else {
+              const arr = Array.isArray(formNow && formNow.value)
+                ? formNow.value
+                : [];
+              if (min && arr.length < min) {
+                this.validates[key] = "min";
+                Swal.fire({
+                  text: `質問${
+                    this.currentQuestionIndex + 1
+                  }では、最低${min}個の選択が必要です。`,
+                  icon: "warning",
+                  confirmButtonColor: "#01932e",
+                  confirmButtonText: "閉じる",
+                });
+              } else if (max && arr.length > max) {
+                this.validates[key] = "max";
+                Swal.fire({
+                  text: `質問${
+                    this.currentQuestionIndex + 1
+                  }では、最大${max}個まで選択できます。`,
+                  icon: "warning",
+                  confirmButtonColor: "#01932e",
+                  confirmButtonText: "閉じる",
+                });
               }
             }
           }

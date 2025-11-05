@@ -67,7 +67,7 @@
       #content label {
         font-weight: 400;
       }
-  /* ================== General ================== */
+      /* ================== General ================== */
       .modal-description {
         word-break: break-word;
         white-space: pre-wrap;
@@ -483,8 +483,9 @@
           right: -6px;
         }
         .content-total__dataSummary-chart {
-          min-height: 200px !important;
-          height: 200px !important;
+          /* Allow JS to control chart height; provide a sensible minimum */
+          height: auto !important;
+          min-height: 220px !important;
         }
       }
 
@@ -817,7 +818,9 @@
 
         /* Chart area */
         .content-total__dataSummary-chart {
-          height: 120px !important;
+          /* Let chart height be driven by JS and content; avoid fixed tiny height */
+          height: auto !important;
+          min-height: 220px !important;
           width: 100% !important;
           min-width: 300px !important;
           margin-bottom: 6px !important;
@@ -1010,7 +1013,8 @@
         }
 
         .content-total__dataSummary-chart {
-          height: 100px !important;
+          height: auto !important;
+          min-height: 180px !important;
           min-width: 250px !important;
         }
 
