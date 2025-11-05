@@ -89,6 +89,50 @@
     },
     computed: {},
     methods: {
+      // Determine top answer for questions WITHOUT criteria
+      getTopNoCriteria(questionResult) {
+        if (!questionResult || !questionResult.question_answers) return null;
+        const arr = this.getAnswersArray(questionResult);
+        if (!arr.length) return null;
+        let max = -1;
+        let topName = null;
+        let countMax = 0;
+        arr.forEach((a) => {
+          const v = Number(a.total || 0);
+          if (v > max) {
+            max = v;
+            topName = a.name || a.answer || a.label || a.title || null;
+            countMax = 1;
+          } else if (v === max) {
+            countMax += 1;
+          }
+        });
+        // No top when all zero or tie
+        if (max <= 0 || countMax !== 1) return null;
+        return topName;
+      },
+
+      // Determine top answer name for a given criteria
+      getTopByCriteria(questionResult, criteriaName) {
+        if (!questionResult || !questionResult.question_answers) return null;
+        const arr = this.getAnswersArray(questionResult);
+        if (!arr.length) return null;
+        let max = -1;
+        let topName = null;
+        let countMax = 0;
+        arr.forEach((a) => {
+          const v = Number((a.criteria && a.criteria[criteriaName]) || 0);
+          if (v > max) {
+            max = v;
+            topName = a.name || a.answer || a.label || a.title || null;
+            countMax = 1;
+          } else if (v === max) {
+            countMax += 1;
+          }
+        });
+        if (max <= 0 || countMax !== 1) return null;
+        return topName;
+      },
       getAnswersArray(questionResult) {
         if (!questionResult || !questionResult.question_answers) return [];
         return Array.isArray(questionResult.question_answers)

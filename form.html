@@ -84,6 +84,40 @@
         border-radius: 3px;
         margin-left: 10px;
       }
+      /* Top/Topなし chip styles */
+      .top-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border-radius: 18px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+      .top-chip--green {
+        background: #01932e;
+        color: #fff;
+        border: 2px solid #e6f5ea;
+      }
+      .top-chip--gray {
+        background: #e6e9ef;
+        color: #5f6368;
+        border: 2px solid #eef1f5;
+      }
+      .top-answer {
+        font-weight: 600;
+        color: #333;
+      }
+      /* Ellipsis for answer name next to chip */
+      .top-answer-ellipsis {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        flex: 1 1 auto;
+        min-width: 0; /* allow flex child to shrink for ellipsis */
+      }
     </style>
     <script>
       var surveyID = "<?= surveyID ?>";
@@ -420,7 +454,7 @@
                       <span
                         class="content-slideForm_identifyUser-quizInfo___group-firstLine"
                         style="display: flex; align-items: center"
-                        >結果公開&nbsp;&nbsp;&nbsp; ： {{ vote.statistics}}</span
+                        >結果公開&nbsp;&nbsp; ： {{ vote.statistics}}</span
                       >
                     </div>
                     <!-- Nhập thông tin hay không-->
@@ -431,7 +465,7 @@
                       <span
                         class="content-slideForm_identifyUser-quizInfo___group-firstLine"
                         style="display: flex; align-items: center"
-                        >参加者情報： {{
+                        >参加者情報&nbsp;&nbsp; ： {{
                         vote.informationRequired}}</span
                       >
                     </div>
@@ -445,7 +479,7 @@
                         style="align-content: center"
                         >実施期間&nbsp;&nbsp; ： {{vote.dateRun}} 〜
                         <span class="sp-time-end" style="white-space: nowrap"
-                          > {{vote.dateEnd}}</span
+                          >&nbsp;&nbsp; {{vote.dateEnd}}</span
                         ></span
                       >
                     </div>
@@ -1208,9 +1242,32 @@
                       v-for="(crit, cIdx) in item.criterias"
                       :key="crit.name || cIdx"
                     >
-                      <!-- Tiêu chí -->
-                      <div class="col-12 col-md-2 fw-bold mb-1 mb-md-0">
-                        {{ crit.name }}:
+                      <!-- Tiêu chí: move chip to the left label column -->
+                      <div
+                        class="col-12 col-md-2 fw-bold mb-1 mb-md-0 d-flex align-items-center"
+                        style="
+                          gap: 8px;
+                          align-items: flex-start !important;
+                          min-width: 0;
+                        "
+                      >
+                        <span>{{ crit.name }}:</span>
+                        <template
+                          v-if="getTopByCriteria(results[currentQuestionIndex], crit.name)"
+                        >
+                          <span class="top-chip top-chip--green">トップ</span>
+                          <span
+                            class="top-answer-ellipsis"
+                            :title="getTopByCriteria(results[currentQuestionIndex], crit.name)"
+                            >{{ getTopByCriteria(results[currentQuestionIndex],
+                            crit.name) }}</span
+                          >
+                        </template>
+                        <template v-else>
+                          <span class="top-chip top-chip--gray"
+                            >トップなし</span
+                          >
+                        </template>
                       </div>
 
                       <!-- Gộp nhãn + progress để thẳng hàng (theo từng đáp án) -->
@@ -1278,12 +1335,36 @@
                       v-if="(!item.criterias || item.criterias.length === 0) && results[currentQuestionIndex] && results[currentQuestionIndex].question_answers"
                       class="row mb-3 border-bottom border-bottom-row"
                     >
-                      <!-- Label column (giống col tiêu chí) -->
-                      <div class="col-12 col-md-2 fw-bold mb-1 mb-md-0">
-                        結果:
+                      <!-- Label column (giống col tiêu chí) with chip inline -->
+                      <div
+                        class="col-12 col-md-2 fw-bold mb-1 mb-md-0 d-flex align-items-center"
+                        style="
+                          gap: 8px;
+                          align-items: flex-start !important;
+                          min-width: 0;
+                        "
+                      >
+                        <span style="white-space: nowrap">結果:</span>
+                        <template
+                          v-if="getTopNoCriteria(results[currentQuestionIndex])"
+                        >
+                          <span class="top-chip top-chip--green">トップ</span>
+                          <span
+                            class="top-answer-ellipsis"
+                            :title="getTopNoCriteria(results[currentQuestionIndex])"
+                            >{{ getTopNoCriteria(results[currentQuestionIndex])
+                            }}</span
+                          >
+                        </template>
+                        <template v-else>
+                          <span class="top-chip top-chip--gray"
+                            >トップなし</span
+                          >
+                        </template>
                       </div>
                       <!-- Không tiêu chí: gộp nhãn + progress -->
                       <div class="col-12 col-md-10">
+                        <!-- chip moved to left; list starts at top without extra spacing -->
                         <div
                           v-for="(ans, aIdx) in results[currentQuestionIndex].question_answers"
                           :key="'nocrit-row-'+aIdx"
