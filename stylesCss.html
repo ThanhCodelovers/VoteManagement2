@@ -36,6 +36,20 @@
     /* Đã bỏ overflow-y: hidden để cho phép scroll dọc */
   }
 
+  #content-pageSearch_header .form-control:focus,
+  #content-pageSearch_header .form-select:focus {
+    outline: none !important;
+    border-color: #1d4ed8 !important; /* blue tone */
+    box-shadow: 0 0 0 0.1rem rgba(29, 78, 216, 0.28) !important; /* thinner than Bootstrap default */
+  }
+
+  /* Ensure flatpickr-wrapped inputs get the same look */
+  #content-pageSearch_header .flatpickr-input:focus {
+    outline: none !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 0 0 0.1rem rgba(29, 78, 216, 0.28) !important;
+  }
+
   /*--- circle loading ---*/
 
   /* QR Code Screen Scrollable Container */
