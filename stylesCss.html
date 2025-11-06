@@ -579,7 +579,8 @@
 
   .table-events {
     max-height: 29vw;
-    overflow: auto;
+    overflow: visible; /* Changed from auto to allow inner scroll */
+    position: relative;
   }
 
   .carousel-footer button {
@@ -1516,29 +1517,23 @@
       margin-right: 5px;
     }
 
+    /* Base styles for table scrolling - no horizontal scroll by default */
     .table-scroll-wrapper {
       max-height: 65vh;
       overflow-y: auto;
-      overflow-x: auto;
+      overflow-x: visible;
       position: relative;
       -webkit-overflow-scrolling: touch;
     }
 
-    .table-scroll-wrapper {
-      overflow: hidden;
-    }
-
     .table-inner-wrapper {
-      overflow-x: auto;
-      overflow-y: hidden;
+      overflow: visible;
       width: 100%;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
     }
 
+    /* Table natural width */
     .table {
-      min-width: 700px;
-      width: max-content;
+      width: 100%;
     }
 
     .table th,
@@ -1546,10 +1541,12 @@
       white-space: nowrap;
     }
 
+    /* Sticky header stays on top during vertical scroll */
     .table thead th {
       position: sticky;
       top: 0;
       z-index: 10;
+      background-color: #fff; /* Ensure header has background */
     }
 
     th.text-start {
@@ -1560,10 +1557,6 @@
     td.text-start {
       width: calc(100vw - 100px) !important;
       min-width: 200px;
-    }
-
-    .table-scroll-wrapper {
-      overflow-x: auto;
     }
 
     .sp-width-25 {
@@ -2263,9 +2256,16 @@
       margin-left: 26px;
     }
 
+    /* Allow horizontal scroll for table on mobile */
     .table-scroll-wrapper {
       max-height: calc(100vh - 60px);
       overflow-y: auto;
+      overflow-x: auto !important; /* Enable horizontal scroll */
+    }
+
+    .table-inner-wrapper {
+      min-width: 1200px; /* Force table to be wide enough to scroll */
+      width: max-content;
     }
 
     .table-scroll-padding-spacer {
@@ -2340,6 +2340,93 @@
       padding-left: 0 !important;
       padding-right: 0 !important;
       width: 100% !important;
+    }
+  }
+
+  /* Horizontal scroll for table on smaller screens (desktop included) */
+  @media (max-width: 1400px) {
+    /* Prevent page-level horizontal scroll */
+    body {
+      overflow-x: hidden !important;
+    }
+
+    #content,
+    .container-fuild {
+      overflow-x: hidden !important;
+    }
+
+    /* Container for table */
+    .table-events {
+      overflow: visible !important;
+      max-height: none !important;
+    }
+
+    /* Outer wrapper - prevent overflow escape */
+    .table-outer-wrapper {
+      position: relative;
+      width: 100%;
+      overflow: hidden !important; /* Critical: contain the scroll within */
+    }
+
+    /* Scroll wrapper - THIS creates the horizontal scrollbar */
+    .table-scroll-wrapper {
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      max-height: none !important;
+      position: relative;
+    }
+
+    /* Inner wrapper - forces table to be wider than viewport */
+    .table-inner-wrapper {
+      overflow: visible !important;
+      min-width: 1200px !important; /* Force minimum width to trigger scroll */
+      width: max-content !important;
+      display: block !important;
+    }
+
+    /* Table takes full width of inner wrapper */
+    #content-pageSearch_body__table .table {
+      min-width: 1200px !important;
+      width: 100% !important;
+      margin-bottom: 0;
+      table-layout: auto;
+    }
+
+    /* Keep header sticky */
+    #content-pageSearch_body__table .table thead th {
+      position: sticky;
+      top: 0;
+      background-color: #f8f9fa;
+      z-index: 10;
+      box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Ensure table cells don't wrap */
+    #content-pageSearch_body__table .table th,
+    #content-pageSearch_body__table .table td {
+      white-space: nowrap;
+      padding: 8px 12px;
+    }
+
+    /* Custom scrollbar for better UX */
+    .table-scroll-wrapper::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 5px;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-thumb {
+      background: #01932e;
+      border-radius: 5px;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+      background: #017025;
     }
   }
 </style>

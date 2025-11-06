@@ -84,39 +84,47 @@
         border-radius: 3px;
         margin-left: 10px;
       }
-      /* Top/Topなし chip styles */
-      .top-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 10px;
-        border-radius: 18px;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1.2;
-        white-space: nowrap;
-      }
-      .top-chip--green {
-        background: #01932e;
-        color: #fff;
-        border: 2px solid #e6f5ea;
-      }
-      .top-chip--gray {
-        background: #e6e9ef;
-        color: #5f6368;
-        border: 2px solid #eef1f5;
-      }
-      .top-answer {
-        font-weight: 600;
-        color: #333;
-      }
-      /* Ellipsis for answer name next to chip */
-      .top-answer-ellipsis {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-block;
-        flex: 1 1 auto;
-        min-width: 0; /* allow flex child to shrink for ellipsis */
+
+      /* SP landscape: hiển thị khối quizInfo giống chế độ dọc */
+      @media only screen and (max-width: 900px) and (orientation: landscape) {
+        /* Ép các cột md co về 100% để xếp dọc như SP dọc */
+        .content-slideForm_identifyUser-quizInfo .col-md-2,
+        .content-slideForm_identifyUser-quizInfo .col-md-3,
+        .content-slideForm_identifyUser-quizInfo .col-md-4,
+        .content-slideForm_identifyUser-quizInfo .width-custom {
+          flex: 0 0 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* Bố cục icon-trái, nội dung-phải gọn gàng */
+        .content-slideForm_identifyUser-quizInfo___group {
+          display: grid;
+          grid-template-columns: 30px 1fr;
+          column-gap: 8px;
+          align-items: flex-start;
+        }
+
+        .content-slideForm_identifyUser-quizInfo___group > i {
+          width: 26px;
+          height: 26px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .content-slideForm_identifyUser-quizInfo___group-firstLine {
+          white-space: normal; /* cho phép xuống dòng giống SP dọc */
+          line-height: 1.4;
+        }
+
+        /* Đưa thời gian kết thúc xuống dòng và canh lề cho đẹp */
+        .content-slideForm_identifyUser-quizInfo___group .sp-time-end {
+          display: block;
+          padding-left: 72px; /* canh theo chiều dài nhãn “実施期間” */
+          margin-left: 0;
+          white-space: normal !important;
+        }
       }
     </style>
     <script>
@@ -126,6 +134,17 @@
     </script>
   </head>
 
+  <style>
+    /* SP landscape: chỉnh header và title nhỏ lại */
+    @media (max-width: 900px) and (orientation: landscape) {
+      .custom-header {
+        padding: 0px 12px 0px !important;
+      }
+      .vote-title {
+        font-size: 16px !important;
+      }
+    }
+  </style>
   <body>
     <div id="app">
       <!-- Header -->
@@ -477,9 +496,9 @@
                       <span
                         class="content-slideForm_identifyUser-quizInfo___group-firstLine"
                         style="align-content: center"
-                        >実施期間&nbsp;&nbsp; ： {{vote.dateRun}} 〜
-                        <span class="sp-time-end" style="white-space: nowrap"
-                          >&nbsp;&nbsp; {{vote.dateEnd}}</span
+                        >実施期間： {{vote.dateRun}} 〜
+                        <span class="sp-time-end" style="white-space: wrap"
+                          >{{vote.dateEnd}}</span
                         ></span
                       >
                     </div>
@@ -1242,32 +1261,9 @@
                       v-for="(crit, cIdx) in item.criterias"
                       :key="crit.name || cIdx"
                     >
-                      <!-- Tiêu chí: move chip to the left label column -->
-                      <div
-                        class="col-12 col-md-2 fw-bold mb-1 mb-md-0 d-flex align-items-center"
-                        style="
-                          gap: 8px;
-                          align-items: flex-start !important;
-                          min-width: 0;
-                        "
-                      >
-                        <span>{{ crit.name }}:</span>
-                        <template
-                          v-if="getTopByCriteria(results[currentQuestionIndex], crit.name)"
-                        >
-                          <span class="top-chip top-chip--green">トップ</span>
-                          <span
-                            class="top-answer-ellipsis"
-                            :title="getTopByCriteria(results[currentQuestionIndex], crit.name)"
-                            >{{ getTopByCriteria(results[currentQuestionIndex],
-                            crit.name) }}</span
-                          >
-                        </template>
-                        <template v-else>
-                          <span class="top-chip top-chip--gray"
-                            >トップなし</span
-                          >
-                        </template>
+                      <!-- Tiêu chí -->
+                      <div class="col-12 col-md-2 fw-bold mb-1 mb-md-0">
+                        {{ crit.name }}:
                       </div>
 
                       <!-- Gộp nhãn + progress để thẳng hàng (theo từng đáp án) -->
@@ -1335,36 +1331,12 @@
                       v-if="(!item.criterias || item.criterias.length === 0) && results[currentQuestionIndex] && results[currentQuestionIndex].question_answers"
                       class="row mb-3 border-bottom border-bottom-row"
                     >
-                      <!-- Label column (giống col tiêu chí) with chip inline -->
-                      <div
-                        class="col-12 col-md-2 fw-bold mb-1 mb-md-0 d-flex align-items-center"
-                        style="
-                          gap: 8px;
-                          align-items: flex-start !important;
-                          min-width: 0;
-                        "
-                      >
-                        <span style="white-space: nowrap">結果:</span>
-                        <template
-                          v-if="getTopNoCriteria(results[currentQuestionIndex])"
-                        >
-                          <span class="top-chip top-chip--green">トップ</span>
-                          <span
-                            class="top-answer-ellipsis"
-                            :title="getTopNoCriteria(results[currentQuestionIndex])"
-                            >{{ getTopNoCriteria(results[currentQuestionIndex])
-                            }}</span
-                          >
-                        </template>
-                        <template v-else>
-                          <span class="top-chip top-chip--gray"
-                            >トップなし</span
-                          >
-                        </template>
+                      <!-- Label column (giống col tiêu chí) -->
+                      <div class="col-12 col-md-2 fw-bold mb-1 mb-md-0">
+                        結果:
                       </div>
                       <!-- Không tiêu chí: gộp nhãn + progress -->
                       <div class="col-12 col-md-10">
-                        <!-- chip moved to left; list starts at top without extra spacing -->
                         <div
                           v-for="(ans, aIdx) in results[currentQuestionIndex].question_answers"
                           :key="'nocrit-row-'+aIdx"
